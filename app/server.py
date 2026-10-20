@@ -219,6 +219,13 @@ def list_music() -> list[str]:
 
 
 @mcp.tool()
+def find_music(page_url: str, keyword: str | None = None) -> list[dict]:
+    """抓取曲库网页（例如 https://mixkit.co/free-stock-music/mood/positive/ ），列出页面里的
+    mp3 链接，再用 add_music 下载。keyword 可按文件名过滤。"""
+    return editor.find_audio_links(page_url, keyword)
+
+
+@mcp.tool()
 def add_music(url: str, name: str) -> dict:
     """从链接下载一首背景音乐到音乐库（Drive 公开链接或直链）。返回 job_id。"""
     return {"job_id": _submit("music", editor.import_music, url, name, heavy=False)}

@@ -187,6 +187,25 @@ def import_video(url: str, name: str | None = None) -> dict[str, Any]:
     return meta
 
 
+def find_audio_links(page_url: str, keyword: str | None = None) -> list[dict[str, str]]:
+    """抓取一个网页（如 Mixkit / Pixabay 曲库页），找出里面的 mp3/m4a 链接。"""
+    r = requests.get(page_url, headers={"User-Agent": UA, "Accept-Language": "en"}, timeout=60)
+    r.raise_for_status()
+    page = html.unescape(r.text).replace("\\/", "/")
+    urls = []
+    for m in re.finditer(r"https?://[^\s\"'<>()]+?\.(?:mp3|m4a)(?:\?[^\s\"'<>()]*)?", page):
+        u = m.group(0)
+        if u not in urls:
+            urls.append(u)
+    out = []
+    for u in urls:
+        name = Path(u.split("?")[0]).stem
+        if keyword and keyword.lower() not in (name + u).lower():
+            continue
+        out.append({"name": name, "url": u})
+    return out[:60]
+
+
 def import_music(url: str, name: str) -> str:
     name = re.sub(r"[^\w\u4e00-\u9fff-]", "_", name)[:40] or "bgm"
     tmp = MUSIC / f".tmp_{uuid.uuid4().hex[:6]}"
@@ -467,16 +486,39 @@ def _esc(t: str) -> str:
     return t.replace("\\", "＼").replace("{", "｛").replace("}", "｝")
 
 
+CAPTION_PRESETS: dict[str, dict[str, Any]] = {
+    # 抖音口播最常见：白字粗黑描边 + 投影，重点词黄色放大
+    "douyin": {"color": "#FFFFFF", "outline_color": "#111111", "highlight_color": "#FFE14D",
+               "outline_ratio": 0.085, "shadow": 5, "box": False, "size_ratio": 0.097},
+    # 黑底白字条（更稳重，适合知识类）
+    "box": {"color": "#FFFFFF", "outline_color": "#000000", "highlight_color": "#FFE14D",
+            "outline_ratio": 0.0, "shadow": 0, "box": True, "size_ratio": 0.085},
+    # 黄字黑边（更吸睛）
+    "yellow": {"color": "#FFE14D", "outline_color": "#111111", "highlight_color": "#FFFFFF",
+               "outline_ratio": 0.085, "shadow": 5, "box": False, "size_ratio": 0.097},
+}
+
+
 def write_ass(path: Path, cues: list[Cue], W: int, H: int, style: dict,
               highlights: list[str], title: dict | None) -> None:
-    fs = int(style.get("font_size", round(W * 0.088)))
-    y = float(style.get("y", 0.68))
+    pre = CAPTION_PRESETS.get(style.get("preset", "douyin"), CAPTION_PRESETS["douyin"])
+    st = {**pre, **style}
+    fs = int(st.get("font_size", round(W * st["size_ratio"])))
+    y = float(st.get("y", 0.70))
     margin_v = int(H * (1 - y))
-    primary = _ass_color(style.get("color", "#FFFFFF"))
-    outline_c = _ass_color(style.get("outline_color", "#000000"))
-    hi = _ass_color(style.get("highlight_color", "#FFD400"))
-    outline = style.get("outline", max(4, fs // 13))
-    font = style.get("font", FONT_NAME)
+    primary = _ass_color(st["color"])
+    outline_c = _ass_color(st["outline_color"])
+    hi = _ass_color(st["highlight_color"])
+    outline = st.get("outline", max(3, round(fs * st["outline_ratio"])))
+    shadow = st.get("shadow", 5)
+    font = st.get("font", FONT_NAME)
+    hi_scale = int(st.get("highlight_scale", 112))
+    if st.get("box"):
+        cap_style = (f"Style: Cap,{font},{fs},{primary},{primary},&H00000000,&H66000000,-1,0,0,0,"
+                     f"100,100,1,0,3,{max(12, fs // 4)},0,2,60,60,{margin_v},1")
+    else:
+        cap_style = (f"Style: Cap,{font},{fs},{primary},{primary},{outline_c},&H96000000,-1,0,0,0,"
+                     f"100,100,1,0,1,{outline},{shadow},2,40,40,{margin_v},1")
     lines = [
         "[Script Info]", "ScriptType: v4.00+", f"PlayResX: {W}", f"PlayResY: {H}",
         "WrapStyle: 2", "ScaledBorderAndShadow: yes", "",
@@ -484,16 +526,20 @@ def write_ass(path: Path, cues: list[Cue], W: int, H: int, style: dict,
         "Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, "
         "BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, "
         "BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding",
-        f"Style: Cap,{font},{fs},{primary},{primary},{outline_c},&H80000000,-1,0,0,0,100,100,2,0,"
-        f"1,{outline},3,2,40,40,{margin_v},1",
+        cap_style,
     ]
     if title:
-        tfs = int(title.get("font_size", round(W * 0.085)))
-        tc = _ass_color(title.get("color", "#FFFFFF"))
-        tb = _ass_color(title.get("box_color", "#E6312E"), "10")
+        tfs = int(title.get("font_size", round(W * 0.128)))
+        t1 = _ass_color(title.get("color", "#FFE14D"))       # 第一行：黄
+        t2 = _ass_color(title.get("color2", "#FFFFFF"))      # 第二行起：白
+        tout = _ass_color(title.get("outline_color", "#111111"))
+        ty = int(H * float(title.get("y", 0.085)))
         lines.append(
-            f"Style: Title,{font},{tfs},{tc},{tc},{tb},{tb},-1,0,0,0,100,100,3,0,"
-            f"3,{max(10, tfs // 4)},0,8,60,60,{int(H * float(title.get('y', 0.12)))},1")
+            f"Style: Title,{font},{tfs},{t1},{t1},{tout},&H96000000,-1,0,0,0,100,100,2,0,"
+            f"1,{max(4, round(tfs * 0.09))},6,8,50,50,{ty},1")
+        lines.append(
+            f"Style: Title2,{font},{int(tfs * 0.86)},{t2},{t2},{tout},&H96000000,-1,0,0,0,100,100,2,0,"
+            f"1,{max(4, round(tfs * 0.08))},6,8,50,50,{ty + int(tfs * 1.22)},1")
     lines += ["", "[Events]",
               "Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text"]
     his = sorted({h for h in highlights if h}, key=len, reverse=True)
@@ -501,29 +547,88 @@ def write_ass(path: Path, cues: list[Cue], W: int, H: int, style: dict,
         txt = _esc(q.text)
         for hword in his:
             hw = _esc(hword)
-            if hw in txt:
-                txt = txt.replace(hw, f"{{\\c{hi}}}{hw}{{\\c{primary}}}")
-        # 轻微弹出动画
-        pop = "{\\fscx88\\fscy88\\t(0,90,\\fscx100\\fscy100)}"
+            if hw in txt and "\\c" not in hw:
+                txt = txt.replace(
+                    hw, f"{{\\c{hi}\\fscx{hi_scale}\\fscy{hi_scale}}}{hw}{{\\c{primary}\\fscx100\\fscy100}}")
+        # 弹出动画：从 85% 放大到 100%
+        pop = "{\\fscx85\\fscy85\\t(0,80,\\fscx100\\fscy100)}" if "\\fscx" not in txt else \
+              "{\\fad(40,0)}"
         lines.append(f"Dialogue: 0,{_ass_time(q.start)},{_ass_time(q.end)},Cap,,0,0,0,,{pop}{txt}")
     if title:
-        end = title.get("duration") or 36000
-        # 换行既可以写真正的换行，也可以写 ASS 的 \N
-        ttxt = _esc(title["text"].replace("\\N", "\n")).replace("\n", "\\N")
-        lines.append(f"Dialogue: 1,{_ass_time(0)},{_ass_time(float(end))},Title,,0,0,0,,{ttxt}")
+        end = float(title.get("duration") or 36000)
+        rows = [r.strip() for r in title["text"].replace("\\N", "\n").split("\n") if r.strip()]
+        if len(rows) > 2:
+            rows = [rows[0], " ".join(rows[1:])]
+        for k, row in enumerate(rows):
+            # 第一行先弹出，第二行稍后弹出
+            anim = ("{\\fad(150,0)\\fscx60\\fscy60\\t(0,170,\\fscx108\\fscy108)"
+                    "\\t(170,250,\\fscx100\\fscy100)}")
+            lines.append(f"Dialogue: 1,{_ass_time(0.0 if k == 0 else 0.2)},{_ass_time(end)},"
+                         f"{'Title' if k == 0 else 'Title2'},,0,0,0,,{anim}{_esc(row)}")
     path.write_text("\n".join(lines) + "\n", encoding="utf-8")
 
 
 # ---------------------------------------------------------------- 渲染
-def _color_filter(meta: dict) -> str:
+_HAS_ZSCALE: bool | None = None
+
+
+def _has_zscale() -> bool:
+    global _HAS_ZSCALE
+    if _HAS_ZSCALE is None:
+        p = subprocess.run(["ffmpeg", "-hide_banner", "-filters"], capture_output=True, text=True)
+        _HAS_ZSCALE = " zscale " in p.stdout and " tonemap " in p.stdout
+    return _HAS_ZSCALE
+
+
+def _color_filter(meta: dict, color: dict) -> str:
+    """HDR（iPhone HLG / PQ）→ SDR 色调映射 + 简单调色。返回以逗号结尾的滤镜串。"""
     trc = meta.get("color_transfer") or ""
     prim = meta.get("color_primaries") or ""
-    if trc == "smpte2084":  # PQ HDR → SDR 色调映射
-        return ("zscale=t=linear:npl=100,format=gbrpf32le,zscale=p=bt709,"
-                "tonemap=tonemap=hable:desat=0,zscale=t=bt709:m=bt709:r=tv,")
-    if prim == "bt2020" or trc == "arib-std-b67":  # iPhone HLG：HLG 本身兼容 SDR，只转色彩矩阵
-        return "scale=in_color_matrix=bt2020:out_color_matrix=bt709,"
-    return ""
+    mode = color.get("mode", "auto")
+    hdr = trc in ("arib-std-b67", "smpte2084")
+    chain = ""
+    if hdr and mode in ("auto", "tonemap") and _has_zscale():
+        npl = float(color.get("npl", 100))
+        algo = color.get("tonemap", "mobius")
+        param = color.get("param")
+        desat = float(color.get("desat", 0))
+        tm = f"tonemap=tonemap={algo}:desat={desat}" + (f":param={param}" if param is not None else "")
+        chain = (f"zscale=tin={trc}:pin=bt2020:min=bt2020nc:rin=tv:t=linear:npl={npl},"
+                 f"format=gbrpf32le,zscale=p=bt709,{tm},"
+                 f"zscale=t=bt709:m=bt709:r=tv,format=yuv420p,")
+    elif (hdr or prim == "bt2020") and mode != "none":
+        chain = "scale=in_color_matrix=bt2020:out_color_matrix=bt709,"
+    b = float(color.get("brightness", 0.0))
+    c = float(color.get("contrast", 1.0))
+    s = float(color.get("saturation", 1.0))
+    g = float(color.get("gamma", 1.0))
+    if (b, c, s, g) != (0.0, 1.0, 1.0, 1.0):
+        chain += f"eq=brightness={b}:contrast={c}:saturation={s}:gamma={g},"
+    w = float(color.get("warmth", 0.0))
+    if w:
+        k = 0.08 * w
+        chain += f"colorbalance=rm={k:.3f}:bm={-k:.3f}:rs={k / 2:.3f}:bs={-k / 2:.3f},"
+    return chain
+
+
+def _sfx_files() -> dict[str, Path]:
+    """合成两个无版权音效：嗖（转场）和 啵（标题弹出）。生成一次后缓存。"""
+    sd = DATA_DIR / "sfx"
+    sd.mkdir(exist_ok=True)
+    files = {"whoosh": sd / "whoosh.wav", "pop": sd / "pop.wav"}
+    if not files["whoosh"].exists():
+        run(["ffmpeg", "-y", "-v", "error", "-f", "lavfi", "-i",
+             "anoisesrc=d=0.45:c=pink:r=48000:a=0.6", "-af",
+             "highpass=f=500,lowpass=f=7000,afade=t=in:d=0.22:curve=exp,"
+             "afade=t=out:st=0.22:d=0.23:curve=exp,aformat=channel_layouts=stereo,"
+             "aecho=0.6:0.4:40:0.3,volume=0.8", str(files["whoosh"])])
+    if not files["pop"].exists():
+        run(["ffmpeg", "-y", "-v", "error", "-f", "lavfi", "-i",
+             "sine=f=880:d=0.18:r=48000", "-f", "lavfi", "-i", "sine=f=1760:d=0.18:r=48000",
+             "-filter_complex",
+             "[0][1]amix=inputs=2:normalize=0,afade=t=in:d=0.005,afade=t=out:st=0.01:d=0.17:curve=exp,"
+             "aformat=channel_layouts=stereo,volume=0.6", str(files["pop"])])
+    return files
 
 
 def render(spec: dict[str, Any], progress=lambda msg: None) -> dict[str, Any]:
@@ -542,18 +647,44 @@ def render(spec: dict[str, Any], progress=lambda msg: None) -> dict[str, Any]:
     out_id = uuid.uuid4().hex[:12]
     work = OUTPUTS / f".work_{out_id}"
     work.mkdir()
-    color = _color_filter(meta)
+    color = _color_filter(meta, spec.get("color", {}) or {})
     focus_y = float(spec.get("focus_y", 0.35))
+    eff = {"drift": 0.04, "oversample": 1.5, "flash_first": True, "sfx": True,
+           "sfx_volume": 0.35, "progress_bar": True, "bar_color": "#FFE14D", "bar_height": 10,
+           **(spec.get("effects", {}) or {})}
+    whoosh_at: list[float] = []
     try:
         parts = []
+        t_out = 0.0
         for i, c in enumerate(clips):
             progress(f"剪辑片段 {i + 1}/{len(clips)}")
             dur = c["end"] - c["start"]
             z = max(1.0, float(c.get("zoom", 1.0)))
-            zw, zh = math.ceil(W * z / 2) * 2, math.ceil(H * z / 2) * 2
             fy = float(c.get("focus_y", focus_y))
-            vf = (f"{color}scale={zw}:{zh}:force_original_aspect_ratio=increase:flags=lanczos,"
-                  f"crop={W}:{H}:(iw-{W})/2:(ih-{H})*{fy},fps={fps},setsar=1,format=yuv420p")
+            drift = float(c.get("drift", eff["drift"]))
+            if drift > 0:
+                # 先放大到 oversample 倍再用 zoompan 缓慢推拉，减轻 zoompan 的像素抖动
+                os_ = float(eff["oversample"])
+                bw, bh = math.ceil(W * os_ / 2) * 2, math.ceil(H * os_ / 2) * 2
+                zw, zh = math.ceil(bw * z / 2) * 2, math.ceil(bh * z / 2) * 2
+                n = max(1, round(dur * fps))
+                zexpr = (f"1+{drift}*on/{n}" if i % 2 == 0 or z > 1.0
+                         else f"1+{drift}-{drift}*on/{n}")
+                geo = (f"scale={zw}:{zh}:force_original_aspect_ratio=increase:flags=bicubic,"
+                       f"crop={bw}:{bh}:(iw-{bw})/2:(ih-{bh})*{fy},fps={fps},"
+                       f"zoompan=z='{zexpr}':x='(iw-iw/zoom)/2':y='(ih-ih/zoom)*{fy}':"
+                       f"d=1:s={W}x{H}:fps={fps}")
+            else:
+                zw, zh = math.ceil(W * z / 2) * 2, math.ceil(H * z / 2) * 2
+                geo = (f"scale={zw}:{zh}:force_original_aspect_ratio=increase:flags=lanczos,"
+                       f"crop={W}:{H}:(iw-{W})/2:(ih-{H})*{fy},fps={fps}")
+            flash = ""
+            if c.get("flash") or (i == 0 and eff["flash_first"]):
+                flash = ",fade=t=in:st=0:d=0.15:color=white"
+            if eff["sfx"] and i > 0 and (z >= 1.08 or c.get("flash")):
+                whoosh_at.append(max(0.0, t_out - 0.12))
+            vf = f"{color}{geo}{flash},setsar=1,format=yuv420p"
+            t_out += dur
             fade = min(0.015, dur / 4)
             af = (f"aresample=48000,aformat=channel_layouts=stereo,"
                   f"afade=t=in:d={fade},afade=t=out:st={dur - fade:.3f}:d={fade}")
@@ -600,8 +731,20 @@ def render(spec: dict[str, Any], progress=lambda msg: None) -> dict[str, Any]:
             voice_chain.append("loudnorm=I=-14:TP=-1.5:LRA=11")
         voice_chain.append("aresample=48000")
         inputs = ["-i", str(joined)]
-        fc = [f"[0:v]subtitles=filename={ass.name}:fontsdir={FONTS_DIR}[v]",
+        nin = 1
+        vlabel = "[vs]"
+        fc = [f"[0:v]subtitles=filename={ass.name}:fontsdir={FONTS_DIR}{vlabel}",
               f"[0:a]{','.join(voice_chain)}[voice]"]
+        # 顶部进度条
+        if eff["progress_bar"]:
+            bc = eff["bar_color"].lstrip("#")
+            bh_ = int(eff["bar_height"])
+            inputs += ["-f", "lavfi", "-i", f"color=c=0x{bc}:s={W}x{bh_}:r={fps}:d={total + 1:.3f}"]
+            fc.append(f"{vlabel}[{nin}:v]overlay=x='-w+W*t/{total:.3f}':y=0:shortest=1[vb]")
+            vlabel = "[vb]"
+            nin += 1
+        fc.append(f"{vlabel}null[v]")
+        mix = ["[voice]"]
         bgm = spec.get("bgm")
         if bgm:
             bpath = MUSIC / Path(bgm["name"]).name if bgm.get("name") else None
@@ -612,15 +755,34 @@ def render(spec: dict[str, Any], progress=lambda msg: None) -> dict[str, Any]:
             vol = float(bgm.get("volume", 0.12))
             fo = float(bgm.get("fade_out", 1.5))
             fi = float(bgm.get("fade_in", 0.5))
-            inputs += ["-stream_loop", "-1", "-i", str(bpath)]
-            fc += [f"[1:a]aresample=48000,aformat=channel_layouts=stereo,volume={vol},"
+            ss = float(bgm.get("start", 0))
+            inputs += ["-stream_loop", "-1", "-ss", f"{ss:.2f}", "-i", str(bpath)]
+            fc += [f"[{nin}:a]aresample=48000,aformat=channel_layouts=stereo,volume={vol},"
                    f"atrim=0:{total:.3f},afade=t=in:d={fi},"
                    f"afade=t=out:st={max(0, total - fo):.3f}:d={fo}[bgm]",
                    "[voice]asplit=2[v1][v2]",
-                   "[bgm][v2]sidechaincompress=threshold=0.04:ratio=5:attack=15:release=350[bd]",
-                   "[v1][bd]amix=inputs=2:duration=first:normalize=0[a]"]
+                   "[bgm][v2]sidechaincompress=threshold=0.04:ratio=5:attack=15:release=350[bd]"]
+            mix = ["[v1]", "[bd]"]
+            nin += 1
+        # 音效：转场"嗖"、标题"啵"
+        hits: list[tuple[str, float]] = [("whoosh", t) for t in whoosh_at]
+        if eff["sfx"] and title:
+            hits.append(("pop", 0.05))
+            if "\n" in title["text"].replace("\\N", "\n"):
+                hits.append(("pop", 0.25))
+        if hits:
+            sf = _sfx_files()
+            sv = float(eff["sfx_volume"])
+            for k, (kind, t) in enumerate(hits):
+                inputs += ["-i", str(sf[kind])]
+                ms = int(t * 1000)
+                fc.append(f"[{nin}:a]volume={sv},adelay={ms}|{ms}[sx{k}]")
+                mix.append(f"[sx{k}]")
+                nin += 1
+        if len(mix) > 1:
+            fc.append(f"{''.join(mix)}amix=inputs={len(mix)}:duration=first:normalize=0[a]")
         else:
-            fc[-1] = fc[-1].replace("[voice]", "[a]")
+            fc[1] = fc[1].replace("[voice]", "[a]")
         out = OUTPUTS / f"{out_id}.mp4"
         _final(work, inputs, fc, total, fps, spec, out)
         result = {"output_id": out_id, "file": out.name, "duration": round(total, 2),

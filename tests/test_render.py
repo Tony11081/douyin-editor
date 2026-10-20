@@ -42,9 +42,9 @@ spec = {
     ],
     "corrections": {"yellow88": "1688"},
     "highlight_words": ["便宜", "1688", "五十美金"],
-    "title": {"text": "做Etsy别再这样干了", "duration": 3},
+    "title": {"text": "代做产品图\n又好又快又便宜"},
     "bgm": {"name": "light.mp3", "volume": 0.1, "fade_out": 1.0},
-    "preset": "veryfast",
+    "preset": "veryfast", "color": {"saturation": 0.95, "warmth": 0.3},
 }
 msgs = []
 res = editor.render(spec, msgs.append)
