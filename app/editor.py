@@ -542,18 +542,39 @@ def write_ass(path: Path, cues: list[Cue], W: int, H: int, style: dict,
             f"1,{max(4, round(tfs * 0.08))},6,8,50,50,{ty + int(tfs * 1.22)},1")
     lines += ["", "[Events]",
               "Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text"]
+    # 行内覆盖标签用标准写法 \c&HBBGGRR&（6 位 + 结尾 &），旧版 libass 才认得
+    hi_in = "&H" + _ass_color(st["highlight_color"])[4:] + "&"
+    pr_in = "&H" + _ass_color(st["color"])[4:] + "&"
     his = sorted({h for h in highlights if h}, key=len, reverse=True)
     for q in cues:
         txt = _esc(q.text)
+        # 先标出要高亮的区间，避免短词在已替换的标签里再次匹配
+        marks = [False] * len(txt)
         for hword in his:
             hw = _esc(hword)
-            if hw in txt and "\\c" not in hw:
-                txt = txt.replace(
-                    hw, f"{{\\c{hi}\\fscx{hi_scale}\\fscy{hi_scale}}}{hw}{{\\c{primary}\\fscx100\\fscy100}}")
-        # 弹出动画：从 85% 放大到 100%
-        pop = "{\\fscx85\\fscy85\\t(0,80,\\fscx100\\fscy100)}" if "\\fscx" not in txt else \
-              "{\\fad(40,0)}"
-        lines.append(f"Dialogue: 0,{_ass_time(q.start)},{_ass_time(q.end)},Cap,,0,0,0,,{pop}{txt}")
+            start = 0
+            while (k := txt.find(hw, start)) >= 0:
+                if not any(marks[k:k + len(hw)]):
+                    for j in range(k, k + len(hw)):
+                        marks[j] = True
+                start = k + len(hw)
+        pieces, on = [], False
+        for ch, m in zip(txt, marks):
+            if m and not on:
+                pieces.append(f"{{\\c{hi_in}\\fscx{hi_scale}\\fscy{hi_scale}}}")
+            elif not m and on:
+                pieces.append(f"{{\\c{pr_in}\\fscx100\\fscy100}}")
+            pieces.append(ch)
+            on = m
+        body = "".join(pieces)
+        has_hi = any(marks)
+        # 弹出动画：从 85% 放大到 100%（有放大的重点词时改成淡入，避免缩放互相覆盖）
+        pop = "\\fad(40,0)" if has_hi else "\\fscx85\\fscy85\\t(0,80,\\fscx100\\fscy100)"
+        if body.startswith("{"):          # 合并成一个标签块
+            body = "{" + pop + body[1:]
+        else:
+            body = "{" + pop + "}" + body
+        lines.append(f"Dialogue: 0,{_ass_time(q.start)},{_ass_time(q.end)},Cap,,0,0,0,,{body}")
     if title:
         end = float(title.get("duration") or 36000)
         rows = [r.strip() for r in title["text"].replace("\\N", "\n").split("\n") if r.strip()]
