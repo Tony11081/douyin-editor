@@ -69,6 +69,20 @@ EOF
   chmod 600 "$APP_DIR/.env"
 fi
 
+# AI 配音（OpenRouter）：老配置里没有就补上占位；安装时传了 OPENROUTER_API_KEY 就写进去
+if ! grep -q '^OPENROUTER_API_KEY=' "$APP_DIR/.env"; then
+  cat >> "$APP_DIR/.env" <<'EOF'
+# AI 配音（OpenRouter）：填上密钥后 systemctl restart douyin-editor
+OPENROUTER_API_KEY=
+OPENROUTER_TTS_MODEL=openai/gpt-4o-mini-tts-2025-12-15
+EOF
+fi
+if [ -n "${OPENROUTER_API_KEY:-}" ]; then
+  sed -i "s|^OPENROUTER_API_KEY=.*|OPENROUTER_API_KEY=${OPENROUTER_API_KEY}|" "$APP_DIR/.env"
+  say "已写入 OpenRouter 密钥"
+fi
+chmod 600 "$APP_DIR/.env"
+
 say "注册系统服务（开机自启）"
 cat > /etc/systemd/system/douyin-editor.service <<EOF
 [Unit]

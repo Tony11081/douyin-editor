@@ -522,14 +522,40 @@ def build_cues(clips: list[dict], words: list[dict] | None, max_chars: int,
             if cur:
                 cues.append(Cue(c0, c1, cur))
         offset += dur
+    return _finish_cues(cues, offset)
+
+
+def _finish_cues(cues: list[Cue], total: float) -> list[Cue]:
     # 连续字幕之间不留闪烁空隙，最短 0.35 秒
     cues.sort(key=lambda q: q.start)
     for i, q in enumerate(cues):
-        nxt = cues[i + 1].start if i + 1 < len(cues) else offset
+        nxt = cues[i + 1].start if i + 1 < len(cues) else total
         if nxt - q.end < 0.4:
             q.end = nxt
         q.end = max(q.end, min(q.start + 0.35, nxt if nxt > q.start else q.start + 0.35))
     return [q for q in cues if q.end > q.start and q.text]
+
+
+def voiceover_cues(placed: list[dict], max_chars: int, corrections: dict[str, str],
+                   total: float) -> list[Cue]:
+    """配音字幕：每句文字按长度切成短行，在这句配音的时长里按字数分配时间。"""
+    cues: list[Cue] = []
+    for p in placed:
+        text = p["text"]
+        for bad, good in corrections.items():
+            text = text.replace(bad, good)
+        chunks = split_text(text, max_chars)
+        if not chunks:
+            continue
+        span = p["end"] - p["start"]
+        tl = sum(_visual_len(x) for x in chunks) or 1
+        t = p["start"]
+        for ch in chunks:
+            d = span * _visual_len(ch) / tl
+            cues.append(Cue(t, t + d, ch))
+            t += d
+    # 句与句之间的停顿保留字幕（_finish_cues 只填补 0.4 秒内的空隙）
+    return _finish_cues(cues, total)
 
 
 def _ass_color(hex_rgb: str, alpha: str = "00") -> str:
@@ -790,18 +816,35 @@ def render(spec: dict[str, Any], progress=lambda msg: None) -> dict[str, Any]:
              "-c", "copy", str(joined)])
         total = sum(c["end"] - c["start"] for c in clips)
 
+        # AI 配音：每句放到成片时间轴上
+        vo = spec.get("voiceover") or None
+        vo_track: Path | None = None
+        vo_placed: list[dict] = []
+        if vo:
+            import tts  # 延迟导入，避免循环引用
+            if not vo.get("tts_id"):
+                raise EditorError("voiceover 缺少 tts_id（先调用 tts 生成配音）")
+            progress("铺配音")
+            vo_track = work / "voiceover.wav"
+            vo_placed = tts.build_voice_track(vo["tts_id"], vo.get("at"), total, vo_track)
+
         # 字幕
         progress("生成字幕")
         cap = spec.get("captions", "auto")
         cues: list[Cue] = []
         style = spec.get("caption_style", {}) or {}
+        max_chars = int(style.get("max_chars", 12))
+        corrections = spec.get("corrections", {}) or {}
         if cap != "none":
             tr = load_transcript(video_id)
             words = tr["words"] if tr else None
-            if not words and not any("text" in c for c in clips):
-                raise EditorError("还没有转写，也没给片段文字：先调用 transcribe，或在 clips 里写 text")
-            cues = build_cues(clips, words, int(style.get("max_chars", 12)),
-                              spec.get("corrections", {}) or {})
+            has_text = any("text" in c for c in clips)
+            if vo and (cap == "voiceover" or (not words and not has_text)):
+                cues = voiceover_cues(vo_placed, max_chars, corrections, total)
+            else:
+                if not words and not has_text:
+                    raise EditorError("还没有转写，也没给片段文字：先调用 transcribe，或在 clips 里写 text")
+                cues = build_cues(clips, words, max_chars, corrections)
         title = spec.get("title")
         ass = work / "subs.ass"
         write_ass(ass, cues, W, H, style, spec.get("highlight_words", []) or [], title)
@@ -855,7 +898,23 @@ def render(spec: dict[str, Any], progress=lambda msg: None) -> dict[str, Any]:
             cur = "[comp]"
         vlabel = "[vs]"
         fv.append(f"{cur}subtitles=filename={ass.name}:fontsdir={FONTS_DIR}{vlabel}")
-        fc = [";".join(fv), f"[0:a]{','.join(voice_chain)}[voice]"]
+        voice_expr = f"[0:a]{','.join(voice_chain)}[voice]"
+        if vo_track:
+            vi = nin
+            inputs += ["-i", str(vo_track)]
+            nin += 1
+            vo_chain = (f"[{vi}:a]aresample=48000,aformat=channel_layouts=stereo,"
+                        f"volume={float(vo.get('volume', 1.0))}")
+            if a.get("loudnorm", True):
+                vo_chain += ",loudnorm=I=-14:TP=-1.5:LRA=11,aresample=48000"
+            ovol = float(vo.get("original_volume", 0.0))
+            if ovol > 0 and meta["has_audio"]:
+                voice_expr = (f"[0:a]{','.join(voice_chain)},volume={ovol}[orig];{vo_chain}[vo];"
+                              f"[orig][vo]amix=inputs=2:duration=first:normalize=0,"
+                              f"alimiter=limit=0.95[voice]")
+            else:
+                voice_expr = f"{vo_chain}[voice]"
+        fc = [";".join(fv), voice_expr]
         # 前景透明动画层（例如代码渲染的 VP9 alpha webm），按成片时间叠加
         for k, ov in enumerate(front):
             opath = _cached_download(ov["url"], "overlays")
@@ -918,7 +977,9 @@ def render(spec: dict[str, Any], progress=lambda msg: None) -> dict[str, Any]:
         out = OUTPUTS / f"{out_id}.mp4"
         _final(work, inputs, fc, total, fps, spec, out)
         result = {"output_id": out_id, "file": out.name, "duration": round(total, 2),
-                  "width": W, "height": H, "captions": [
+                  "width": W, "height": H, "voiceover": [
+                      {"start": round(p["start"], 2), "end": round(p["end"], 2), "text": p["text"]}
+                      for p in vo_placed], "captions": [
                       {"start": round(q.start, 2), "end": round(q.end, 2), "text": q.text} for q in cues]}
         (OUTPUTS / f"{out_id}.json").write_text(json.dumps({"spec": spec, **result}, ensure_ascii=False))
         return result

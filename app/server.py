@@ -22,6 +22,7 @@ from starlette.responses import FileResponse, JSONResponse, PlainTextResponse
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import editor  # noqa: E402
+import tts  # noqa: E402
 
 TOKEN = os.environ.get("ACCESS_TOKEN", "")
 if len(TOKEN) < 16:
@@ -35,6 +36,9 @@ INSTRUCTIONS = """抖音口播剪辑工具。典型流程：
 3. 根据逐字时间决定保留哪些片段（去口误、重复、停顿，可重排，把钩子句放最前）
 4. render(spec) → wait_job，拿到成片下载链接
 5. get_frames 看几帧检查字幕和构图，有问题改 spec 重新 render
+没有人声的视频（动画、素材混剪）可以用 AI 配音：
+a. tts(segments=[逐句旁白]) → wait_job，拿到 tts_id 和每句时长（可先 tts_voices 选模型/音色）
+b. 按每句时长安排画面，render 时加 voiceover={tts_id, at:[每句开始秒数]}，字幕自动按配音生成
 耗时操作都返回 job_id，用 wait_job 轮询。"""
 
 mcp = MCPServer(name="douyin-editor", title="抖音口播剪辑", instructions=INSTRUCTIONS)
@@ -94,9 +98,19 @@ def _job_view(job: dict[str, Any]) -> dict[str, Any]:
             v["transcript"] = editor.transcript_text(r)
         elif job["kind"] == "render":
             v["result"] = {**r, "download_url": _file_url(r["file"])}
+        elif job["kind"] == "tts":
+            v["result"] = _tts_view(r)
         else:
             v["result"] = r
     return v
+
+
+def _tts_view(meta: dict[str, Any]) -> dict[str, Any]:
+    return {"tts_id": meta["tts_id"], "model": meta["model"], "voice": meta["voice"],
+            "total": meta["total"], "gap": meta["gap"],
+            "segments": [{k: it[k] for k in ("index", "text", "duration", "start", "end")}
+                         for it in meta["segments"]],
+            "preview_url": f"{PUBLIC_URL}/files/{TOKEN}/tts/{meta['tts_id']}.mp3"}
 
 
 # ---------------------------------------------------------------- 工具
@@ -160,12 +174,44 @@ def render(spec: dict) -> dict:
     - bgm: {name（list_music 里的文件名）或 url, volume?=0.12, fade_in?=0.5, fade_out?=1.5}
         人声出现时 BGM 自动压低。
     - audio: {denoise?=true, loudnorm?=true}
+    - voiceover: {tts_id, at?: [每句在成片里的开始秒数，数量和配音句数一致；不填按配音顺排],
+        volume?=1.0, original_volume?=0（原片声音保留多少，0 = 只要配音）}
+        有 voiceover 且原片没转写时，字幕自动按配音文字生成；也可 captions: "voiceover" 强制使用。
     - width?=1080, height?=1920, fps?=30, focus_y?=0.35（裁切时人脸偏上的位置）
     """
     if "video_id" not in spec:
         raise ValueError("spec 缺少 video_id")
     editor.video_dir(spec["video_id"])
     return {"job_id": _submit("render", editor.render, json.loads(json.dumps(spec)))}
+
+
+@mcp.tool()
+def tts(segments: list[str], model: str | None = None, voice: str | None = None,
+        instructions: str | None = None, speed: float | None = None,
+        gap: float = 0.3) -> dict:
+    """AI 配音（OpenRouter 语音接口）。segments 是逐句旁白（建议一句一个镜头），
+    每句单独生成并去掉首尾静音，wait_job 完成后返回 tts_id、每句时长和试听链接 preview_url。
+    - model：默认用服务器 .env 的 OPENROUTER_TTS_MODEL；可用 tts_voices 查模型
+    - voice：音色 ID（随模型不同，例如 OpenAI 的 alloy、nova）
+    - instructions：语气说明，如「沉稳的知识类讲解，语速稍快」（OpenAI / Gemini / Fish Audio 支持）
+    - speed：语速倍率（部分模型支持）；gap：顺排时句与句的间隔秒数
+    数字、百分号建议写成汉字读法（如「百分之二」），字幕里再用 corrections 改回「2%」。"""
+    if not isinstance(segments, list) or not segments:
+        raise ValueError("segments 需要是非空的句子列表")
+    return {"job_id": _submit("tts", tts.synthesize, segments, model, voice, instructions,
+                              speed, gap, heavy=False)}
+
+
+@mcp.tool()
+def tts_voices(filter_text: str | None = None) -> list[dict]:
+    """列出 OpenRouter 上的语音模型（含价格、可用音色 supported_voices）。filter_text 可按名称过滤，如 seed、fish。"""
+    return tts.list_voices(filter_text)
+
+
+@mcp.tool()
+def get_tts(tts_id: str) -> dict:
+    """查看一次配音的每句文字、时长和试听链接。"""
+    return _tts_view(tts.load(tts_id))
 
 
 @mcp.tool()
@@ -252,6 +298,19 @@ async def files(request: Request):
     if not path.exists():
         return PlainTextResponse("not found", status_code=404)
     return FileResponse(path, media_type="video/mp4", filename=f"douyin_{name}")
+
+
+@mcp.custom_route("/files/{token}/tts/{name}", methods=["GET", "HEAD"], include_in_schema=False)
+async def tts_files(request: Request):
+    tok, name = request.path_params["token"], request.path_params["name"]
+    m = re.fullmatch(r"([a-z0-9]{12})\.mp3", name)
+    if not secrets.compare_digest(tok, TOKEN) or not m:
+        return PlainTextResponse("not found", status_code=404)
+    try:
+        path = tts.preview(m.group(1))
+    except editor.EditorError:
+        return PlainTextResponse("not found", status_code=404)
+    return FileResponse(path, media_type="audio/mpeg", filename=f"voice_{name}")
 
 
 @mcp.custom_route("/health", methods=["GET"], include_in_schema=False)

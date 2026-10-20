@@ -34,6 +34,30 @@ https://edit.你的域名.com/mcp/0f3a...（一长串密钥）
 claude.ai →「设置 → 连接器 → 添加自定义连接器」，名称填「抖音剪辑」，URL 填上面那个地址。
 之后在对话里发 Drive 链接，说「帮我剪」就行。
 
+## AI 配音（OpenRouter）
+
+没有人声的视频（代码动画、素材混剪）可以让 Claude 直接配音：逐句生成旁白 → 按每句时长对画面
+→ 渲染时铺上配音、自动出字幕、BGM 避让人声。
+
+1. 在 [openrouter.ai](https://openrouter.ai/keys) 建一个专用 API Key，设好额度上限
+2. 写进服务器配置并重启（二选一）：
+
+   ```bash
+   # 方式一：手动编辑
+   nano /opt/douyin-editor/.env          # 填 OPENROUTER_API_KEY=sk-or-...
+   systemctl restart douyin-editor
+
+   # 方式二：更新代码时一起写入
+   curl -fsSL https://raw.githubusercontent.com/Tony11081/douyin-editor/main/setup.sh | sudo DOMAIN=edit.你的域名.com OPENROUTER_API_KEY=sk-or-... bash
+   ```
+
+3. 默认模型是 `OPENROUTER_TTS_MODEL`（`.env` 里可改）。中文建议对比试听几个，
+   例如 `bytedance-seed/seed-audio-1-0`、`fish-audio/s2.1-pro`、`openai/gpt-4o-mini-tts-2025-12-15`；
+   在对话里让 Claude 调 `tts_voices` 就能看到可用模型和音色。
+
+相关工具：`tts`（逐句配音，返回每句时长和试听链接）、`tts_voices`、`get_tts`，
+`render` 的 `voiceover` 参数（把每句配音放到指定时间点）。
+
 ## 常用命令
 
 ```bash
