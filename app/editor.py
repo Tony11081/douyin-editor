@@ -205,14 +205,22 @@ def transcribe(video_id: str, language: str = "zh") -> dict[str, Any]:
     global _model
     d = video_dir(video_id)
     meta = load_meta(video_id)
-    wav = d / "audio16k.wav"
-    run(["ffmpeg", "-y", "-v", "error", "-i", str(d / meta["source"]), "-vn", "-ac", "1",
-         "-ar", "16000", str(wav)])
+    # 直接用 ffmpeg 解码成 16kHz 单声道 float32 数组交给 Whisper，
+    # 不经过 PyAV（新版 PyAV 和 faster-whisper 的 decode_audio 不兼容）
+    import numpy as np
+    p = subprocess.run(["ffmpeg", "-v", "error", "-i", str(d / meta["source"]), "-vn",
+                        "-ac", "1", "-ar", "16000", "-f", "f32le", "-"],
+                       capture_output=True, timeout=1800)
+    if p.returncode != 0:
+        raise EditorError(f"提取音频失败:\n{p.stderr.decode(errors='ignore')[-1500:]}")
+    audio = np.frombuffer(p.stdout, dtype=np.float32)
+    if audio.size < 16000:
+        raise EditorError("音频太短或没有声音")
     from faster_whisper import WhisperModel  # 延迟导入，启动快
     if _model is None:
         _model = WhisperModel(WHISPER_MODEL, device="auto", compute_type="int8")
     prompt = "以下是普通话口播，使用简体中文和标点。" if language.startswith("zh") else None
-    segs, _ = _model.transcribe(str(wav), language=language, word_timestamps=True,
+    segs, _ = _model.transcribe(audio, language=language, word_timestamps=True,
                                 vad_filter=True, initial_prompt=prompt, beam_size=5)
     words, segments = [], []
     for sg in segs:
@@ -225,7 +233,6 @@ def transcribe(video_id: str, language: str = "zh") -> dict[str, Any]:
                          "text": _to_simplified(sg.text.strip()), "w0": first, "w1": len(words) - 1})
     data = {"language": language, "segments": segments, "words": words}
     (d / "transcript.json").write_text(json.dumps(data, ensure_ascii=False))
-    wav.unlink(missing_ok=True)
     return data
 
 
