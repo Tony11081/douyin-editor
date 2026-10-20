@@ -206,6 +206,27 @@ def find_audio_links(page_url: str, keyword: str | None = None) -> list[dict[str
     return out[:60]
 
 
+def _cached_download(url: str, kind: str) -> Path:
+    """下载一次并按 URL 缓存（叠加层、音频床等素材）。"""
+    import hashlib
+    d = DATA_DIR / kind
+    d.mkdir(exist_ok=True)
+    key = hashlib.sha1(url.encode()).hexdigest()[:16]
+    hit = next(iter(d.glob(f"{key}.*")), None)
+    if hit:
+        return hit
+    tmp = d / f".tmp_{key}"
+    tmp.mkdir(exist_ok=True)
+    try:
+        f = download(url, tmp)
+        ext = Path(url.split("?")[0]).suffix.lower() or f.suffix
+        dest = d / f"{key}{ext}"
+        shutil.move(f, dest)
+    finally:
+        shutil.rmtree(tmp, ignore_errors=True)
+    return dest
+
+
 def import_music(url: str, name: str) -> str:
     name = re.sub(r"[^\w\u4e00-\u9fff-]", "_", name)[:40] or "bgm"
     tmp = MUSIC / f".tmp_{uuid.uuid4().hex[:6]}"
@@ -756,6 +777,17 @@ def render(spec: dict[str, Any], progress=lambda msg: None) -> dict[str, Any]:
         vlabel = "[vs]"
         fc = [f"[0:v]subtitles=filename={ass.name}:fontsdir={FONTS_DIR}{vlabel}",
               f"[0:a]{','.join(voice_chain)}[voice]"]
+        # 透明动画层（例如代码渲染的 VP9 alpha webm / ProRes 4444 mov），按成片时间叠加
+        for k, ov in enumerate(spec.get("overlays", []) or []):
+            opath = _cached_download(ov["url"], "overlays")
+            off = float(ov.get("start", 0))
+            dec = ["-c:v", "libvpx-vp9"] if opath.suffix.lower() == ".webm" else []
+            inputs += [*dec, "-itsoffset", f"{off:.3f}", "-i", str(opath)]
+            fc.append(f"[{nin}:v]format=yuva420p,setpts=PTS[ov{k}]")
+            fc.append(f"{vlabel}[ov{k}]overlay=x={int(ov.get('x', 0))}:y={int(ov.get('y', 0))}:"
+                      f"eof_action=pass:format=auto[vo{k}]")
+            vlabel = f"[vo{k}]"
+            nin += 1
         # 顶部进度条
         if eff["progress_bar"]:
             bc = eff["bar_color"].lstrip("#")
