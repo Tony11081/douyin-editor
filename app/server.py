@@ -23,6 +23,7 @@ from starlette.responses import FileResponse, JSONResponse, PlainTextResponse
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import editor  # noqa: E402
 import tts  # noqa: E402
+import videogen  # noqa: E402
 
 TOKEN = os.environ.get("ACCESS_TOKEN", "")
 if len(TOKEN) < 16:
@@ -39,6 +40,8 @@ INSTRUCTIONS = """抖音口播剪辑工具。典型流程：
 没有人声的视频（动画、素材混剪）可以用 AI 配音：
 a. tts(segments=[逐句旁白]) → wait_job，拿到 tts_id 和每句时长（可先 tts_voices 选模型/音色）
 b. 按每句时长安排画面，render 时加 voiceover={tts_id, at:[每句开始秒数]}，字幕自动按配音生成
+AI 生成视频：generate_video(prompt, image_url?) → wait_job（通常几分钟），得到新的 video_id；
+render 的 clips 里每段可写自己的 video_id，把多个生成镜头和原片拼成一条成片。
 耗时操作都返回 job_id，用 wait_job 轮询。"""
 
 mcp = MCPServer(name="douyin-editor", title="抖音口播剪辑", instructions=INSTRUCTIONS)
@@ -69,7 +72,7 @@ def _submit(kind: str, fn, *args, heavy: bool = True) -> str:
         job["state"] = "running"
         job["progress"] = "处理中"
         try:
-            job["result"] = fn(*args, progress) if kind == "render" else fn(*args)
+            job["result"] = fn(*args, progress=progress) if kind in ("render", "genvideo") else fn(*args)
             job["state"] = "done"
             job["progress"] = "完成"
         except Exception as e:  # noqa: BLE001
@@ -212,6 +215,33 @@ def tts_voices(filter_text: str | None = None) -> list[dict]:
 def get_tts(tts_id: str) -> dict:
     """查看一次配音的每句文字、时长和试听链接。"""
     return _tts_view(tts.load(tts_id))
+
+
+@mcp.tool()
+def generate_video(prompt: str, model: str | None = None, image_url: str | None = None,
+                   last_image_url: str | None = None, reference_urls: list[str] | None = None,
+                   duration: int | None = None, resolution: str | None = None,
+                   aspect_ratio: str | None = "9:16", generate_audio: bool = False,
+                   seed: int | None = None, name: str | None = None) -> dict:
+    """AI 生成视频（OpenRouter 视频接口），完成后自动导入视频库，返回 video_id。返回 job_id，
+    用 wait_job 反复等待（生成通常要 1~5 分钟）。
+    - prompt：画面描述（主体、动作、镜头运动、光线、风格），建议写清楚「镜头缓慢推进」等运镜
+    - image_url：首帧图（图生视频，让插画动起来）；last_image_url：尾帧图。
+      支持图片直链或 Google Drive 分享链接（需「知道链接的任何人可查看」）
+    - reference_urls：风格/内容参考图（没有首帧图时生效）
+    - duration / resolution / aspect_ratio：要符合模型支持的值（video_models 可查），默认竖屏 9:16
+    - generate_audio：是否让模型生成环境音（默认关，配音和 BGM 另外加）
+    - model：默认用 .env 的 OPENROUTER_VIDEO_MODEL
+    生成的视频按秒计费，较贵：先用短时长、低分辨率试，满意再出正式版。"""
+    return {"job_id": _submit("genvideo", videogen.generate, prompt, model, image_url,
+                              last_image_url, reference_urls, duration, resolution,
+                              aspect_ratio, generate_audio, seed, name, heavy=False)}
+
+
+@mcp.tool()
+def video_models(filter_text: str | None = None) -> list[dict]:
+    """列出 OpenRouter 上的视频生成模型，以及各自支持的时长、分辨率、画幅和价格。"""
+    return videogen.list_models(filter_text)
 
 
 @mcp.tool()

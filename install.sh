@@ -77,6 +77,8 @@ OPENROUTER_API_KEY=
 OPENROUTER_TTS_MODEL=openai/gpt-4o-mini-tts-2025-12-15
 EOF
 fi
+grep -q '^OPENROUTER_VIDEO_MODEL=' "$APP_DIR/.env" || \
+  echo "OPENROUTER_VIDEO_MODEL=google/veo-3.1" >> "$APP_DIR/.env"
 if [ -n "${OPENROUTER_API_KEY:-}" ]; then
   sed -i "s|^OPENROUTER_API_KEY=.*|OPENROUTER_API_KEY=${OPENROUTER_API_KEY}|" "$APP_DIR/.env"
   say "已写入 OpenRouter 密钥"

@@ -58,6 +58,19 @@ claude.ai →「设置 → 连接器 → 添加自定义连接器」，名称填
 相关工具：`tts`（逐句配音，返回每句时长和试听链接）、`tts_voices`、`get_tts`，
 `render` 的 `voiceover` 参数（把每句配音放到指定时间点）。
 
+## AI 生成视频（OpenRouter）
+
+和配音共用同一个 `OPENROUTER_API_KEY`。在对话里说「把这张插画做成 5 秒的动态镜头」之类即可：
+
+- `generate_video`：文生视频，或给首帧图（`image_url`，支持 Drive 分享链接）做图生视频；
+  默认竖屏 9:16、不生成环境音，生成完自动导入视频库，得到 `video_id`
+- `video_models`：查可用模型，以及支持的时长、分辨率、画幅和价格
+- `render` 的 `clips` 里每段可以写自己的 `video_id`，把多个生成镜头、原片拼成一条成片，
+  再叠配音、字幕和 BGM
+
+默认模型在 `.env` 的 `OPENROUTER_VIDEO_MODEL`。视频按秒计费，比配音贵得多，
+建议先用短时长、低分辨率试效果，满意再出正式版。
+
 ## 常用命令
 
 ```bash

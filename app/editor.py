@@ -485,10 +485,12 @@ def build_cues(clips: list[dict], words: list[dict] | None, max_chars: int,
                corrections: dict[str, str]) -> list[Cue]:
     cues: list[Cue] = []
     offset = 0.0
+    all_words = words
     for c in clips:
         s, e = c["start"], c["end"]
         dur = e - s
         text = c.get("text")
+        words = c.get("_words", all_words)
         if text is not None:
             for bad, good in corrections.items():
                 text = text.replace(bad, good)
@@ -746,19 +748,29 @@ def render(spec: dict[str, Any], progress=lambda msg: None) -> dict[str, Any]:
     video_id = spec["video_id"]
     d = video_dir(video_id)
     meta = load_meta(video_id)
-    src = d / meta["source"]
     W, H = int(spec.get("width", 1080)), int(spec.get("height", 1920))
     fps = int(spec.get("fps", 30))
     clips = spec.get("clips") or [{"start": 0, "end": meta["duration"]}]
+    # 每个片段可以来自不同的视频（clips 里写 video_id，例如 AI 生成的镜头），不写就用主视频
+    metas: dict[str, dict[str, Any]] = {video_id: meta}
+
+    def clip_meta(c: dict) -> dict[str, Any]:
+        vid = c.get("video_id") or video_id
+        if vid not in metas:
+            video_dir(vid)
+            metas[vid] = load_meta(vid)
+        return metas[vid]
+
     for c in clips:
-        c["start"] = max(0.0, float(c["start"]))
-        c["end"] = min(float(c["end"]), meta["duration"])
+        cm = clip_meta(c)
+        c["start"] = max(0.0, float(c.get("start", 0)))
+        c["end"] = min(float(c.get("end", cm["duration"])), cm["duration"])
         if c["end"] - c["start"] < 0.1:
             raise EditorError(f"片段太短或时间不对: {c}")
     out_id = uuid.uuid4().hex[:12]
     work = OUTPUTS / f".work_{out_id}"
     work.mkdir()
-    color = _color_filter(meta, spec.get("color", {}) or {})
+    color_spec = spec.get("color", {}) or {}
     focus_y = float(spec.get("focus_y", 0.35))
     eff = {"drift": 0.04, "oversample": 1.5, "flash_first": True, "sfx": True,
            "sfx_volume": 0.35, "progress_bar": True, "bar_color": "#FFE14D", "bar_height": 10,
@@ -769,6 +781,9 @@ def render(spec: dict[str, Any], progress=lambda msg: None) -> dict[str, Any]:
         t_out = 0.0
         for i, c in enumerate(clips):
             progress(f"剪辑片段 {i + 1}/{len(clips)}")
+            cm = clip_meta(c)
+            csrc = VIDEOS / cm["video_id"] / cm["source"]
+            color = _color_filter(cm, color_spec)
             dur = c["end"] - c["start"]
             z = max(1.0, float(c.get("zoom", 1.0)))
             fy = float(c.get("focus_y", focus_y))
@@ -800,11 +815,11 @@ def render(spec: dict[str, Any], progress=lambda msg: None) -> dict[str, Any]:
             af = (f"aresample=48000,aformat=channel_layouts=stereo,"
                   f"afade=t=in:d={fade},afade=t=out:st={dur - fade:.3f}:d={fade}")
             part = work / f"p{i:03d}.mkv"
-            cmd = ["ffmpeg", "-y", "-v", "error", "-ss", f"{c['start']:.3f}", "-i", str(src),
+            cmd = ["ffmpeg", "-y", "-v", "error", "-ss", f"{c['start']:.3f}", "-i", str(csrc),
                    "-t", f"{dur:.3f}"]
-            if not meta["has_audio"]:
+            if not cm["has_audio"]:
                 cmd += ["-f", "lavfi", "-t", f"{dur:.3f}", "-i", "anullsrc=r=48000:cl=stereo"]
-            cmd += ["-vf", vf, "-af", af, "-map", "0:v:0", "-map", "0:a:0" if meta["has_audio"] else "1:a:0",
+            cmd += ["-vf", vf, "-af", af, "-map", "0:v:0", "-map", "0:a:0" if cm["has_audio"] else "1:a:0",
                     "-c:v", "libx264", "-preset", "veryfast", "-crf", "14",
                     "-c:a", "pcm_s16le", str(part)]
             run(cmd)
@@ -844,7 +859,17 @@ def render(spec: dict[str, Any], progress=lambda msg: None) -> dict[str, Any]:
             else:
                 if not words and not has_text:
                     raise EditorError("还没有转写，也没给片段文字：先调用 transcribe，或在 clips 里写 text")
-                cues = build_cues(clips, words, max_chars, corrections)
+                # 来自别的视频的片段用它自己的转写
+                for c in clips:
+                    vid = c.get("video_id")
+                    if vid and vid != video_id:
+                        t2 = load_transcript(vid)
+                        c["_words"] = t2["words"] if t2 else []
+                try:
+                    cues = build_cues(clips, words, max_chars, corrections)
+                finally:
+                    for c in clips:
+                        c.pop("_words", None)
         title = spec.get("title")
         ass = work / "subs.ass"
         write_ass(ass, cues, W, H, style, spec.get("highlight_words", []) or [], title)
@@ -908,7 +933,7 @@ def render(spec: dict[str, Any], progress=lambda msg: None) -> dict[str, Any]:
             if a.get("loudnorm", True):
                 vo_chain += ",loudnorm=I=-14:TP=-1.5:LRA=11,aresample=48000"
             ovol = float(vo.get("original_volume", 0.0))
-            if ovol > 0 and meta["has_audio"]:
+            if ovol > 0 and any(m["has_audio"] for m in metas.values()):
                 voice_expr = (f"[0:a]{','.join(voice_chain)},volume={ovol}[orig];{vo_chain}[vo];"
                               f"[orig][vo]amix=inputs=2:duration=first:normalize=0,"
                               f"alimiter=limit=0.95[voice]")
