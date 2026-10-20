@@ -448,7 +448,8 @@ def write_ass(path: Path, cues: list[Cue], W: int, H: int, style: dict,
         lines.append(f"Dialogue: 0,{_ass_time(q.start)},{_ass_time(q.end)},Cap,,0,0,0,,{pop}{txt}")
     if title:
         end = title.get("duration") or 36000
-        ttxt = _esc(title["text"]).replace("\\N", "\\N").replace("\n", "\\N")
+        # 换行既可以写真正的换行，也可以写 ASS 的 \N
+        ttxt = _esc(title["text"].replace("\\N", "\n")).replace("\n", "\\N")
         lines.append(f"Dialogue: 1,{_ass_time(0)},{_ass_time(float(end))},Title,,0,0,0,,{ttxt}")
     path.write_text("\n".join(lines) + "\n", encoding="utf-8")
 
