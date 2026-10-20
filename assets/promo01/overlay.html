@@ -93,7 +93,7 @@ body{font-family:var(--sans);color:var(--z100);-webkit-font-smoothing:antialiase
 .burst{width:200px;height:200px;border-radius:50%;border:8px solid var(--lime)}
 /* 遮罩 */
 #scrimT{left:0;right:0;top:0;height:360px;background:linear-gradient(180deg,rgba(0,0,0,.55),rgba(0,0,0,0))}
-#scrimB{left:0;right:0;bottom:0;height:820px;background:linear-gradient(0deg,rgba(0,0,0,.62) 0%,rgba(0,0,0,.35) 45%,rgba(0,0,0,0) 100%)}
+#scrimB{left:0;right:0;bottom:0;height:640px;background:linear-gradient(0deg,rgba(0,0,0,.5) 0%,rgba(0,0,0,.22) 45%,rgba(0,0,0,0) 100%)}
 #vig{inset:0;background:radial-gradient(ellipse 80% 62% at 50% 45%,transparent 60%,rgba(0,0,0,.32) 100%)}
 
 /* ===== 背后大字（立体挤出） ===== */
@@ -103,7 +103,10 @@ body{font-family:var(--sans);color:var(--z100);-webkit-font-smoothing:antialiase
 .bw.w{color:#fafafa;text-shadow:0 3px 0 #dcdce0,0 6px 0 #c2c2c8,0 9px 0 #a8a8b0,0 12px 0 #8e8e97,0 15px 0 #74747d,0 18px 0 #5a5a63,0 21px 0 #42424a,0 44px 70px rgba(0,0,0,.55)}
 body.L-behind > *:not(#behind):not(script){display:none!important}
 body.L-front #behind{display:none!important}
-body.L-front #big, body.L-front #bigsub, body.L-front #ring, body.L-front #ctaH, body.L-front #hdr, body.L-front #brand, body.L-front #chips{display:none!important}
+body.L-front #big, body.L-front #bigsub, body.L-front #ring, body.L-front #ctaH, body.L-front #hdr, body.L-front #brand, body.L-front #chips,
+body.L-front #price, body.L-front #cardA, body.L-front #cardB, body.L-front #beam, body.L-front #speed, body.L-front #optA, body.L-front #optB, body.L-front #burst2{display:none!important}
+/* 极简 CTA：小号胶囊按钮 */
+body.L-front #btn{left:220px;width:640px;top:1318px;height:96px;border-radius:48px;font-size:44px}
 </style>
 </head>
 <body>
@@ -255,7 +258,7 @@ function renderHook(t){
   S($('big'),{o,s,x:sx,y:sy+out*120,r:Math.sin(t*57)*3*shake});
   S($('bigsub'),{o:Math.min(oExpo(P(t,0.12,0.4)),1-out)*0.95,y:(1-oExpo(P(t,0.12,0.4)))*14});
   const rk=P(t,HIT,HIT+0.5); S($('ring'),{o:(1-rk)*(t>=HIT?1:0),s:lerp(0.3,2.2,oExpo(rk))});
-  $('flash').style.opacity=(t>=HIT?0.22*Math.exp(-22*(t-HIT)):0).toFixed(3)+'';
+  $('flash').style.opacity=(t>=HIT?0.10*Math.exp(-22*(t-HIT)):0).toFixed(3)+'';
   if(t>=HIT2&&t<HIT2+0.2)$('flash').style.opacity=(0.12*Math.exp(-22*(t-HIT2))).toFixed(3);
 }
 
@@ -308,8 +311,8 @@ function renderCTA(t){
   const glow=t>=15.42?(0.45+0.25*Math.abs(Math.sin((t-15.42)*Math.PI/0.5))):0;
   $('btn').style.boxShadow=`0 0 ${Math.round(40+60*glow)}px rgba(200,255,0,${glow.toFixed(2)})`;
   [['burst1',16.70,0],['burst2',16.84,1]].forEach(([id,t0,k])=>{
-    const p=P(t,t0,t0+0.55); const el=$(id); el.style.left=(540-100)+'px'; el.style.top=(1352-100)+'px';
-    S(el,{o:(t>=t0?(1-p):0)*0.9,s:lerp(0.5,4.2+k,oExpo(p))});
+    const p=P(t,t0,t0+0.55); const el=$(id); el.style.left=(540-100)+'px'; el.style.top=(1366-100)+'px';
+    S(el,{o:(t>=t0?(1-p):0)*0.6,s:lerp(0.5,3.2+k,oExpo(p))});
   });
   // 图标：聊天气泡 / 地球
   $('icoA').innerHTML='<div style="position:absolute;left:16px;top:18px;width:44px;height:32px;border-radius:10px;background:#C8FF00"></div><div style="position:absolute;left:22px;top:44px;width:0;height:0;border-left:10px solid #C8FF00;border-bottom:10px solid transparent"></div>';
