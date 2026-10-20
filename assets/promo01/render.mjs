@@ -7,14 +7,15 @@ import path from 'path';
 const require = createRequire('/opt/npm-tools/node_modules/');
 const { chromium } = require('playwright');
 
-const [, , mode, a, b, c] = process.argv;
+const [, , mode, a, b, c, layerArg] = process.argv;
+const layer = layerArg || process.env.LAYER || 'front';
 const here = path.dirname(new URL(import.meta.url).pathname);
 const browser = await chromium.launch({
   executablePath: '/opt/pw-browsers/chromium-1194/chrome-linux/chrome',
   args: ['--force-color-profile=srgb', '--disable-lcd-text', '--font-render-hinting=none'],
 });
 const page = await browser.newPage({ viewport: { width: 1080, height: 1920 }, deviceScaleFactor: 1 });
-await page.goto('file://' + path.join(here, 'overlay.html'));
+await page.goto('file://' + path.join(here, 'overlay.html') + '?layer=' + layer);
 await page.evaluate(() => document.fonts.ready);
 
 const shot = async (t, file) => {
@@ -24,12 +25,13 @@ const shot = async (t, file) => {
 
 if (mode === 'stills') {
   fs.mkdirSync(path.join(here, 'stills'), { recursive: true });
-  for (const t of a.split(',').map(Number)) await shot(t, path.join(here, 'stills', `s_${t.toFixed(2)}.png`));
+  for (const t of a.split(',').map(Number)) await shot(t, path.join(here, 'stills', `${layer}_${t.toFixed(2)}.png`));
 } else {
   const shard = Number(a), shards = Number(b), total = Number(c);
-  fs.mkdirSync(path.join(here, 'frames'), { recursive: true });
+  const fdir = path.join(here, 'frames_' + layer);
+  fs.mkdirSync(fdir, { recursive: true });
   for (let i = shard; i < total; i += shards) {
-    const f = path.join(here, 'frames', `f${String(i).padStart(5, '0')}.png`);
+    const f = path.join(fdir, `f${String(i).padStart(5, '0')}.png`);
     if (!fs.existsSync(f)) await shot(i / 30, f);
   }
 }

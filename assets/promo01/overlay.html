@@ -95,9 +95,26 @@ body{font-family:var(--sans);color:var(--z100);-webkit-font-smoothing:antialiase
 #scrimT{left:0;right:0;top:0;height:360px;background:linear-gradient(180deg,rgba(0,0,0,.55),rgba(0,0,0,0))}
 #scrimB{left:0;right:0;bottom:0;height:820px;background:linear-gradient(0deg,rgba(0,0,0,.62) 0%,rgba(0,0,0,.35) 45%,rgba(0,0,0,0) 100%)}
 #vig{inset:0;background:radial-gradient(ellipse 80% 62% at 50% 45%,transparent 60%,rgba(0,0,0,.32) 100%)}
+
+/* ===== 背后大字（立体挤出） ===== */
+#behind{position:absolute;inset:0}
+.bw{position:absolute;left:0;right:0;top:330px;text-align:center;font-weight:900;font-size:380px;line-height:1;letter-spacing:.52em;padding-left:.52em;white-space:nowrap}
+.bw.l{color:#C8FF00;text-shadow:0 3px 0 #b0e000,0 6px 0 #98c400,0 9px 0 #82a800,0 12px 0 #6c8c00,0 15px 0 #577000,0 18px 0 #425600,0 21px 0 #2f3d00,0 44px 70px rgba(0,0,0,.55)}
+.bw.w{color:#fafafa;text-shadow:0 3px 0 #dcdce0,0 6px 0 #c2c2c8,0 9px 0 #a8a8b0,0 12px 0 #8e8e97,0 15px 0 #74747d,0 18px 0 #5a5a63,0 21px 0 #42424a,0 44px 70px rgba(0,0,0,.55)}
+body.L-behind > *:not(#behind):not(script){display:none!important}
+body.L-front #behind{display:none!important}
+body.L-front #big, body.L-front #bigsub, body.L-front #ring, body.L-front #ctaH{display:none!important}
 </style>
 </head>
 <body>
+<div id="behind">
+  <div class="bw l" id="bw1">便宜</div>
+  <div class="bw w" id="bw2">更好</div>
+  <div class="bw l" id="bw3">超快</div>
+  <div class="bw w" id="bw4">私信</div>
+  <div class="bw w" id="bw6">官网</div>
+  <div class="bw l" id="bw5">下单</div>
+</div>
 <div class="abs" id="vig"></div>
 <div class="abs" id="scrimT"></div>
 <div class="abs" id="scrimB"></div>
@@ -299,7 +316,25 @@ function renderCTA(t){
   $('icoB').innerHTML='<div style="position:absolute;left:16px;top:16px;width:44px;height:44px;border-radius:50%;border:4px solid #C8FF00"></div><div style="position:absolute;left:34px;top:16px;width:8px;height:44px;border-radius:50%;border:3px solid #C8FF00"></div><div style="position:absolute;left:16px;top:36px;width:44px;height:4px;background:#C8FF00"></div>';
 }
 
+// ---------------- 背后大字：从人身后升起，部分被头和肩挡住
+const LAYER=new URLSearchParams(location.search).get('layer')||'front';
+document.body.classList.add('L-'+LAYER);
+const BW=[['bw1',0.66,4.70,[0.76,1.12,3.86]],['bw2',6.62,8.90,[6.70]],['bw3',8.88,10.38,[9.62]],
+          ['bw4',10.40,14.12,[10.42,12.82]],['bw6',14.10,15.36,[14.15]],['bw5',15.38,17.60,[15.42,16.68]]];
+function renderBehind(t){
+  for(const [id,a,b,hits] of BW){
+    const el=$(id);
+    if(t<a||t>b){el.style.visibility='hidden';continue}
+    const rise=oExpo(P(t,a,a+0.30)); const sink=ioCub(P(t,b-0.22,b));
+    let s=lerp(0.86,1,rise)*lerp(1,0.92,sink);
+    let shake=0;
+    for(const h of hits){ if(t>=h){ const d=t-h; s+=0.07*Math.exp(-d*9)*Math.cos(d*26); shake+=Math.exp(-d*16);} }
+    const sx=Math.sin(t*97)*14*shake, sy=Math.cos(t*73)*10*shake;
+    S(el,{o:Math.min(P(t,a,a+0.12),1-sink),y:(1-rise)*300+sink*260+sy,x:sx,s});
+  }
+}
 function render(t){
+  if(LAYER==='behind'){renderBehind(t);return}
   renderTop(t); renderHook(t); renderPrice(t); renderCompare(t); renderSpeed(t); renderCTA(t); renderCap(t);
   // 结尾整体淡出遮罩
   const end=P(t,17.2,17.45); document.body.style.opacity=(1-end*0.0).toFixed(3);
