@@ -206,6 +206,49 @@ def find_audio_links(page_url: str, keyword: str | None = None) -> list[dict[str
     return out[:60]
 
 
+RVM_URL = ("https://github.com/PeterL1n/RobustVideoMatting/releases/download/v1.0.0/"
+           "rvm_mobilenetv3_fp32.onnx")
+
+
+def make_matte(video: Path, out: Path, W: int, H: int, fps: int, progress=lambda m: None) -> None:
+    """人像抠像：RobustVideoMatting（ONNX，CPU）逐帧算人物透明度，输出灰度遮罩视频。
+    半分辨率推理再放大，速度约为全分辨率的 4 倍；递归状态让边缘在帧间稳定。"""
+    import numpy as np
+    import onnxruntime as ort
+    model = _cached_download(RVM_URL, "models")
+    so = ort.SessionOptions()
+    so.intra_op_num_threads = max(1, (os.cpu_count() or 2))
+    sess = ort.InferenceSession(str(model), so, providers=["CPUExecutionProvider"])
+    w, h = W // 2, H // 2
+    dec = subprocess.Popen(["ffmpeg", "-v", "error", "-i", str(video), "-vf", f"scale={w}:{h}",
+                            "-f", "rawvideo", "-pix_fmt", "rgb24", "-"], stdout=subprocess.PIPE)
+    enc = subprocess.Popen(["ffmpeg", "-v", "error", "-y", "-f", "rawvideo", "-pix_fmt", "gray",
+                            "-s", f"{w}x{h}", "-r", str(fps), "-i", "-",
+                            "-vf", f"scale={W}:{H}:flags=bicubic", "-c:v", "ffv1", "-pix_fmt", "gray",
+                            str(out)], stdin=subprocess.PIPE)
+    rec = [np.zeros((1, 1, 1, 1), np.float32)] * 4
+    ratio = np.array([0.5], np.float32)     # 半分辨率输入上再缩一半做粗推理
+    n = 0
+    try:
+        while True:
+            buf = dec.stdout.read(w * h * 3)
+            if len(buf) < w * h * 3:
+                break
+            src = np.frombuffer(buf, np.uint8).reshape(h, w, 3).transpose(2, 0, 1)[None].astype(np.float32) / 255
+            fgr, pha, *rec = sess.run(None, {"src": src, "r1i": rec[0], "r2i": rec[1], "r3i": rec[2],
+                                             "r4i": rec[3], "downsample_ratio": ratio})
+            enc.stdin.write((np.clip(pha[0, 0], 0, 1) * 255).astype(np.uint8).tobytes())
+            n += 1
+            if n % 60 == 0:
+                progress(f"抠像 {n} 帧")
+    finally:
+        enc.stdin.close()
+        enc.wait()
+        dec.wait()
+    if enc.returncode != 0 or n == 0:
+        raise EditorError("抠像失败")
+
+
 def _cached_download(url: str, kind: str) -> Path:
     """下载一次并按 URL 缓存（叠加层、音频床等素材）。"""
     import hashlib
@@ -774,11 +817,47 @@ def render(spec: dict[str, Any], progress=lambda msg: None) -> dict[str, Any]:
         voice_chain.append("aresample=48000")
         inputs = ["-i", str(joined)]
         nin = 1
+        overlays = spec.get("overlays", []) or []
+        behind = [o for o in overlays if o.get("layer") == "behind"]
+        front = [o for o in overlays if o.get("layer") != "behind"]
+        fv: list[str] = []
+        cur = "[0:v]"
+
+        def _ov_input(ov: dict) -> None:
+            nonlocal nin, inputs
+            opath = _cached_download(ov["url"], "overlays")
+            dec = ["-c:v", "libvpx-vp9"] if opath.suffix.lower() == ".webm" else []
+            inputs += [*dec, "-itsoffset", f"{float(ov.get('start', 0)):.3f}", "-i", str(opath)]
+            nin += 1
+
+        if behind:
+            # 字在人后面：背景 → 背后文字层 → 抠出的人物 → 字幕/前景层
+            progress("抠像")
+            matte = work / "matte.mkv"
+            make_matte(joined, matte, W, H, fps, progress)
+            inputs += ["-i", str(matte)]
+            mi = nin
+            nin += 1
+            fv.append(f"{cur}split=2[bg0][fg0]")
+            cur = "[bg0]"
+            for k, ov in enumerate(behind):
+                idx = nin
+                _ov_input(ov)
+                fv.append(f"[{idx}:v]format=yuva420p[bh{k}]")
+                fv.append(f"{cur}[bh{k}]overlay=x={int(ov.get('x', 0))}:y={int(ov.get('y', 0))}:"
+                          f"eof_action=pass:format=auto[bb{k}]")
+                cur = f"[bb{k}]"
+            feather = float((spec.get("matte") or {}).get("feather", 1.5))
+            soft = f",gblur=sigma={feather}" if feather > 0 else ""
+            fv.append(f"[{mi}:v]format=gray{soft}[mk]")
+            fv.append("[fg0][mk]alphamerge[person]")
+            fv.append(f"{cur}[person]overlay=0:0:format=auto[comp]")
+            cur = "[comp]"
         vlabel = "[vs]"
-        fc = [f"[0:v]subtitles=filename={ass.name}:fontsdir={FONTS_DIR}{vlabel}",
-              f"[0:a]{','.join(voice_chain)}[voice]"]
-        # 透明动画层（例如代码渲染的 VP9 alpha webm / ProRes 4444 mov），按成片时间叠加
-        for k, ov in enumerate(spec.get("overlays", []) or []):
+        fv.append(f"{cur}subtitles=filename={ass.name}:fontsdir={FONTS_DIR}{vlabel}")
+        fc = [";".join(fv), f"[0:a]{','.join(voice_chain)}[voice]"]
+        # 前景透明动画层（例如代码渲染的 VP9 alpha webm），按成片时间叠加
+        for k, ov in enumerate(front):
             opath = _cached_download(ov["url"], "overlays")
             off = float(ov.get("start", 0))
             dec = ["-c:v", "libvpx-vp9"] if opath.suffix.lower() == ".webm" else []
