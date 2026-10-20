@@ -57,6 +57,11 @@ def _submit(kind: str, fn, *args, heavy: bool = True) -> str:
         job["progress"] = msg
 
     def runner():
+        if job.get("cancel"):
+            job["state"] = "cancelled"
+            job["progress"] = "已取消"
+            job["finished"] = time.time()
+            return
         job["state"] = "running"
         job["progress"] = "处理中"
         try:
@@ -173,6 +178,25 @@ def wait_job(job_id: str, wait_seconds: int = 50) -> dict:
     while job["state"] in ("queued", "running") and time.time() < end:
         time.sleep(1)
     return _job_view(job)
+
+
+@mcp.tool()
+def cancel_job(job_id: str) -> dict:
+    """取消还在排队的任务（已经开始运行的任务无法中途停止）。"""
+    job = _jobs.get(job_id)
+    if not job:
+        raise ValueError("找不到这个 job_id")
+    if job["state"] == "queued":
+        job["cancel"] = True
+        return {"job_id": job_id, "cancelled": True}
+    return {"job_id": job_id, "cancelled": False, "state": job["state"]}
+
+
+@mcp.tool()
+def list_jobs() -> list[dict]:
+    """列出最近的任务和状态（排队中/运行中/完成/出错）。"""
+    jobs = sorted(_jobs.values(), key=lambda j: j["created"], reverse=True)[:20]
+    return [{k: j[k] for k in ("job_id", "kind", "state", "progress")} for j in jobs]
 
 
 @mcp.tool()

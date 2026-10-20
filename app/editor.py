@@ -284,30 +284,75 @@ def _visual_len(t: str) -> float:
     return sum(0.55 if ch.isascii() else 1.0 for ch in t)
 
 
-def split_text(text: str, max_chars: int) -> list[str]:
-    """按标点和长度把一句话切成短字幕（不切断英文单词/数字）。"""
-    tokens = re.findall(r"[A-Za-z0-9.%+#@&'-]+|.", text)
-    chunks, cur = [], ""
+def _balanced(tokens: list[str], max_chars: int) -> list[str]:
+    """把过长的一段切成长度尽量相等的几行，只在 token 边界切（不切断英文/数字）。"""
+    total = sum(_visual_len(t) for t in tokens)
+    k = max(1, math.ceil(total / max_chars))
+    target = total / k
+    parts, cur, acc = [], "", 0.0
     for tok in tokens:
-        if tok in BREAK_PUNCT or tok in "\n":
-            if _clean(cur):
-                chunks.append(cur)
-            cur = ""
-            continue
-        if _visual_len(_clean(cur + tok)) > max_chars and _clean(cur):
-            chunks.append(cur)
+        L = _visual_len(tok)
+        if cur and len(parts) < k - 1 and acc + L / 2 > target * (len(parts) + 1):
+            parts.append(cur)
             cur = ""
         cur += tok
-    if _clean(cur):
-        chunks.append(cur)
-    out = []
-    for c in chunks:
-        c = _clean(c)
-        # 太短的尾巴并到前一条
-        if out and _visual_len(c) <= 2 and _visual_len(out[-1]) + _visual_len(c) <= max_chars + 2:
-            out[-1] += c
+        acc += L
+    if cur:
+        parts.append(cur)
+    return parts
+
+
+_jieba = None
+
+
+def _words(text: str) -> list[str]:
+    """分词：有 jieba 就按中文词切，否则按字；英文/数字整体保留。"""
+    global _jieba
+    if _jieba is None:
+        try:
+            import jieba  # type: ignore
+            jieba.setLogLevel(60)
+            _jieba = jieba
+        except Exception:
+            _jieba = False
+    out: list[str] = []
+    for m in re.finditer(r"[A-Za-z0-9.%+#@&'-]+|\s+|[一-鿿]+|.", text):
+        seg = m.group(0)
+        if _jieba and re.fullmatch(r"[一-鿿]+", seg):
+            out += _jieba.lcut(seg)
+        elif re.fullmatch(r"[一-鿿]+", seg):
+            out += list(seg)
         else:
-            out.append(c)
+            out.append(seg)
+    return out
+
+
+def split_text(text: str, max_chars: int) -> list[str]:
+    """按标点、空格切成短字幕；单段太长时按词平均切成几行。不切断词、英文和数字。"""
+    tokens = _words(text)
+    phrases, cur = [], []
+    for tok in tokens:
+        if tok in BREAK_PUNCT or tok.isspace():
+            if cur:
+                phrases.append(cur)
+            cur = []
+        elif tok not in PUNCT:
+            cur.append(tok)
+    if cur:
+        phrases.append(cur)
+    out: list[str] = []
+    for ph in phrases:
+        s = "".join(ph)
+        if _visual_len(s) > max_chars:
+            pieces = _balanced(ph, max_chars)
+        else:
+            pieces = [s]
+        for c in pieces:
+            # 太短的尾巴并到前一条
+            if out and _visual_len(c) <= 2 and _visual_len(out[-1]) + _visual_len(c) <= max_chars + 1:
+                out[-1] += c
+            else:
+                out.append(c)
     return out
 
 
