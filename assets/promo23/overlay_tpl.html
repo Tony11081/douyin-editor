@@ -60,7 +60,8 @@ function init(cfg){
   const host=$('behind');
   CFG.words.forEach((w,i)=>{const d=document.createElement('div');d.className='bw '+w.c;d.id='bw'+i;d.textContent=w.t;
     const vis=[...w.t].reduce((a,ch)=>a+(/[\x00-\x7f]/.test(ch)?0.62:1),0);
-    d.style.fontSize=(w.size||Math.min(350,Math.floor(900/Math.max(1,vis*1.06))))+'px';host.appendChild(d)});
+    d.style.fontSize=Math.round((w.size||Math.min(350,Math.floor(900/Math.max(1,vis*1.06))))*(CFG.word_scale||1))+'px';host.appendChild(d)});
+  if(CFG.word_top)document.querySelectorAll('.bw').forEach(e=>e.style.top=CFG.word_top+'px');
   if(CFG.pill)$('pillT').textContent=CFG.pill.t, CFG.pill.mono&&$('pillT').classList.add('mono');
 }
 // 字幕
