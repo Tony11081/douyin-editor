@@ -22,7 +22,22 @@ MUSIC = DATA_DIR / "music"
 for _d in (VIDEOS, OUTPUTS, MUSIC):
     _d.mkdir(parents=True, exist_ok=True)
 
-FONT_NAME = os.environ.get("CAPTION_FONT", "Noto Sans CJK SC Black")
+def _pick_font(wanted: str) -> str:
+    """确认字体族真实存在；"xxx Bold" 这种不是字体族名，退回到基础族名（样式里自带加粗）。"""
+    try:
+        fams = subprocess.run(["fc-list", ":", "family"], capture_output=True, text=True,
+                              timeout=20).stdout
+    except Exception:
+        return wanted
+    names = {n.strip() for line in fams.splitlines() for n in line.split(",")}
+    for cand in (wanted, re.sub(r"\s+(Bold|Black|Heavy|Medium)$", "", wanted),
+                 "Noto Sans CJK SC Black", "Noto Sans CJK SC", "WenQuanYi Zen Hei"):
+        if cand in names:
+            return cand
+    return wanted
+
+
+FONT_NAME = _pick_font(os.environ.get("CAPTION_FONT", "Noto Sans CJK SC Black"))
 FONTS_DIR = os.environ.get("FONTS_DIR", "/usr/share/fonts")
 WHISPER_MODEL = os.environ.get("WHISPER_MODEL", "medium")
 UA = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/124 Safari/537.36"

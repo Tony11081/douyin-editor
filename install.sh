@@ -42,7 +42,7 @@ PIP_ARGS=()
 
 # 字体：有 Black 特粗用特粗，否则用粗体
 FONT="Noto Sans CJK SC Black"
-fc-list | grep -q "Noto Sans CJK SC Black" || FONT="Noto Sans CJK SC Bold"
+fc-list | grep -q "Noto Sans CJK SC Black" || FONT="Noto Sans CJK SC"   # 字幕样式自带加粗
 
 # 内存小于 6GB 用 small 模型，否则用 medium（中文更准）
 MEM_GB=$(awk '/MemTotal/ {printf "%d", $2/1024/1024}' /proc/meminfo)
