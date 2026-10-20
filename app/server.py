@@ -42,6 +42,8 @@ a. tts(segments=[逐句旁白]) → wait_job，拿到 tts_id 和每句时长（�
 b. 按每句时长安排画面，render 时加 voiceover={tts_id, at:[每句开始秒数]}，字幕自动按配音生成
 AI 生成视频：generate_video(prompt, image_url?) → wait_job（通常几分钟），得到新的 video_id；
 render 的 clips 里每段可写自己的 video_id，把多个生成镜头和原片拼成一条成片。
+画面已经做好（例如 Claude 本地渲染的动画）：import_video(成片链接) → tts → mux，
+mux 只合成声音，画面原样复制、不重新编码。
 耗时操作都返回 job_id，用 wait_job 轮询。"""
 
 mcp = MCPServer(name="douyin-editor", title="抖音口播剪辑", instructions=INSTRUCTIONS)
@@ -242,6 +244,22 @@ def generate_video(prompt: str, model: str | None = None, image_url: str | None 
 def video_models(filter_text: str | None = None) -> list[dict]:
     """列出 OpenRouter 上的视频生成模型，以及各自支持的时长、分辨率、画幅和价格。"""
     return videogen.list_models(filter_text)
+
+
+@mcp.tool()
+def mux(spec: dict) -> dict:
+    """只混音、不动画面：视频画面原样复制（不重新编码、不加任何特效/字幕），
+    只把 AI 配音和背景音乐合进去。用于画面已经做好的成片（例如 Claude 用代码渲染的动画）。
+    返回 job_id；wait_job 完成后给出 download_url。
+    spec 字段：
+    - video_id（必填）：先用 import_video 导入做好的成片
+    - voiceover: {tts_id, at?: [每句开始秒数], volume?=1.0}
+    - bgm: {name 或 url, volume?=0.12, fade_in?=0.5, fade_out?=1.5, start?=0}，有配音时自动避让
+    - original_volume?=0：成片原有声音保留多少；loudnorm?=true"""
+    if "video_id" not in spec:
+        raise ValueError("spec 缺少 video_id")
+    editor.video_dir(spec["video_id"])
+    return {"job_id": _submit("render", editor.mux, json.loads(json.dumps(spec)))}
 
 
 @mcp.tool()

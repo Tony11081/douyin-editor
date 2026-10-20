@@ -1012,6 +1012,83 @@ def render(spec: dict[str, Any], progress=lambda msg: None) -> dict[str, Any]:
         shutil.rmtree(work, ignore_errors=True)
 
 
+def mux(spec: dict[str, Any], progress=lambda msg: None) -> dict[str, Any]:
+    """只换声音、不动画面：视频流原样复制（-c:v copy，不重新编码），
+    铺上 AI 配音和 BGM（人声出现时自动压低）。适合画面已经在别处做好的成片。
+    spec: {video_id, voiceover?: {tts_id, at?, volume?}, bgm?: {name|url, volume?, fade_in?, fade_out?, start?},
+           original_volume?=0（原片声音保留多少）, loudnorm?=true}"""
+    video_id = spec["video_id"]
+    d = video_dir(video_id)
+    meta = load_meta(video_id)
+    src = d / meta["source"]
+    total = float(meta["duration"])
+    vo = spec.get("voiceover") or None
+    bgm = spec.get("bgm") or None
+    ovol = float(spec.get("original_volume", 0.0))
+    if not vo and not bgm and not (ovol > 0 and meta["has_audio"]):
+        raise EditorError("mux 至少需要 voiceover、bgm 或保留原声其中之一")
+    out_id = uuid.uuid4().hex[:12]
+    work = OUTPUTS / f".work_{out_id}"
+    work.mkdir()
+    try:
+        inputs = ["-i", str(src)]
+        nin = 1
+        fc: list[str] = []
+        mix: list[str] = []
+        placed: list[dict] = []
+        norm = ",loudnorm=I=-14:TP=-1.5:LRA=11,aresample=48000" if spec.get("loudnorm", True) else ""
+        if vo:
+            import tts  # 延迟导入，避免循环引用
+            progress("铺配音")
+            track = work / "voiceover.wav"
+            placed = tts.build_voice_track(vo["tts_id"], vo.get("at"), total, track)
+            inputs += ["-i", str(track)]
+            fc.append(f"[{nin}:a]aresample=48000,aformat=channel_layouts=stereo,"
+                      f"volume={float(vo.get('volume', 1.0))}{norm}[voice]")
+            nin += 1
+            mix.append("[voice]")
+        if ovol > 0 and meta["has_audio"]:
+            fc.append(f"[0:a]aresample=48000,aformat=channel_layouts=stereo,volume={ovol}[orig]")
+            mix.append("[orig]")
+        if bgm:
+            bpath = MUSIC / Path(bgm["name"]).name if bgm.get("name") else None
+            if bgm.get("url"):
+                bpath = MUSIC / import_music(bgm["url"], bgm.get("save_as", f"bgm_{out_id}"))
+            if not bpath or not bpath.exists():
+                raise EditorError(f"找不到背景音乐 {bgm}")
+            fo, fi = float(bgm.get("fade_out", 1.5)), float(bgm.get("fade_in", 0.5))
+            inputs += ["-stream_loop", "-1", "-ss", f"{float(bgm.get('start', 0)):.2f}", "-i", str(bpath)]
+            fc.append(f"[{nin}:a]aresample=48000,aformat=channel_layouts=stereo,"
+                      f"volume={float(bgm.get('volume', 0.12))},atrim=0:{total:.3f},afade=t=in:d={fi},"
+                      f"afade=t=out:st={max(0, total - fo):.3f}:d={fo}[bgm]")
+            nin += 1
+            if mix:  # 有人声时 BGM 自动避让
+                key = mix[0]
+                fc.append(f"{key}asplit=2[k1][k2]")
+                fc.append("[bgm][k2]sidechaincompress=threshold=0.04:ratio=5:attack=15:release=350[bd]")
+                mix = ["[k1]", *mix[1:], "[bd]"]
+            else:
+                mix = ["[bgm]"]
+        progress("合成声音")
+        if len(mix) > 1:
+            fc.append(f"{''.join(mix)}amix=inputs={len(mix)}:duration=longest:normalize=0,"
+                      f"alimiter=limit=0.97,apad,atrim=0:{total:.3f}[a]")
+        else:
+            fc.append(f"{mix[0]}apad,atrim=0:{total:.3f}[a]")
+        out = OUTPUTS / f"{out_id}.mp4"
+        run(["ffmpeg", "-y", "-v", "error", *inputs, "-filter_complex", ";".join(fc),
+             "-map", "0:v:0", "-map", "[a]", "-c:v", "copy", "-c:a", "aac", "-b:a", "192k",
+             "-ar", "48000", "-t", f"{total:.3f}", "-movflags", "+faststart", str(out)])
+        result = {"output_id": out_id, "file": out.name, "duration": round(total, 2),
+                  "width": meta["width"], "height": meta["height"], "video_copied": True,
+                  "voiceover": [{"start": round(p["start"], 2), "end": round(p["end"], 2),
+                                 "text": p["text"]} for p in placed], "captions": []}
+        (OUTPUTS / f"{out_id}.json").write_text(json.dumps({"spec": spec, **result}, ensure_ascii=False))
+        return result
+    finally:
+        shutil.rmtree(work, ignore_errors=True)
+
+
 def _final(work: Path, inputs: list[str], fc: list[str], total: float, fps: int,
            spec: dict, out: Path) -> None:
     cmd = ["ffmpeg", "-y", "-v", "error", *inputs, "-filter_complex", ";".join(fc),

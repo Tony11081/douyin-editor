@@ -79,4 +79,25 @@ try:
     raise AssertionError("应该报错")
 except editor.EditorError as e:
     print("expected error:", e)
+# mux：只加声音，画面必须逐帧和原片一样（视频流原样复制）
+music = editor.MUSIC / "bed.mp3"
+subprocess.run(["ffmpeg", "-y", "-v", "error", "-f", "lavfi", "-i", "sine=f=660:d=30", "-c:a", "libmp3lame",
+                str(music)], check=True)
+mres = editor.mux({"video_id": vid, "voiceover": {"tts_id": meta["tts_id"], "at": at},
+                   "bgm": {"name": "bed.mp3", "volume": 0.1}})
+mout = editor.OUTPUTS / mres["file"]
+
+
+def vhash(path):
+    p = subprocess.run(["ffmpeg", "-v", "error", "-i", str(path), "-map", "0:v:0", "-c", "copy",
+                        "-f", "hash", "-hash", "md5", "-"], capture_output=True, text=True)
+    return p.stdout.strip()
+
+
+assert mres["video_copied"] and vhash(mout) == vhash(d / "source.mp4"), "mux 改动了画面"
+minfo = editor.probe(mout)
+assert minfo["has_audio"] and abs(minfo["duration"] - 12) < 0.15, minfo
+out = mout
+print("mux vol before voice / during voice:", vol(0.0, 0.4), vol(1.0, 1.0))
+assert vol(1.0, 1.0) > vol(0.0, 0.4) + 6, "配音没铺上"
 print("OK")
