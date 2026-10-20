@@ -1,0 +1,311 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>01 产品图代制作 · 动态图形层</title>
+<style>
+:root{
+  --lime:#C8FF00; --lime2:#9BD100; --ink:#060607;
+  --z100:#f4f4f5; --z300:#d4d4d8; --z400:#a1a1aa; --z500:#71717a; --z700:#3f3f46; --z800:#27272a;
+  --sans:"Noto Sans CJK SC",sans-serif; --mono:"DejaVu Sans Mono",monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{width:1080px;height:1920px;overflow:hidden;background:transparent}
+body{font-family:var(--sans);color:var(--z100);-webkit-font-smoothing:antialiased}
+.abs{position:absolute}
+.mono{font-family:var(--mono);letter-spacing:.18em;text-transform:uppercase}
+.glass{background:rgba(8,8,10,.80);border:1.5px solid rgba(255,255,255,.09);border-radius:40px;
+  box-shadow:0 30px 80px rgba(0,0,0,.45), inset 0 1px 0 rgba(255,255,255,.06)}
+.lime{color:var(--lime)}
+/* 字幕 */
+#cap{left:0;right:0;top:1445px;text-align:center;font-weight:900;font-size:84px;line-height:1.15;
+  letter-spacing:.02em;white-space:nowrap}
+#cap span{display:inline-block;-webkit-text-stroke:5px rgba(0,0,0,.72);paint-order:stroke fill;
+  text-shadow:0 6px 18px rgba(0,0,0,.55)}
+#cap span.k{color:var(--lime)}
+/* 顶部 */
+#hdr{left:72px;top:150px;font-size:26px;color:var(--z300);display:flex;align-items:center;gap:16px}
+#hdr i{width:14px;height:14px;border-radius:50%;background:var(--lime);box-shadow:0 0 18px var(--lime)}
+#brand{right:72px;top:150px;font-size:24px;color:var(--z500)}
+#chips{left:72px;top:206px;display:flex;gap:16px}
+.chip{height:72px;padding:0 28px 0 22px;border-radius:36px;display:flex;align-items:center;gap:12px;
+  font-size:36px;font-weight:800;border:2px solid rgba(255,255,255,.28);color:rgba(244,244,245,.78);background:rgba(8,8,10,.62)}
+.chip b{width:36px;height:36px;border-radius:50%;border:2px solid rgba(255,255,255,.35);display:grid;place-items:center;
+  font-size:22px;font-weight:900;color:transparent}
+.chip.on{border-color:var(--lime);color:var(--ink);background:var(--lime);box-shadow:0 0 34px rgba(200,255,0,.45)}
+.chip.on b{border-color:var(--ink);background:var(--ink);color:var(--lime)}
+/* 钩子 */
+#big{left:0;right:0;top:1052px;text-align:center;font-size:290px;font-weight:900;line-height:1;letter-spacing:-.02em}
+#big span{background:linear-gradient(180deg,#F2FFB0 0%,#C8FF00 42%,#86B800 100%);-webkit-background-clip:text;
+  background-clip:text;color:transparent;filter:drop-shadow(0 18px 40px rgba(0,0,0,.6))}
+#bigsub{left:0;right:0;top:1000px;text-align:center;font-size:34px;color:var(--z300)}
+#ring{width:520px;height:520px;left:280px;top:937px;border-radius:50%;border:10px solid var(--lime)}
+#flash{inset:0;background:var(--lime)}
+/* 价格对比 */
+#price{left:72px;top:1010px;width:936px;height:360px;padding:44px 48px}
+.plab{font-size:24px;color:var(--z400)}
+.row{display:flex;align-items:center;gap:26px;margin-top:34px}
+.row .n{width:130px;font-size:40px;font-weight:800}
+.track{flex:1;height:58px;position:relative}
+.bar{position:absolute;left:0;top:0;height:58px;border-radius:29px}
+#barA{background:linear-gradient(90deg,#52525b,#71717a)}
+#barB{background:linear-gradient(90deg,#9BD100,#C8FF00);box-shadow:0 0 30px rgba(200,255,0,.5)}
+.yen{position:absolute;top:6px;font-size:40px;font-weight:900;white-space:nowrap}
+#tagLow{right:48px;top:40px;padding:10px 22px;border-radius:24px;background:var(--lime);color:var(--ink);
+  font-size:30px;font-weight:900}
+/* 前后对比 */
+.card{top:1000px;width:440px;height:392px;padding:20px}
+#cardA{left:64px} #cardB{left:576px}
+.shot{height:276px;border-radius:26px;position:relative;overflow:hidden}
+#shotA{background:linear-gradient(160deg,#6b6250,#4a4437);filter:saturate(.55) brightness(.85)}
+#shotB{background:radial-gradient(ellipse 90% 70% at 50% 35%,#fffaf2 0%,#efe3d1 55%,#d9c6aa 100%)}
+.mug{position:absolute;left:125px;top:62px;width:150px;height:170px;border-radius:14px 14px 46px 46px}
+.handle{position:absolute;left:258px;top:102px;width:84px;height:92px;border-radius:50%;border:22px solid}
+.shadow{position:absolute;left:95px;top:222px;width:230px;height:30px;border-radius:50%;background:rgba(0,0,0,.25);filter:blur(10px)}
+#shotA .mug{background:linear-gradient(90deg,#9a9182,#b5ad9e 60%,#8c8476);transform:rotate(-7deg)}
+#shotA .handle{border-color:#8f8778;transform:rotate(-7deg)}
+#shotB .mug{background:linear-gradient(90deg,#f3eee6,#ffffff 45%,#e2dbd0)}
+#shotB .handle{border-color:#ece6dc}
+#shotB .leaf{position:absolute;left:300px;top:24px;width:70px;height:150px;border-radius:70px 0;background:linear-gradient(150deg,#9fb48a,#6f8a5a);transform:rotate(25deg)}
+.clab{display:flex;justify-content:space-between;align-items:center;margin-top:18px;padding:0 8px}
+.clab .t{font-size:38px;font-weight:800}
+.mark{width:52px;height:52px;border-radius:50%;display:grid;place-items:center;font-size:30px;font-weight:900}
+#cardB{border:3px solid var(--lime);box-shadow:0 0 60px rgba(200,255,0,.35),0 30px 80px rgba(0,0,0,.45)}
+#beam{top:1000px;width:120px;height:392px;background:linear-gradient(90deg,transparent,rgba(200,255,0,.85),transparent);filter:blur(6px)}
+/* 速度 */
+#speed{left:72px;top:1030px;width:936px;height:330px;padding:44px 48px}
+#spT{font-size:110px;font-weight:900;line-height:1}
+#spPct{right:48px;top:64px;font-size:56px;font-weight:700;color:var(--lime);font-family:var(--mono)}
+#spTrack{margin-top:46px;height:40px;border-radius:20px;background:var(--z800);position:relative;overflow:hidden}
+#spFill{position:absolute;left:0;top:0;bottom:0;border-radius:20px;background:linear-gradient(90deg,#9BD100,#C8FF00);box-shadow:0 0 30px rgba(200,255,0,.6)}
+.streak{position:absolute;height:6px;border-radius:3px;background:linear-gradient(90deg,transparent,rgba(200,255,0,.9))}
+/* CTA */
+#ctaH{left:0;right:0;top:1060px;text-align:center}
+#ctaH .a{font-size:104px;font-weight:900}
+#ctaH .b{font-size:26px;color:var(--z400);margin-top:22px}
+.opt{left:72px;width:936px;height:132px;padding:0 40px;display:flex;align-items:center;gap:30px;border-radius:34px}
+#optA{top:990px} #optB{top:1140px}
+.ico{width:76px;height:76px;border-radius:22px;background:rgba(200,255,0,.12);border:2px solid rgba(200,255,0,.5);position:relative;flex:none}
+.opt .t{font-size:46px;font-weight:800}
+.opt .s{font-size:24px;color:var(--z400);margin-top:6px}
+#btn{left:72px;top:1296px;width:936px;height:112px;border-radius:56px;background:var(--lime);color:var(--ink);
+  display:flex;align-items:center;justify-content:center;font-size:54px;font-weight:900;box-shadow:0 0 60px rgba(200,255,0,.55)}
+.burst{width:200px;height:200px;border-radius:50%;border:8px solid var(--lime)}
+/* 遮罩 */
+#scrimT{left:0;right:0;top:0;height:360px;background:linear-gradient(180deg,rgba(0,0,0,.55),rgba(0,0,0,0))}
+#scrimB{left:0;right:0;bottom:0;height:820px;background:linear-gradient(0deg,rgba(0,0,0,.62) 0%,rgba(0,0,0,.35) 45%,rgba(0,0,0,0) 100%)}
+#vig{inset:0;background:radial-gradient(ellipse 80% 62% at 50% 45%,transparent 60%,rgba(0,0,0,.32) 100%)}
+</style>
+</head>
+<body>
+<div class="abs" id="vig"></div>
+<div class="abs" id="scrimT"></div>
+<div class="abs" id="scrimB"></div>
+
+<div class="abs mono" id="hdr"><i></i>ETSY 产品图 · 代制作</div>
+<div class="abs mono" id="brand">SHOPWRIGHT</div>
+<div class="abs" id="chips">
+  <div class="chip" id="c1"><b>✓</b>价格便宜</div>
+  <div class="chip" id="c2"><b>✓</b>效果更好</div>
+  <div class="chip" id="c3"><b>✓</b>出图超快</div>
+</div>
+
+<!-- 钩子 -->
+<div class="abs" id="flash"></div>
+<div class="abs" id="ring"></div>
+<div class="abs mono" id="bigsub">最主要的是</div>
+<div class="abs" id="big"><span>便宜</span></div>
+
+<!-- 价格对比 -->
+<div class="abs glass" id="price">
+  <div class="mono plab">价格对比 · PRICE</div>
+  <div class="row"><div class="n" style="color:var(--z300)">市面价</div>
+    <div class="track"><div class="bar" id="barA"></div><div class="yen" id="yenA" style="color:var(--z400)">¥ ¥ ¥ ¥</div></div></div>
+  <div class="row"><div class="n lime">我们</div>
+    <div class="track"><div class="bar" id="barB"></div><div class="yen lime" id="yenB">¥</div></div></div>
+  <div class="abs" id="tagLow">↓ 低于市面价</div>
+</div>
+
+<!-- 前后对比 -->
+<div class="abs glass card" id="cardA">
+  <div class="shot" id="shotA"><div class="shadow"></div><div class="handle"></div><div class="mug"></div></div>
+  <div class="clab"><span class="t" style="color:var(--z300)">自己拍</span>
+    <span class="mark" style="background:var(--z800);color:var(--z400)">✕</span></div>
+</div>
+<div class="abs glass card" id="cardB">
+  <div class="shot" id="shotB"><div class="leaf"></div><div class="shadow"></div><div class="handle"></div><div class="mug"></div></div>
+  <div class="clab"><span class="t lime">我们做</span>
+    <span class="mark" style="background:var(--lime);color:var(--ink)">✓</span></div>
+</div>
+<div class="abs" id="beam"></div>
+
+<!-- 速度 -->
+<div class="abs glass" id="speed">
+  <div class="mono plab">交付 · DELIVERY</div>
+  <div id="spT" style="margin-top:18px">出图<span class="lime">快</span></div>
+  <div class="abs" id="spPct">000%</div>
+  <div id="spTrack"><div id="spFill"></div></div>
+  <div class="abs" id="spHead" style="width:46px;height:46px;border-radius:50%;background:#fff;box-shadow:0 0 30px 12px rgba(200,255,0,.9)"></div>
+</div>
+
+<!-- CTA -->
+<div class="abs" id="ctaH"><div class="a">帮你做<span class="lime">产品图</span></div>
+  <div class="b mono">Etsy product photos · 代制作</div></div>
+<div class="abs glass opt" id="optA">
+  <div class="ico" id="icoA"></div>
+  <div><div class="t">后台私信我们</div><div class="s mono">抖音后台 · 直接沟通</div></div>
+</div>
+<div class="abs glass opt" id="optB">
+  <div class="ico" id="icoB"></div>
+  <div><div class="t">官网下单</div><div class="s mono">openaigrowth.com</div></div>
+</div>
+<div class="abs" id="btn">立即咨询下单 →</div>
+<div class="abs burst" id="burst1"></div>
+<div class="abs burst" id="burst2"></div>
+
+<div class="abs" id="cap"></div>
+
+<script>
+const $=id=>document.getElementById(id);
+const clamp=(x,a=0,b=1)=>Math.min(b,Math.max(a,x));
+const P=(t,a,b)=>clamp((t-a)/(b-a));
+const oExpo=x=>x>=1?1:1-Math.pow(2,-10*x);
+const oBack=x=>{const c1=1.6,c3=c1+1;return 1+c3*Math.pow(x-1,3)+c1*Math.pow(x-1,2)};
+const ioCub=x=>x<.5?4*x*x*x:1-Math.pow(-2*x+2,3)/2;
+const lerp=(a,b,x)=>a+(b-a)*x;
+function S(el,{o=1,x=0,y=0,s=1,r=0,sx=null}={}){
+  el.style.opacity=o.toFixed(3);
+  el.style.transform=`translate(${x.toFixed(1)}px,${y.toFixed(1)}px) scale(${(sx??s).toFixed(4)},${s.toFixed(4)}) rotate(${r.toFixed(2)}deg)`;
+  el.style.visibility=o<=0.001?'hidden':'visible';
+}
+// 进出场：在 [a,b] 区间内淡入淡出
+function inout(t,a,b,fi=.22,fo=.18){return Math.min(oExpo(P(t,a,a+fi)),1-P(t,b-fo,b))}
+
+// ---------------- 字幕（成片时间）
+const CUES=[[0.05,1.07,"最主要就是便宜"],[1.07,1.82,"很便宜"],[1.82,3.82,"你可以到市面上打听一下"],
+[3.82,4.68,"真的很便宜"],[4.68,6.28,"做的图片肯定是要比您"],[6.68,8.88,"自己做的要好很多"],
+[8.88,10.34,"我们做的时间也很快"],[10.34,11.55,"如果大家希望我们"],[11.55,12.82,"帮你们做图片的话"],
+[12.82,14.15,"也可以在后台找我们"],[14.15,15.42,"或者在我们网站"],[15.42,16.68,"与我们沟通下单"],[16.68,17.45,"就可以了"]];
+const KEYS=["便宜","市面上","好很多","很快","后台","网站","下单"];
+const cap=$('cap'); let capIdx=-1, capSpans=[];
+function buildCap(i){
+  cap.innerHTML=''; capSpans=[];
+  const txt=CUES[i][2]; const mark=new Array(txt.length).fill(false);
+  for(const k of KEYS){let p=txt.indexOf(k);while(p>=0){for(let j=p;j<p+k.length;j++)mark[j]=true;p=txt.indexOf(k,p+k.length)}}
+  [...txt].forEach((ch,j)=>{const s=document.createElement('span');s.textContent=ch;if(mark[j])s.className='k';cap.appendChild(s);capSpans.push(s)});
+  capIdx=i;
+}
+function renderCap(t){
+  let i=CUES.findIndex(c=>t>=c[0]&&t<c[1]);
+  if(i<0){cap.style.opacity=0;return}
+  if(i!==capIdx)buildCap(i);
+  cap.style.opacity=1;
+  const [a,b]=CUES[i]; const n=capSpans.length; const span=Math.min((b-a)*0.72,0.05*n+0.25);
+  capSpans.forEach((s,j)=>{
+    const t0=a+span*j/Math.max(1,n);
+    const k=P(t,t0,t0+0.16);
+    const isK=s.className==='k';
+    const pop=isK?lerp(1.35,1.12,oBack(P(t,t0,t0+0.28))):1;
+    s.style.opacity=oExpo(k).toFixed(3);
+    s.style.transform=`translateY(${((1-oExpo(k))*26).toFixed(1)}px) scale(${pop.toFixed(3)})`;
+  });
+  // 换行前一瞬间整体轻微上移淡出
+  const out=P(t,b-0.06,b); cap.style.opacity=(1-out).toFixed(3);
+}
+
+// ---------------- 顶部
+function renderTop(t){
+  const k=oExpo(P(t,0.1,0.5));
+  S($('hdr'),{o:k,y:(1-k)*-20}); S($('brand'),{o:k*0.9,y:(1-k)*-20});
+  const ck=oExpo(P(t,0.25,0.7)); S($('chips'),{o:ck,y:(1-ck)*-16});
+  [[ 'c1',1.20],['c2',7.05],['c3',9.55]].forEach(([id,on])=>{
+    const el=$(id); const lit=t>=on; el.classList.toggle('on',lit);
+    const b=lit?lerp(1.25,1,oBack(P(t,on,on+0.35))):1; S(el,{s:b});
+  });
+  // 指示灯呼吸
+  $('hdr').querySelector('i').style.opacity=(0.55+0.45*Math.abs(Math.sin(t*3.2))).toFixed(2);
+}
+
+// ---------------- 钩子 0–1.95
+function renderHook(t){
+  const HIT=0.76, HIT2=1.12;
+  const k=oExpo(P(t,HIT,HIT+0.16));
+  let s=lerp(2.6,1,k), o=P(t,HIT,HIT+0.06);
+  const pulse=Math.sin(Math.PI*P(t,HIT2,HIT2+0.22))*0.12; s+=pulse;
+  const out=ioCub(P(t,1.70,1.95)); o*=1-out; s*=lerp(1,0.55,out);
+  const shake=Math.exp(-14*Math.max(0,t-HIT))*(t>=HIT?1:0)+Math.exp(-14*Math.max(0,t-HIT2))*(t>=HIT2?0.7:0);
+  const sx=Math.sin(t*93)*22*shake, sy=Math.cos(t*71)*16*shake;
+  S($('big'),{o,s,x:sx,y:sy+out*120,r:Math.sin(t*57)*3*shake});
+  S($('bigsub'),{o:Math.min(oExpo(P(t,0.12,0.4)),1-out)*0.95,y:(1-oExpo(P(t,0.12,0.4)))*14});
+  const rk=P(t,HIT,HIT+0.5); S($('ring'),{o:(1-rk)*(t>=HIT?1:0),s:lerp(0.3,2.2,oExpo(rk))});
+  $('flash').style.opacity=(t>=HIT?0.22*Math.exp(-22*(t-HIT)):0).toFixed(3)+'';
+  if(t>=HIT2&&t<HIT2+0.2)$('flash').style.opacity=(0.12*Math.exp(-22*(t-HIT2))).toFixed(3);
+}
+
+// ---------------- 价格对比 1.95–4.75
+function renderPrice(t){
+  const o=inout(t,1.92,4.78,.25,.2); const e=oExpo(P(t,1.92,2.3));
+  S($('price'),{o,y:(1-e)*60,s:lerp(.96,1,e),x:-P(t,4.58,4.78)*80});
+  const a=oExpo(P(t,2.05,2.75)), b=oExpo(P(t,2.85,3.25));
+  $('barA').style.width=(a*600).toFixed(1)+'px'; $('yenA').style.left=(a*600+20).toFixed(1)+'px'; $('yenA').style.opacity=P(t,2.4,2.8);
+  $('barB').style.width=(b*170).toFixed(1)+'px'; $('yenB').style.left=(b*170+20).toFixed(1)+'px'; $('yenB').style.opacity=P(t,3.0,3.3);
+  const tg=P(t,3.86,4.18); S($('tagLow'),{o:oExpo(tg)*(t<4.7?1:0),s:t>=3.86?lerp(1.6,1,oBack(tg)):1.6,r:-4});
+}
+
+// ---------------- 前后对比 4.75–8.9
+function renderCompare(t){
+  const ea=oExpo(P(t,4.78,5.2)); const outA=ioCub(P(t,8.7,8.95));
+  const dim=t>=7.0?lerp(1,0.42,ioCub(P(t,7.0,7.35))):1;
+  S($('cardA'),{o:Math.min(ea,1-outA)*dim+0*0,x:(1-ea)*-260,r:lerp(-8,-3,ea),s:lerp(1,.9,outA)});
+  $('cardA').style.filter=t>=7.0?`grayscale(${P(t,7.0,7.35)})`:'none';
+  const eb=P(t,6.66,7.06); const ebE=oExpo(eb);
+  S($('cardB'),{o:Math.min(eb>0?1:0,1-outA),x:(1-ebE)*120,s:lerp(1.08,1,oBack(eb))*lerp(1,.9,outA),r:lerp(4,2,ebE)});
+  $('cardB').style.clipPath=`inset(0 ${((1-ebE)*100).toFixed(1)}% 0 0 round 40px)`;
+  const bm=P(t,6.66,7.06); S($('beam'),{o:bm>0&&bm<1?Math.sin(Math.PI*bm):0,x:576+lerp(-60,440,ioCub(bm))});
+}
+
+// ---------------- 速度 8.95–10.38
+function renderSpeed(t){
+  const o=inout(t,8.92,10.4,.2,.18); const e=oExpo(P(t,8.92,9.25));
+  S($('speed'),{o,y:(1-e)*60,s:lerp(.96,1,e)*lerp(1,1.06,P(t,10.2,10.4))});
+  const f=ioCub(P(t,9.05,9.62)); $('spFill').style.width=(f*100).toFixed(2)+'%';
+  $('spPct').textContent=String(Math.round(f*100)).padStart(3,'0')+'%';
+    const hd=$('spHead'); hd.style.left=(48+f*840-23).toFixed(1)+'px'; hd.style.top='233px';
+  S(hd,{o:(t>9.05&&t<9.75?1:0)*(1-P(t,9.62,9.75)),s:1+0.15*Math.sin(t*40)});
+  S($('spT'),{s:t>=9.62?lerp(1.12,1,oBack(P(t,9.62,9.95))):1});
+}
+
+// ---------------- CTA 10.4–17.45
+function renderCTA(t){
+  const hk=oExpo(P(t,10.42,10.8)); const hout=ioCub(P(t,12.55,12.8));
+  S($('ctaH'),{o:Math.min(hk,1-hout),s:lerp(1.25,1,hk)*lerp(1,.9,hout),y:hout*-40});
+  const a=P(t,12.82,13.2), b=P(t,14.15,14.53);
+  S($('optA'),{o:oExpo(a),x:(1-oExpo(a))*-200,s:t>=12.82?lerp(1.06,1,oBack(a)):1});
+  S($('optB'),{o:oExpo(b),x:(1-oExpo(b))*200,s:t>=14.15?lerp(1.06,1,oBack(b)):1});
+  // 按钮：15.42 入场、呼吸，16.68 按下
+  const c=P(t,15.42,15.82);
+  let bs=t>=15.42?lerp(.6,1,oBack(c)):0.6;
+  if(t>15.82&&t<16.68)bs*=1+0.035*Math.sin((t-15.82)*Math.PI*2/0.5);
+  if(t>=16.68)bs*=lerp(.92,1,oBack(P(t,16.68,16.95)));
+  S($('btn'),{o:oExpo(c),s:bs});
+  const glow=t>=15.42?(0.45+0.25*Math.abs(Math.sin((t-15.42)*Math.PI/0.5))):0;
+  $('btn').style.boxShadow=`0 0 ${Math.round(40+60*glow)}px rgba(200,255,0,${glow.toFixed(2)})`;
+  [['burst1',16.70,0],['burst2',16.84,1]].forEach(([id,t0,k])=>{
+    const p=P(t,t0,t0+0.55); const el=$(id); el.style.left=(540-100)+'px'; el.style.top=(1352-100)+'px';
+    S(el,{o:(t>=t0?(1-p):0)*0.9,s:lerp(0.5,4.2+k,oExpo(p))});
+  });
+  // 图标：聊天气泡 / 地球
+  $('icoA').innerHTML='<div style="position:absolute;left:16px;top:18px;width:44px;height:32px;border-radius:10px;background:#C8FF00"></div><div style="position:absolute;left:22px;top:44px;width:0;height:0;border-left:10px solid #C8FF00;border-bottom:10px solid transparent"></div>';
+  $('icoB').innerHTML='<div style="position:absolute;left:16px;top:16px;width:44px;height:44px;border-radius:50%;border:4px solid #C8FF00"></div><div style="position:absolute;left:34px;top:16px;width:8px;height:44px;border-radius:50%;border:3px solid #C8FF00"></div><div style="position:absolute;left:16px;top:36px;width:44px;height:4px;background:#C8FF00"></div>';
+}
+
+function render(t){
+  renderTop(t); renderHook(t); renderPrice(t); renderCompare(t); renderSpeed(t); renderCTA(t); renderCap(t);
+  // 结尾整体淡出遮罩
+  const end=P(t,17.2,17.45); document.body.style.opacity=(1-end*0.0).toFixed(3);
+}
+window.render=render;
+render(0);
+</script>
+</body>
+</html>
