@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>口播动态图形模板</title>
+<style>
+:root{--lime:#C8FF00;--red:#FF3B30;--ink:#060607;--sans:"Noto Sans CJK SC",sans-serif;--mono:"DejaVu Sans Mono",monospace}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{width:1080px;height:1920px;overflow:hidden;background:transparent}
+body{font-family:var(--sans);color:#f4f4f5;-webkit-font-smoothing:antialiased}
+.abs{position:absolute}
+/* 背后立体大字 */
+#behind{position:absolute;inset:0}
+.bw{position:absolute;left:0;right:0;top:150px;text-align:center;font-weight:900;font-size:350px;line-height:1;
+  letter-spacing:.06em;padding-left:.06em;white-space:nowrap;visibility:hidden}
+.bw.l{color:#C8FF00;text-shadow:0 3px 0 #b0e000,0 6px 0 #98c400,0 9px 0 #82a800,0 12px 0 #6c8c00,0 15px 0 #577000,0 18px 0 #425600,0 21px 0 #2f3d00,0 44px 70px rgba(0,0,0,.55)}
+.bw.w{color:#fafafa;text-shadow:0 3px 0 #dcdce0,0 6px 0 #c2c2c8,0 9px 0 #a8a8b0,0 12px 0 #8e8e97,0 15px 0 #74747d,0 18px 0 #5a5a63,0 21px 0 #42424a,0 44px 70px rgba(0,0,0,.55)}
+.bw.r{color:#FF453A;text-shadow:0 3px 0 #e8352b,0 6px 0 #cc2b22,0 9px 0 #b0231b,0 12px 0 #941b15,0 15px 0 #78150f,0 18px 0 #5e0f0b,0 21px 0 #440a07,0 44px 70px rgba(0,0,0,.55)}
+/* 前景：极简 */
+#vig{inset:0;background:radial-gradient(ellipse 80% 62% at 50% 45%,transparent 60%,rgba(0,0,0,.30) 100%)}
+#scrimB{left:0;right:0;bottom:0;height:640px;background:linear-gradient(0deg,rgba(0,0,0,.5) 0%,rgba(0,0,0,.22) 45%,rgba(0,0,0,0) 100%)}
+#flash{inset:0}
+#cap{left:0;right:0;top:1445px;text-align:center;font-weight:900;font-size:84px;line-height:1.15;letter-spacing:.02em;white-space:nowrap}
+#cap span{display:inline-block;-webkit-text-stroke:5px rgba(0,0,0,.72);paint-order:stroke fill;text-shadow:0 6px 18px rgba(0,0,0,.55)}
+#cap span.k{color:var(--lime)} #cap span.rk{color:#FF453A}
+#pill{left:0;right:0;top:1318px;display:flex;justify-content:center;visibility:hidden}
+#pill div{height:92px;padding:0 46px;border-radius:46px;background:var(--lime);color:var(--ink);display:flex;align-items:center;
+  font-size:42px;font-weight:900;box-shadow:0 0 50px rgba(200,255,0,.5)}
+#pill div.mono{font-family:var(--mono);letter-spacing:.06em}
+body.L-behind > *:not(#behind):not(script){display:none!important}
+body.L-front #behind{display:none!important}
+</style>
+</head>
+<body>
+<div id="behind"></div>
+<div class="abs" id="vig"></div>
+<div class="abs" id="scrimB"></div>
+<div class="abs" id="flash"></div>
+<div class="abs" id="pill"><div id="pillT"></div></div>
+<div class="abs" id="cap"></div>
+<script>
+const Q=new URLSearchParams(location.search);
+const LAYER=Q.get('layer')||'front';
+document.body.classList.add('L-'+LAYER);
+const $=id=>document.getElementById(id);
+const clamp=(x,a=0,b=1)=>Math.min(b,Math.max(a,x));
+const P=(t,a,b)=>clamp((t-a)/(b-a));
+const oExpo=x=>x>=1?1:1-Math.pow(2,-10*x);
+const oBack=x=>{const c1=1.6,c3=c1+1;return 1+c3*Math.pow(x-1,3)+c1*Math.pow(x-1,2)};
+const ioCub=x=>x<.5?4*x*x*x:1-Math.pow(-2*x+2,3)/2;
+const lerp=(a,b,x)=>a+(b-a)*x;
+function S(el,{o=1,x=0,y=0,s=1,r=0}={}){
+  el.style.opacity=o.toFixed(3);
+  el.style.transform=`translate(${x.toFixed(1)}px,${y.toFixed(1)}px) scale(${s.toFixed(4)}) rotate(${r.toFixed(2)}deg)`;
+  el.style.visibility=o<=0.001?'hidden':'visible';
+}
+let CFG=null;
+function init(cfg){
+  CFG=cfg;
+  const host=$('behind');
+  CFG.words.forEach((w,i)=>{const d=document.createElement('div');d.className='bw '+w.c;d.id='bw'+i;d.textContent=w.t;
+    const vis=[...w.t].reduce((a,ch)=>a+(/[\x00-\x7f]/.test(ch)?0.62:1),0);
+    d.style.fontSize=(w.size||Math.min(350,Math.floor(900/Math.max(1,vis*1.06))))+'px';host.appendChild(d)});
+  if(CFG.pill)$('pillT').textContent=CFG.pill.t, CFG.pill.mono&&$('pillT').classList.add('mono');
+}
+// 字幕
+let capIdx=-1,capSpans=[];
+function buildCap(i){
+  const cap=$('cap');cap.innerHTML='';capSpans=[];
+  const txt=CFG.cues[i][2];const mark=new Array(txt.length).fill('');
+  const tag=(list,cls)=>{for(const k of list){let p=txt.indexOf(k);while(p>=0){for(let j=p;j<p+k.length;j++)if(!mark[j])mark[j]=cls;p=txt.indexOf(k,p+k.length)}}};
+  tag(CFG.red_keys||[],'rk');tag(CFG.keys||[],'k');
+  [...txt].forEach((ch,j)=>{const s=document.createElement('span');s.textContent=ch;if(mark[j])s.className=mark[j];cap.appendChild(s);capSpans.push(s)});
+    const vis=[...txt].reduce((a,ch)=>a+(/[\x00-\x7f]/.test(ch)?0.58:1),0);
+  cap.style.fontSize=Math.min(84,Math.floor(940/Math.max(1,vis)))+'px';
+  capIdx=i;
+}
+function renderCap(t){
+  const cap=$('cap');const i=CFG.cues.findIndex(c=>t>=c[0]&&t<c[1]);
+  if(i<0){cap.style.opacity=0;return}
+  if(i!==capIdx)buildCap(i);
+  const [a,b]=CFG.cues[i];const n=capSpans.length;const span=Math.min((b-a)*0.72,0.05*n+0.25);
+  capSpans.forEach((s,j)=>{const t0=a+span*j/Math.max(1,n);const k=P(t,t0,t0+0.16);
+    const pop=s.className?lerp(1.35,1.12,oBack(P(t,t0,t0+0.28))):1;
+    s.style.opacity=oExpo(k).toFixed(3);
+    s.style.transform=`translateY(${((1-oExpo(k))*26).toFixed(1)}px) scale(${pop.toFixed(3)})`});
+  cap.style.opacity=(1-P(t,b-0.06,b)).toFixed(3);
+}
+// 背后大字：从人身后升起，部分被头发挡住
+function renderBehind(t){
+  CFG.words.forEach((w,i)=>{
+    const el=$('bw'+i);const a=w.a,b=w.b;
+    if(t<a||t>b){el.style.visibility='hidden';return}
+    const rise=oExpo(P(t,a,a+0.30));const sink=ioCub(P(t,b-0.22,b));
+    let s=lerp(0.86,1,rise)*lerp(1,0.92,sink);let shake=0;
+    for(const h of (w.hits||[])){if(t>=h){const d=t-h;s+=(w.c==='r'?0.10:0.07)*Math.exp(-d*9)*Math.cos(d*26);shake+=Math.exp(-d*16)*(w.c==='r'?1.6:1)}}
+    S(el,{o:Math.min(P(t,a,a+0.12),1-sink),y:(1-rise)*300+sink*260+Math.cos(t*73)*10*shake,x:Math.sin(t*97)*14*shake,s});
+  });
+}
+// 前景：闪光、结尾胶囊
+function renderFront(t){
+  const f=$('flash');let fo=0,fc='200,255,0';
+  for(const [h,c] of (CFG.flashes||[])){if(t>=h&&t<h+0.3){fo=Math.max(fo,0.10*Math.exp(-22*(t-h)));if(c==='r')fc='255,59,48'}}
+  f.style.background=`rgba(${fc},${fo.toFixed(3)})`;
+  if(CFG.pill){const p=CFG.pill;const el=$('pill');
+    if(t<p.a||t>p.b){el.style.visibility='hidden'}else{
+      const k=P(t,p.a,p.a+0.4);let s=lerp(.6,1,oBack(k));if(t>p.a+0.4)s*=1+0.03*Math.sin((t-p.a)*Math.PI*2/0.6);
+      S(el,{o:Math.min(oExpo(k),1-P(t,p.b-0.15,p.b)),s})}}
+  renderCap(t);
+}
+function render(t){ if(LAYER==='behind')renderBehind(t); else renderFront(t); }
+window.render=render;
+</script>
+<script src="cfg.js"></script>
+<script>init(window.VIDEO_CFG[Q.get('v')]);render(0);</script>
+</body>
+</html>
