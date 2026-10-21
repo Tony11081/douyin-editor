@@ -386,6 +386,64 @@ def list_outputs() -> list[dict]:
     return out
 
 
+# ---------------------------------------------------------------- 维护：自更新、改配置
+APP_DIR = Path(__file__).resolve().parents[1]
+ENV_FILE = APP_DIR / ".env"
+CONFIG_KEYS = {  # 允许远程设置的配置项；密钥只写不读
+    "OPENROUTER_API_KEY": True, "HEYGEN_API_KEY": True,
+    "OPENROUTER_TTS_MODEL": False, "OPENROUTER_TTS_VOICE": False, "OPENROUTER_VIDEO_MODEL": False,
+    "WHISPER_MODEL": False, "RENDER_WORKERS": False,
+}
+REPO = os.environ.get("UPDATE_REPO", "Tony11081/douyin-editor")
+
+
+def _restart_later(cmd: str, unit: str) -> None:
+    """用 systemd-run 在服务之外执行，避免重启服务时把自己杀掉。"""
+    import subprocess
+    if subprocess.run(["which", "systemd-run"], capture_output=True).returncode != 0:
+        raise ValueError("服务器没有 systemd-run，无法远程更新，请在终端手动执行")
+    subprocess.run(["systemd-run", f"--unit={unit}-{int(time.time())}", "--collect", "--quiet",
+                    "/bin/bash", "-lc", cmd], check=True, timeout=30)
+
+
+@mcp.tool()
+def server_info() -> dict:
+    """查看服务器上剪辑工具的版本、已配置了哪些密钥（只显示有没有，不显示内容）和默认模型。"""
+    ver = (Path(__file__).resolve().parent / "VERSION")
+    return {"version": ver.read_text().strip() if ver.exists() else "unknown",
+            "keys": {k: bool(os.environ.get(k, "").strip()) for k, secret in CONFIG_KEYS.items() if secret},
+            "settings": {k: os.environ.get(k, "") for k, secret in CONFIG_KEYS.items() if not secret}}
+
+
+@mcp.tool()
+def set_config(name: str, value: str) -> dict:
+    """修改服务器配置（写入 .env）并自动重启服务，约 5 秒后生效。只允许这些项：
+    OPENROUTER_API_KEY、HEYGEN_API_KEY、OPENROUTER_TTS_MODEL、OPENROUTER_TTS_VOICE、
+    OPENROUTER_VIDEO_MODEL、WHISPER_MODEL、RENDER_WORKERS。密钥写入后不会被读出。"""
+    if name not in CONFIG_KEYS:
+        raise ValueError(f"不允许修改 {name}，可改：{', '.join(CONFIG_KEYS)}")
+    value = (value or "").strip()
+    if not re.fullmatch(r"[\w\-./:+=@]{0,300}", value):
+        raise ValueError("值里有不允许的字符（不能有空格、引号、换行）")
+    lines = ENV_FILE.read_text().splitlines() if ENV_FILE.exists() else []
+    lines = [ln for ln in lines if not ln.startswith(f"{name}=")] + [f"{name}={value}"]
+    ENV_FILE.write_text("\n".join(lines) + "\n")
+    os.chmod(ENV_FILE, 0o600)
+    _restart_later("sleep 2; systemctl restart douyin-editor", "douyin-editor-restart")
+    return {"ok": True, "name": name, "set": bool(value),
+            "note": "服务约 5 秒后重启，之后用 server_info 确认"}
+
+
+@mcp.tool()
+def update_server() -> dict:
+    """从 GitHub 拉取最新代码并重新安装、重启（配置和密钥保留）。在后台执行，通常 1~5 分钟；
+    期间连接会短暂中断，完成后用 server_info 看 version 是否变成最新提交。"""
+    cmd = (f"curl -fsSL https://raw.githubusercontent.com/{REPO}/main/setup.sh | bash "
+           f"> /var/log/douyin-editor-update.log 2>&1")
+    _restart_later(cmd, "douyin-editor-update")
+    return {"started": True, "log": "/var/log/douyin-editor-update.log"}
+
+
 # ---------------------------------------------------------------- HTTP 路由
 @mcp.custom_route("/files/{token}/{name}", methods=["GET", "HEAD"], include_in_schema=False)
 async def files(request: Request):

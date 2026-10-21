@@ -33,6 +33,11 @@ say "复制程序到 $APP_DIR"
 mkdir -p "$APP_DIR/data/music"
 cp -r "$SRC_DIR/app" "$SRC_DIR/requirements.txt" "$APP_DIR/"
 
+# 记录版本（GitHub 最新提交），给 server_info 看
+SHA=$(curl -fsSL --max-time 10 "https://api.github.com/repos/${REPO:-Tony11081/douyin-editor}/commits/${BRANCH:-main}" \
+      | grep -m1 '"sha"' | sed -E 's/.*"([0-9a-f]{40})".*/\1/' || true)
+echo "${SHA:-unknown} $(date '+%Y-%m-%d %H:%M')" > "$APP_DIR/app/VERSION"
+
 say "安装 Python 依赖（首次较慢）"
 python3 -m venv "$APP_DIR/venv"
 PIP_ARGS=()
