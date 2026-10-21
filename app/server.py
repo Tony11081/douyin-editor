@@ -24,6 +24,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 import editor  # noqa: E402
 import tts  # noqa: E402
 import videogen  # noqa: E402
+import heygen  # noqa: E402
 
 TOKEN = os.environ.get("ACCESS_TOKEN", "")
 if len(TOKEN) < 16:
@@ -44,6 +45,8 @@ AI 生成视频：generate_video(prompt, image_url?) → wait_job（通常几分
 render 的 clips 里每段可写自己的 video_id，把多个生成镜头和原片拼成一条成片。
 画面已经做好（例如 Claude 本地渲染的动画）：import_video(成片链接) → tts → mux，
 mux 只合成声音，画面原样复制、不重新编码。
+数字人口播：heygen_avatars / heygen_voices 找到数字人和音色 → heygen_avatar_video(文案) → wait_job
+→ 得到 video_id，之后按普通口播走 transcribe → render（精剪、字幕、标题、BGM）。
 耗时操作都返回 job_id，用 wait_job 轮询。"""
 
 mcp = MCPServer(name="douyin-editor", title="抖音口播剪辑", instructions=INSTRUCTIONS)
@@ -74,7 +77,8 @@ def _submit(kind: str, fn, *args, heavy: bool = True) -> str:
         job["state"] = "running"
         job["progress"] = "处理中"
         try:
-            job["result"] = fn(*args, progress=progress) if kind in ("render", "genvideo") else fn(*args)
+            job["result"] = fn(*args, progress=progress) if kind in ("render", "genvideo", "avatar") \
+                else fn(*args)
             job["state"] = "done"
             job["progress"] = "完成"
         except Exception as e:  # noqa: BLE001
@@ -260,6 +264,37 @@ def mux(spec: dict) -> dict:
         raise ValueError("spec 缺少 video_id")
     editor.video_dir(spec["video_id"])
     return {"job_id": _submit("render", editor.mux, json.loads(json.dumps(spec)))}
+
+
+@mcp.tool()
+def heygen_avatars(filter_text: str | None = None) -> dict:
+    """列出 HeyGen 账号里的数字人（avatar_id）和照片数字人（talking_photo_id）。
+    公共形象很多，用 filter_text 按名字搜用户自己的数字人。"""
+    return heygen.list_avatars(filter_text)
+
+
+@mcp.tool()
+def heygen_voices(filter_text: str | None = None, language: str | None = "Chinese") -> list[dict]:
+    """列出 HeyGen 音色（含用户克隆的声音），默认只看中文；filter_text 可按名字搜。"""
+    return heygen.list_voices(filter_text, language)
+
+
+@mcp.tool()
+def heygen_avatar_video(script: str, voice_id: str, avatar_id: str | None = None,
+                        talking_photo_id: str | None = None, speed: float = 1.0,
+                        aspect_ratio: str = "9:16", background: str | None = None,
+                        avatar_style: str = "normal", test: bool = False,
+                        title: str | None = None, name: str | None = None) -> dict:
+    """用 HeyGen 数字人按文案生成口播视频，完成后自动导入视频库，返回 video_id。返回 job_id，
+    用 wait_job 反复等待（通常几分钟，长文案更久）。
+    - script：口播文案（单段 ≤1500 字）；数字建议写成汉字读法
+    - avatar_id 或 talking_photo_id 二选一；voice_id 用 heygen_voices 查（可用用户自己克隆的声音）
+    - background：#00FF00 这类纯色（方便后期抠像），或图片/视频直链
+    - test=True：HeyGen 测试模式（带水印、不扣额度），先试效果用
+    生成后：transcribe(video_id) → render 精剪、加字幕和 BGM。"""
+    return {"job_id": _submit("avatar", heygen.generate, script, avatar_id, talking_photo_id,
+                              voice_id, speed, aspect_ratio, background, avatar_style, test,
+                              title, name, heavy=False)}
 
 
 @mcp.tool()

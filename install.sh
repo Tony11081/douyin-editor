@@ -79,6 +79,12 @@ EOF
 fi
 grep -q '^OPENROUTER_VIDEO_MODEL=' "$APP_DIR/.env" || \
   echo "OPENROUTER_VIDEO_MODEL=google/veo-3.1" >> "$APP_DIR/.env"
+grep -q '^HEYGEN_API_KEY=' "$APP_DIR/.env" || \
+  printf '# HeyGen 数字人：填上 API Key 后 systemctl restart douyin-editor\nHEYGEN_API_KEY=\n' >> "$APP_DIR/.env"
+if [ -n "${HEYGEN_API_KEY:-}" ]; then
+  sed -i "s|^HEYGEN_API_KEY=.*|HEYGEN_API_KEY=${HEYGEN_API_KEY}|" "$APP_DIR/.env"
+  say "已写入 HeyGen 密钥"
+fi
 if [ -n "${OPENROUTER_API_KEY:-}" ]; then
   sed -i "s|^OPENROUTER_API_KEY=.*|OPENROUTER_API_KEY=${OPENROUTER_API_KEY}|" "$APP_DIR/.env"
   say "已写入 OpenRouter 密钥"

@@ -71,6 +71,15 @@ claude.ai →「设置 → 连接器 → 添加自定义连接器」，名称填
 默认模型在 `.env` 的 `OPENROUTER_VIDEO_MODEL`。视频按秒计费，比配音贵得多，
 建议先用短时长、低分辨率试效果，满意再出正式版。
 
+## HeyGen 数字人口播
+
+用你在 HeyGen 里的数字人和克隆音色，按文案生成口播视频，自动进视频库，再走正常的口播精剪流程。
+
+1. HeyGen 后台 → Settings → API 复制 API Key
+2. 写进 `.env` 的 `HEYGEN_API_KEY=` 后重启，或更新时带上：`sudo DOMAIN=... HEYGEN_API_KEY=... bash`
+3. 相关工具：`heygen_avatars`（查数字人 ID）、`heygen_voices`（查音色，含克隆声音）、
+   `heygen_avatar_video`（生成，`test=True` 为带水印的免费测试；`background="#00FF00"` 方便抠像）
+
 ## 常用命令
 
 ```bash
