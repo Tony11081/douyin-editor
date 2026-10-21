@@ -334,6 +334,24 @@ def transcribe(video_id: str, language: str = "zh") -> dict[str, Any]:
     return data
 
 
+def whisper_file(path: Path, language: str = "zh") -> str:
+    """把一段音频转成文字（用于核对配音念得对不对）。"""
+    global _model
+    import numpy as np
+    p = subprocess.run(["ffmpeg", "-v", "error", "-i", str(path), "-vn", "-ac", "1", "-ar", "16000",
+                        "-f", "f32le", "-"], capture_output=True, timeout=600)
+    if p.returncode != 0:
+        raise EditorError(f"提取音频失败:\n{p.stderr.decode(errors='ignore')[-800:]}")
+    audio = np.frombuffer(p.stdout, dtype=np.float32)
+    from faster_whisper import WhisperModel
+    if _model is None:
+        _model = WhisperModel(WHISPER_MODEL, device="auto", compute_type="int8")
+    prompt = "以下是普通话，使用简体中文和标点。" if language.startswith("zh") else None
+    segs, _ = _model.transcribe(audio, language=language, initial_prompt=prompt, beam_size=5,
+                                vad_filter=False)
+    return _to_simplified("".join(sg.text for sg in segs).strip())
+
+
 def transcript_text(data: dict[str, Any]) -> str:
     """紧凑格式：每句一行 + 逐字时间，方便精确下刀。"""
     lines = []
@@ -744,14 +762,25 @@ def _sfx_files() -> dict[str, Path]:
     return files
 
 
-def render(spec: dict[str, Any], progress=lambda msg: None) -> dict[str, Any]:
+EFFECT_DEFAULTS = {"drift": 0.04, "oversample": 1.5, "flash_first": True, "sfx": True,
+                   "sfx_volume": 0.35, "progress_bar": True, "bar_color": "#FFE14D", "bar_height": 10}
+TOL = 0.05  # 允许的时间误差（秒），大约一帧多一点
+
+
+def plan_render(spec: dict[str, Any]) -> dict[str, Any]:
+    """校验剪辑方案并算出完整的执行计划（时间线、字幕、配音位置、实际生效的设置）。
+    不调用 ffmpeg、不产生费用；有任何做不到或不明确的地方直接报错，不猜。"""
+    import specs  # 延迟导入，避免循环引用
+    specs.validate(spec, "render")
     video_id = spec["video_id"]
-    d = video_dir(video_id)
+    video_dir(video_id)
     meta = load_meta(video_id)
+    warnings: list[str] = []
     W, H = int(spec.get("width", 1080)), int(spec.get("height", 1920))
     fps = int(spec.get("fps", 30))
+    if W % 2 or H % 2:
+        raise EditorError(f"width/height 必须是偶数（现在 {W}x{H}）")
     clips = spec.get("clips") or [{"start": 0, "end": meta["duration"]}]
-    # 每个片段可以来自不同的视频（clips 里写 video_id，例如 AI 生成的镜头），不写就用主视频
     metas: dict[str, dict[str, Any]] = {video_id: meta}
 
     def clip_meta(c: dict) -> dict[str, Any]:
@@ -761,20 +790,122 @@ def render(spec: dict[str, Any], progress=lambda msg: None) -> dict[str, Any]:
             metas[vid] = load_meta(vid)
         return metas[vid]
 
-    for c in clips:
+    timeline, t_out = [], 0.0
+    for i, c in enumerate(clips):
         cm = clip_meta(c)
-        c["start"] = max(0.0, float(c.get("start", 0)))
-        c["end"] = min(float(c.get("end", cm["duration"])), cm["duration"])
+        s0 = float(c.get("start", 0))
+        e0 = float(c.get("end", cm["duration"]))
+        if e0 > cm["duration"] + TOL:
+            raise EditorError(f"clips[{i}].end = {e0} 超过视频 {cm['video_id']} 的时长 "
+                              f"{cm['duration']:.2f} 秒")
+        c["start"], c["end"] = s0, min(e0, cm["duration"])
         if c["end"] - c["start"] < 0.1:
-            raise EditorError(f"片段太短或时间不对: {c}")
+            raise EditorError(f"clips[{i}] 太短或 start ≥ end（{s0} → {e0}），每段至少 0.1 秒")
+        dur = c["end"] - c["start"]
+        timeline.append({"index": i, "video_id": cm["video_id"], "src_start": round(c["start"], 3),
+                         "src_end": round(c["end"], 3), "out_start": round(t_out, 3),
+                         "out_end": round(t_out + dur, 3), "zoom": c.get("zoom", 1.0)})
+        t_out += dur
+    total = t_out
+
+    eff = {**EFFECT_DEFAULTS, **(spec.get("effects") or {})}
+    defaults_used = sorted(set(EFFECT_DEFAULTS) - set(spec.get("effects") or {}))
+
+    vo = spec.get("voiceover")
+    vo_placed: list[dict] = []
+    if vo:
+        import tts
+        vo_placed = tts.plan_voice(vo["tts_id"], vo.get("at"), total)
+
+    cap = spec.get("captions", "auto")
+    style = spec.get("caption_style") or {}
+    max_chars = int(style.get("max_chars", 12))
+    corrections = spec.get("corrections") or {}
+    cues: list[Cue] = []
+    caption_mode = "none"
+    if cap == "voiceover" and not vo:
+        raise EditorError('captions = "voiceover" 但没有 voiceover')
+    if cap != "none":
+        tr = load_transcript(video_id)
+        words = tr["words"] if tr else None
+        has_text = any("text" in c for c in clips)
+        if vo and (cap == "voiceover" or (not words and not has_text)):
+            cues = voiceover_cues(vo_placed, max_chars, corrections, total)
+            caption_mode = "voiceover"
+        else:
+            if not words and not has_text:
+                raise EditorError("还没有转写，也没给片段文字：先调用 transcribe，或在 clips 里写 text，"
+                                  '或设 captions: "none"')
+            for c in clips:
+                vid = c.get("video_id")
+                if vid and vid != video_id:
+                    t2 = load_transcript(vid)
+                    if not t2 and "text" not in c:
+                        raise EditorError(f"clips 里来自视频 {vid} 的片段没有转写也没写 text，字幕没法生成")
+                    c["_words"] = t2["words"] if t2 else []
+            try:
+                cues = build_cues(clips, words, max_chars, corrections)
+            finally:
+                for c in clips:
+                    c.pop("_words", None)
+            caption_mode = "clip_text+transcript" if has_text and words else (
+                "clip_text" if has_text else "transcript")
+        cap_text = "".join(q.text for q in cues)
+        for h in spec.get("highlight_words") or []:
+            if h not in cap_text:
+                warnings.append(f"高亮词「{h}」没有出现在字幕里，不会被标出")
+        for bad in corrections:
+            if bad in cap_text:
+                warnings.append(f"更正「{bad}」后字幕里仍有「{bad}」")
+    title = spec.get("title")
+    if title and title.get("duration") and float(title["duration"]) > total + TOL:
+        warnings.append(f"标题时长 {title['duration']} 秒超过成片 {total:.2f} 秒，会显示到结尾")
+    bgm = spec.get("bgm")
+    if bgm:
+        if not bgm.get("name") and not bgm.get("url"):
+            raise EditorError("bgm 需要 name（list_music 里的文件名）或 url")
+        if bgm.get("name") and not (MUSIC / Path(bgm["name"]).name).exists():
+            raise EditorError(f"音乐库里没有 {bgm['name']}（用 list_music 查）")
+    for i, ov in enumerate(spec.get("overlays") or []):
+        if float(ov.get("start", 0)) >= total:
+            raise EditorError(f"overlays[{i}].start = {ov.get('start')} 超出成片时长 {total:.2f}")
+    pre = CAPTION_PRESETS.get(style.get("preset", "douyin"), CAPTION_PRESETS["douyin"])
+    return {"clips": clips, "metas": metas, "timeline": timeline, "total": round(total, 3),
+            "W": W, "H": H, "fps": fps, "eff": eff, "vo_placed": vo_placed, "cues": cues,
+            "warnings": warnings,
+            "applied": {"width": W, "height": H, "fps": fps, "duration": round(total, 3),
+                        "effects": eff, "effects_defaults_used": defaults_used,
+                        "caption_mode": caption_mode, "caption_style": {**pre, **style},
+                        "audio": {"denoise": True, "loudnorm": True, **(spec.get("audio") or {})},
+                        "preset": spec.get("preset", "medium")}}
+
+
+def plan_view(plan: dict[str, Any]) -> dict[str, Any]:
+    return {"duration": plan["total"], "timeline": plan["timeline"],
+            "voiceover": [{"start": round(p["start"], 2), "end": round(p["end"], 2), "text": p["text"]}
+                          for p in plan["vo_placed"]],
+            "captions": [{"start": round(q.start, 2), "end": round(q.end, 2), "text": q.text}
+                         for q in plan["cues"]],
+            "applied": plan["applied"], "warnings": plan["warnings"]}
+
+
+def render(spec: dict[str, Any], progress=lambda msg: None, dry_run: bool = False) -> dict[str, Any]:
+    plan = plan_render(spec)
+    if dry_run:
+        return {"dry_run": True, **plan_view(plan)}
+    video_id = spec["video_id"]
+    clips, metas = plan["clips"], plan["metas"]
+    W, H, fps, eff = plan["W"], plan["H"], plan["fps"], plan["eff"]
+    total = plan["total"]
+
+    def clip_meta(c: dict) -> dict[str, Any]:
+        return metas[c.get("video_id") or video_id]
+
     out_id = uuid.uuid4().hex[:12]
     work = OUTPUTS / f".work_{out_id}"
     work.mkdir()
     color_spec = spec.get("color", {}) or {}
     focus_y = float(spec.get("focus_y", 0.35))
-    eff = {"drift": 0.04, "oversample": 1.5, "flash_first": True, "sfx": True,
-           "sfx_volume": 0.35, "progress_bar": True, "bar_color": "#FFE14D", "bar_height": 10,
-           **(spec.get("effects", {}) or {})}
     whoosh_at: list[float] = []
     try:
         parts = []
@@ -785,7 +916,7 @@ def render(spec: dict[str, Any], progress=lambda msg: None) -> dict[str, Any]:
             csrc = VIDEOS / cm["video_id"] / cm["source"]
             color = _color_filter(cm, color_spec)
             dur = c["end"] - c["start"]
-            z = max(1.0, float(c.get("zoom", 1.0)))
+            z = float(c.get("zoom", 1.0))
             fy = float(c.get("focus_y", focus_y))
             drift = float(c.get("drift", eff["drift"]))
             if drift > 0:
@@ -829,47 +960,18 @@ def render(spec: dict[str, Any], progress=lambda msg: None) -> dict[str, Any]:
         joined = work / "joined.mkv"
         run(["ffmpeg", "-y", "-v", "error", "-f", "concat", "-safe", "0", "-i", str(lst),
              "-c", "copy", str(joined)])
-        total = sum(c["end"] - c["start"] for c in clips)
-
-        # AI 配音：每句放到成片时间轴上
+        # AI 配音：每句放到成片时间轴上（位置已在计划里校验过）
         vo = spec.get("voiceover") or None
         vo_track: Path | None = None
-        vo_placed: list[dict] = []
+        vo_placed: list[dict] = plan["vo_placed"]
         if vo:
             import tts  # 延迟导入，避免循环引用
-            if not vo.get("tts_id"):
-                raise EditorError("voiceover 缺少 tts_id（先调用 tts 生成配音）")
             progress("铺配音")
             vo_track = work / "voiceover.wav"
-            vo_placed = tts.build_voice_track(vo["tts_id"], vo.get("at"), total, vo_track)
-
-        # 字幕
+            tts.build_voice_track(vo["tts_id"], vo.get("at"), total, vo_track)
         progress("生成字幕")
-        cap = spec.get("captions", "auto")
-        cues: list[Cue] = []
+        cues: list[Cue] = plan["cues"]
         style = spec.get("caption_style", {}) or {}
-        max_chars = int(style.get("max_chars", 12))
-        corrections = spec.get("corrections", {}) or {}
-        if cap != "none":
-            tr = load_transcript(video_id)
-            words = tr["words"] if tr else None
-            has_text = any("text" in c for c in clips)
-            if vo and (cap == "voiceover" or (not words and not has_text)):
-                cues = voiceover_cues(vo_placed, max_chars, corrections, total)
-            else:
-                if not words and not has_text:
-                    raise EditorError("还没有转写，也没给片段文字：先调用 transcribe，或在 clips 里写 text")
-                # 来自别的视频的片段用它自己的转写
-                for c in clips:
-                    vid = c.get("video_id")
-                    if vid and vid != video_id:
-                        t2 = load_transcript(vid)
-                        c["_words"] = t2["words"] if t2 else []
-                try:
-                    cues = build_cues(clips, words, max_chars, corrections)
-                finally:
-                    for c in clips:
-                        c.pop("_words", None)
         title = spec.get("title")
         ass = work / "subs.ass"
         write_ass(ass, cues, W, H, style, spec.get("highlight_words", []) or [], title)
@@ -1001,8 +1103,12 @@ def render(spec: dict[str, Any], progress=lambda msg: None) -> dict[str, Any]:
             fc[1] = fc[1].replace("[voice]", "[a]")
         out = OUTPUTS / f"{out_id}.mp4"
         _final(work, inputs, fc, total, fps, spec, out)
+        progress("成片自检")
+        checks = verify_output(out, {"width": W, "height": H, "fps": fps, "duration": total,
+                                     "voiceover": vo_placed})
         result = {"output_id": out_id, "file": out.name, "duration": round(total, 2),
-                  "width": W, "height": H, "voiceover": [
+                  "width": W, "height": H, "checks": checks, "applied": plan["applied"],
+                  "warnings": plan["warnings"], "voiceover": [
                       {"start": round(p["start"], 2), "end": round(p["end"], 2), "text": p["text"]}
                       for p in vo_placed], "captions": [
                       {"start": round(q.start, 2), "end": round(q.end, 2), "text": q.text} for q in cues]}
@@ -1012,11 +1118,68 @@ def render(spec: dict[str, Any], progress=lambda msg: None) -> dict[str, Any]:
         shutil.rmtree(work, ignore_errors=True)
 
 
+def _mean_db(path: Path, ss: float, dur: float) -> float:
+    p = subprocess.run(["ffmpeg", "-v", "info", "-ss", f"{ss:.3f}", "-t", f"{max(0.05, dur):.3f}", "-i",
+                        str(path), "-vn", "-af", "volumedetect", "-f", "null", "-"],
+                       capture_output=True, text=True, timeout=300)
+    m = re.search(r"mean_volume:\s*(-?[\d.]+|-inf) dB", p.stderr)
+    return -120.0 if not m or m.group(1) == "-inf" else float(m.group(1))
+
+
+def _loudness(path: Path) -> float | None:
+    p = subprocess.run(["ffmpeg", "-v", "info", "-i", str(path), "-vn", "-af", "ebur128", "-f", "null", "-"],
+                       capture_output=True, text=True, timeout=900)
+    m = re.findall(r"I:\s*(-?[\d.]+) LUFS", p.stderr)
+    return float(m[-1]) if m else None
+
+
+def _vhash(path: Path) -> str:
+    return run(["ffmpeg", "-v", "error", "-i", str(path), "-map", "0:v:0", "-c", "copy",
+                "-f", "hash", "-hash", "md5", "-"]).strip()
+
+
+def verify_output(out: Path, expect: dict[str, Any]) -> dict[str, Any]:
+    """成片自检：分辨率、帧率、时长、有没有声音、每句配音位置是否真的有声音、整体响度。"""
+    items: list[dict[str, Any]] = []
+
+    def add(name: str, ok: bool, detail: str) -> None:
+        items.append({"check": name, "ok": bool(ok), "detail": detail})
+
+    info = probe(out)
+    if "width" in expect:
+        add("分辨率", (info["width"], info["height"]) == (expect["width"], expect["height"]),
+            f"{info['width']}x{info['height']}（要求 {expect['width']}x{expect['height']}）")
+    if "fps" in expect:
+        num_, _, den = str(info["fps"]).partition("/")
+        real = float(num_) / float(den or 1) if float(den or 1) else 0
+        add("帧率", abs(real - expect["fps"]) < 0.01, f"{real:g}（要求 {expect['fps']}）")
+    fps = float(expect.get("fps", 30))
+    tol = max(2 / fps, 0.08)
+    add("时长", abs(info["duration"] - expect["duration"]) <= tol,
+        f"{info['duration']:.3f} 秒（要求 {expect['duration']:.3f}，允许 ±{tol:.2f}）")
+    add("有音轨", info["has_audio"], "有" if info["has_audio"] else "没有声音")
+    if info["has_audio"]:
+        for p in expect.get("voiceover", []):
+            mid, span = p["start"] + 0.1, max(0.1, p["end"] - p["start"] - 0.2)
+            db = _mean_db(out, mid, span)
+            add(f"配音第{p['index'] + 1}句有声", db > -40, f"{p['start']:.2f}–{p['end']:.2f} 秒，"
+                f"平均 {db:.1f} dB")
+        lufs = _loudness(out)
+        if lufs is not None:
+            add("整体响度", -20 <= lufs <= -9, f"{lufs:.1f} LUFS（抖音建议 -16 ~ -12）")
+    if expect.get("video_source"):
+        same = _vhash(out) == _vhash(expect["video_source"])
+        add("画面未改动", same, "与原片逐帧一致" if same else "画面和原片不一致")
+    return {"ok": all(i["ok"] for i in items), "items": items}
+
+
 def mux(spec: dict[str, Any], progress=lambda msg: None) -> dict[str, Any]:
     """只换声音、不动画面：视频流原样复制（-c:v copy，不重新编码），
     铺上 AI 配音和 BGM（人声出现时自动压低）。适合画面已经在别处做好的成片。
     spec: {video_id, voiceover?: {tts_id, at?, volume?}, bgm?: {name|url, volume?, fade_in?, fade_out?, start?},
            original_volume?=0（原片声音保留多少）, loudnorm?=true}"""
+    import specs  # 延迟导入，避免循环引用
+    specs.validate(spec, "mux")
     video_id = spec["video_id"]
     d = video_dir(video_id)
     meta = load_meta(video_id)
@@ -1079,8 +1242,11 @@ def mux(spec: dict[str, Any], progress=lambda msg: None) -> dict[str, Any]:
         run(["ffmpeg", "-y", "-v", "error", *inputs, "-filter_complex", ";".join(fc),
              "-map", "0:v:0", "-map", "[a]", "-c:v", "copy", "-c:a", "aac", "-b:a", "192k",
              "-ar", "48000", "-t", f"{total:.3f}", "-movflags", "+faststart", str(out)])
+        progress("成片自检")
+        checks = verify_output(out, {"duration": total, "voiceover": placed, "video_source": src})
         result = {"output_id": out_id, "file": out.name, "duration": round(total, 2),
                   "width": meta["width"], "height": meta["height"], "video_copied": True,
+                  "checks": checks,
                   "voiceover": [{"start": round(p["start"], 2), "end": round(p["end"], 2),
                                  "text": p["text"]} for p in placed], "captions": []}
         (OUTPUTS / f"{out_id}.json").write_text(json.dumps({"spec": spec, **result}, ensure_ascii=False))

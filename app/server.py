@@ -119,7 +119,8 @@ def _tts_view(meta: dict[str, Any]) -> dict[str, Any]:
             "total": meta["total"], "gap": meta["gap"],
             "segments": [{k: it[k] for k in ("index", "text", "duration", "start", "end")}
                          for it in meta["segments"]],
-            "preview_url": f"{PUBLIC_URL}/files/{TOKEN}/tts/{meta['tts_id']}.mp3"}
+            "preview_url": f"{PUBLIC_URL}/files/{TOKEN}/tts/{meta['tts_id']}.mp3",
+            "verify": meta.get("verify")}
 
 
 # ---------------------------------------------------------------- 工具
@@ -179,36 +180,49 @@ def render(spec: dict) -> dict:
     - highlight_words: ["便宜", "百分百"] 字幕里标黄的重点词
     - caption_style: {font_size?, y?=0.68（字幕底边所在高度比例）, max_chars?=12,
         color?="#FFFFFF", highlight_color?="#FFD400", outline?, font?}
-    - title: {text, duration?（秒，不填=全程）, y?=0.12, box_color?="#E6312E"} 顶部标题条
+    - title: {text, duration?（秒，不填=全程）, y?=0.085, font_size?, color?, color2?, outline_color?}
+        顶部大标题（第一行 color，第二行起 color2）
     - bgm: {name（list_music 里的文件名）或 url, volume?=0.12, fade_in?=0.5, fade_out?=1.5}
         人声出现时 BGM 自动压低。
     - audio: {denoise?=true, loudnorm?=true}
     - voiceover: {tts_id, at?: [每句在成片里的开始秒数，数量和配音句数一致；不填按配音顺排],
         volume?=1.0, original_volume?=0（原片声音保留多少，0 = 只要配音）}
         有 voiceover 且原片没转写时，字幕自动按配音文字生成；也可 captions: "voiceover" 强制使用。
+    - effects: {drift?=0.04（缓慢推拉，0 关闭）, flash_first?=true, sfx?=true（转场音效）,
+        progress_bar?=true, bar_color?, bar_height?} —— 不写就用默认值，结果的 applied 会列出来
     - width?=1080, height?=1920, fps?=30, focus_y?=0.35（裁切时人脸偏上的位置）
+    严格模式：写错的参数名、类型、超出范围的值、超出视频时长的片段都会直接报错，不会被忽略或偷偷改。
+    建议先用 validate_spec 预演，确认时间线、字幕、配音位置无误再 render。
+    完成结果里 checks 是成片自检（分辨率、帧率、时长、每句配音有声、响度），warnings 是需要留意的地方。
     """
-    if "video_id" not in spec:
-        raise ValueError("spec 缺少 video_id")
-    editor.video_dir(spec["video_id"])
-    return {"job_id": _submit("render", editor.render, json.loads(json.dumps(spec)))}
+    spec = json.loads(json.dumps(spec))
+    editor.plan_render(json.loads(json.dumps(spec)))  # 先同步校验，有问题马上报错
+    return {"job_id": _submit("render", editor.render, spec)}
+
+
+@mcp.tool()
+def validate_spec(spec: dict) -> dict:
+    """预演 render：严格校验剪辑方案，返回完整时间线（每段在成片里的起止）、字幕列表、配音位置、
+    实际生效的设置（含默认值）和提醒。不渲染、不花钱，几秒出结果。"""
+    return editor.render(json.loads(json.dumps(spec)), dry_run=True)
 
 
 @mcp.tool()
 def tts(segments: list[str], model: str | None = None, voice: str | None = None,
         instructions: str | None = None, speed: float | None = None,
-        gap: float = 0.3) -> dict:
+        gap: float = 0.3, verify: bool = True) -> dict:
     """AI 配音（OpenRouter 语音接口）。segments 是逐句旁白（建议一句一个镜头），
     每句单独生成并去掉首尾静音，wait_job 完成后返回 tts_id、每句时长和试听链接 preview_url。
     - model：默认用服务器 .env 的 OPENROUTER_TTS_MODEL；可用 tts_voices 查模型
     - voice：音色 ID（随模型不同，例如 OpenAI 的 alloy、nova）
     - instructions：语气说明，如「沉稳的知识类讲解，语速稍快」（OpenAI / Gemini / Fish Audio 支持）
     - speed：语速倍率（部分模型支持）；gap：顺排时句与句的间隔秒数
-    数字、百分号建议写成汉字读法（如「百分之二」），字幕里再用 corrections 改回「2%」。"""
-    if not isinstance(segments, list) or not segments:
-        raise ValueError("segments 需要是非空的句子列表")
+    数字、百分号建议写成汉字读法（如「百分之二」），字幕里再用 corrections 改回「2%」。
+    verify=True（默认）：生成后用 Whisper 逐句听写并和原文比对，结果里 verify.flagged 是可能念错的句子。"""
+    if not isinstance(segments, list) or not segments or not all(isinstance(x, str) for x in segments):
+        raise ValueError("segments 需要是非空的句子列表（每项是文字）")
     return {"job_id": _submit("tts", tts.synthesize, segments, model, voice, instructions,
-                              speed, gap, heavy=False)}
+                              speed, gap, True, None, verify, heavy=False)}
 
 
 @mcp.tool()
@@ -260,10 +274,11 @@ def mux(spec: dict) -> dict:
     - voiceover: {tts_id, at?: [每句开始秒数], volume?=1.0}
     - bgm: {name 或 url, volume?=0.12, fade_in?=0.5, fade_out?=1.5, start?=0}，有配音时自动避让
     - original_volume?=0：成片原有声音保留多少；loudnorm?=true"""
-    if "video_id" not in spec:
-        raise ValueError("spec 缺少 video_id")
+    import specs
+    spec = json.loads(json.dumps(spec))
+    specs.validate(spec, "mux")
     editor.video_dir(spec["video_id"])
-    return {"job_id": _submit("render", editor.mux, json.loads(json.dumps(spec)))}
+    return {"job_id": _submit("render", editor.mux, spec)}
 
 
 @mcp.tool()
