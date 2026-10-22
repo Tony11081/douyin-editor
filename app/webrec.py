@@ -98,8 +98,12 @@ _INJECT = r"""
 _SELECTOR_RE = re.compile(r"^(text=|css=|xpath=|role=|id=|#|\.|\[|//|\*|[a-zA-Z][\w-]*[.#\[:>])")
 
 
+_BARE_TAGS = {"h1", "h2", "h3", "h4", "main", "header", "footer", "nav", "section", "article", "form",
+              "button", "input", "textarea", "select", "img", "table"}
+
+
 def _is_selector(s: str) -> bool:
-    return bool(_SELECTOR_RE.match(s)) or " > " in s
+    return bool(_SELECTOR_RE.match(s)) or " > " in s or s.lower() in _BARE_TAGS
 
 
 def _by_text(page, s: str):

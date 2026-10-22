@@ -1027,14 +1027,18 @@ def render(spec: dict[str, Any], progress=lambda msg: None, dry_run: bool = Fals
                 opath = _cached_download(ov["url"], "overlays")
             dec = ["-c:v", "libvpx-vp9"] if opath.suffix.lower() == ".webm" else []
             st = float(ov.get("start", 0))
-            pre: list[str] = []
-            if ov.get("from") is not None:
-                pre += ["-ss", f"{float(ov['from']):.3f}"]
-            if ov.get("duration") is not None:
-                pre += ["-t", f"{float(ov['duration']):.3f}"]
-            inputs += [*dec, *pre, "-itsoffset", f"{st:.3f}", "-i", str(opath)]
+            inputs += [*dec, "-i", str(opath)]
             nin += 1
-            chain = ["format=yuva420p"]
+            # 用滤镜截取和平移时间（输入端 -ss/-itsoffset 在关键帧稀疏的素材上会整体错位）
+            chain = []
+            fr = float(ov.get("from") or 0)
+            if fr > 0 or ov.get("duration") is not None:
+                trim = [f"start={fr:.3f}"]
+                if ov.get("duration") is not None:
+                    trim.append(f"duration={float(ov['duration']):.3f}")
+                chain.append("trim=" + ":".join(trim))
+            chain.append(f"setpts=PTS-STARTPTS+{st:.3f}/TB")
+            chain.append("format=yuva420p")
             if ov.get("w") or ov.get("h"):
                 chain.append(f"scale={int(ov.get('w', -2))}:{int(ov.get('h', -2))}:flags=lanczos")
             fd = float(ov.get("fade", 0) or 0)
