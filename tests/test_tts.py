@@ -100,4 +100,23 @@ assert minfo["has_audio"] and abs(minfo["duration"] - 12) < 0.15, minfo
 out = mout
 print("mux vol before voice / during voice:", vol(0.0, 0.4), vol(1.0, 1.0))
 assert vol(1.0, 1.0) > vol(0.0, 0.4) + 6, "配音没铺上"
+# mux speed：1.5 倍速，时长缩短、配音位置按比例前移、帧率不变
+sres = editor.mux({"video_id": vid, "voiceover": {"tts_id": meta["tts_id"], "at": at},
+                   "bgm": {"name": "bed.mp3", "volume": 0.1}, "speed": 1.5})
+sout = editor.OUTPUTS / sres["file"]
+sinfo = editor.probe(sout)
+assert not sres["video_copied"] and sres["speed"] == 1.5
+assert abs(sinfo["duration"] - 8) < 0.15, sinfo
+assert sinfo["fps"] == editor.probe(d / "source.mp4")["fps"], sinfo
+assert [round(v["start"], 2) for v in sres["voiceover"]] == [round(x / 1.5, 2) for x in at]
+assert sres["checks"]["ok"], sres["checks"]
+out = sout
+first = at[0] / 1.5
+print("speed vol before voice / during voice:", vol(0.0, 0.25), vol(first + 0.3, 0.5))
+assert vol(first + 0.3, 0.5) > vol(0.0, 0.25) + 6, "变速后配音位置不对"
+try:
+    editor.mux({"video_id": vid, "bgm": {"name": "bed.mp3"}, "speed": 3})
+    raise AssertionError("speed 超范围应该报错")
+except Exception as e:  # noqa: BLE001
+    assert "speed" in str(e), e
 print("OK")

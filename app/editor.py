@@ -1177,7 +1177,9 @@ def mux(spec: dict[str, Any], progress=lambda msg: None) -> dict[str, Any]:
     """只换声音、不动画面：视频流原样复制（-c:v copy，不重新编码），
     铺上 AI 配音和 BGM（人声出现时自动压低）。适合画面已经在别处做好的成片。
     spec: {video_id, voiceover?: {tts_id, at?, volume?}, bgm?: {name|url, volume?, fade_in?, fade_out?, start?},
-           original_volume?=0（原片声音保留多少）, loudnorm?=true}"""
+           original_volume?=0（原片声音保留多少）, loudnorm?=true,
+           speed?=1（整体变速 0.5~2：画面和配音一起加速、音调不变，BGM 保持原速铺满；
+                     不为 1 时画面要重新编码）}"""
     import specs  # 延迟导入，避免循环引用
     specs.validate(spec, "mux")
     video_id = spec["video_id"]
@@ -1185,6 +1187,10 @@ def mux(spec: dict[str, Any], progress=lambda msg: None) -> dict[str, Any]:
     meta = load_meta(video_id)
     src = d / meta["source"]
     total = float(meta["duration"])
+    speed = float(spec.get("speed", 1.0))
+    sped = abs(speed - 1.0) > 1e-3
+    final = total / speed  # 变速后的成片时长
+    tempo = f",atempo={speed:.4f}" if sped else ""  # atempo 变速不变调
     vo = spec.get("voiceover") or None
     bgm = spec.get("bgm") or None
     ovol = float(spec.get("original_volume", 0.0))
@@ -1207,11 +1213,11 @@ def mux(spec: dict[str, Any], progress=lambda msg: None) -> dict[str, Any]:
             placed = tts.build_voice_track(vo["tts_id"], vo.get("at"), total, track)
             inputs += ["-i", str(track)]
             fc.append(f"[{nin}:a]aresample=48000,aformat=channel_layouts=stereo,"
-                      f"volume={float(vo.get('volume', 1.0))}{norm}[voice]")
+                      f"volume={float(vo.get('volume', 1.0))}{tempo}{norm}[voice]")
             nin += 1
             mix.append("[voice]")
         if ovol > 0 and meta["has_audio"]:
-            fc.append(f"[0:a]aresample=48000,aformat=channel_layouts=stereo,volume={ovol}[orig]")
+            fc.append(f"[0:a]aresample=48000,aformat=channel_layouts=stereo,volume={ovol}{tempo}[orig]")
             mix.append("[orig]")
         if bgm:
             bpath = MUSIC / Path(bgm["name"]).name if bgm.get("name") else None
@@ -1222,8 +1228,8 @@ def mux(spec: dict[str, Any], progress=lambda msg: None) -> dict[str, Any]:
             fo, fi = float(bgm.get("fade_out", 1.5)), float(bgm.get("fade_in", 0.5))
             inputs += ["-stream_loop", "-1", "-ss", f"{float(bgm.get('start', 0)):.2f}", "-i", str(bpath)]
             fc.append(f"[{nin}:a]aresample=48000,aformat=channel_layouts=stereo,"
-                      f"volume={float(bgm.get('volume', 0.12))},atrim=0:{total:.3f},afade=t=in:d={fi},"
-                      f"afade=t=out:st={max(0, total - fo):.3f}:d={fo}[bgm]")
+                      f"volume={float(bgm.get('volume', 0.12))},atrim=0:{final:.3f},afade=t=in:d={fi},"
+                      f"afade=t=out:st={max(0, final - fo):.3f}:d={fo}[bgm]")
             nin += 1
             if mix:  # 有人声时 BGM 自动避让
                 key = mix[0]
@@ -1235,18 +1241,27 @@ def mux(spec: dict[str, Any], progress=lambda msg: None) -> dict[str, Any]:
         progress("合成声音")
         if len(mix) > 1:
             fc.append(f"{''.join(mix)}amix=inputs={len(mix)}:duration=longest:normalize=0,"
-                      f"alimiter=limit=0.97,apad,atrim=0:{total:.3f}[a]")
+                      f"alimiter=limit=0.97,apad,atrim=0:{final:.3f}[a]")
         else:
-            fc.append(f"{mix[0]}apad,atrim=0:{total:.3f}[a]")
+            fc.append(f"{mix[0]}apad,atrim=0:{final:.3f}[a]")
+        if sped:  # 变速：画面按 speed 加快并重新编码，帧率保持原片
+            placed = [{**p, "start": p["start"] / speed, "end": p["end"] / speed} for p in placed]
+            fps = meta.get("fps") or "30"
+            fc.append(f"[0:v]setpts=PTS/{speed:.4f}[v]")
+            vmap = ["-map", "[v]", "-c:v", "libx264", "-preset", "medium", "-crf", "18",
+                    "-pix_fmt", "yuv420p", "-r", str(fps)]
+        else:
+            vmap = ["-map", "0:v:0", "-c:v", "copy"]
         out = OUTPUTS / f"{out_id}.mp4"
         run(["ffmpeg", "-y", "-v", "error", *inputs, "-filter_complex", ";".join(fc),
-             "-map", "0:v:0", "-map", "[a]", "-c:v", "copy", "-c:a", "aac", "-b:a", "192k",
-             "-ar", "48000", "-t", f"{total:.3f}", "-movflags", "+faststart", str(out)])
+             *vmap, "-map", "[a]", "-c:a", "aac", "-b:a", "192k",
+             "-ar", "48000", "-t", f"{final:.3f}", "-movflags", "+faststart", str(out)])
         progress("成片自检")
-        checks = verify_output(out, {"duration": total, "voiceover": placed, "video_source": src})
-        result = {"output_id": out_id, "file": out.name, "duration": round(total, 2),
-                  "width": meta["width"], "height": meta["height"], "video_copied": True,
-                  "checks": checks,
+        checks = verify_output(out, {"duration": final, "voiceover": placed,
+                                     "video_source": None if sped else src})
+        result = {"output_id": out_id, "file": out.name, "duration": round(final, 2),
+                  "width": meta["width"], "height": meta["height"], "video_copied": not sped,
+                  "speed": speed, "checks": checks,
                   "voiceover": [{"start": round(p["start"], 2), "end": round(p["end"], 2),
                                  "text": p["text"]} for p in placed], "captions": []}
         (OUTPUTS / f"{out_id}.json").write_text(json.dumps({"spec": spec, **result}, ensure_ascii=False))

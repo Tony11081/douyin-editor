@@ -266,14 +266,16 @@ def video_models(filter_text: str | None = None) -> list[dict]:
 
 @mcp.tool()
 def mux(spec: dict) -> dict:
-    """只混音、不动画面：视频画面原样复制（不重新编码、不加任何特效/字幕），
+    """只混音、不动画面：视频画面原样复制（不重新编码、不加任何特效/字幕；speed≠1 时除外），
     只把 AI 配音和背景音乐合进去。用于画面已经做好的成片（例如 Claude 用代码渲染的动画）。
     返回 job_id；wait_job 完成后给出 download_url。
     spec 字段：
     - video_id（必填）：先用 import_video 导入做好的成片
     - voiceover: {tts_id, at?: [每句开始秒数], volume?=1.0}
     - bgm: {name 或 url, volume?=0.12, fade_in?=0.5, fade_out?=1.5, start?=0}，有配音时自动避让
-    - original_volume?=0：成片原有声音保留多少；loudnorm?=true"""
+    - original_volume?=0：成片原有声音保留多少；loudnorm?=true
+    - speed?=1：整体变速（0.5~2，如 1.4 = 1.4 倍速）。画面和配音一起加速、音调不变，
+      BGM 保持原速铺满变速后的时长；voiceover.at 仍按变速前的时间轴写。不为 1 时画面会重新编码。"""
     import specs
     spec = json.loads(json.dumps(spec))
     specs.validate(spec, "mux")

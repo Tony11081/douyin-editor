@@ -62,7 +62,7 @@ RENDER = {"video_id": "str", "clips": lst(CLIP), "captions": enum("auto", "none"
           "matte": {"feather": num(0, 20)}, "voiceover": VOICEOVER,
           "preset": enum("ultrafast", "superfast", "veryfast", "faster", "fast", "medium", "slow", "slower")}
 MUX = {"video_id": "str", "voiceover": {"tts_id": "str", "at": lst(num(0)), "volume": num(0, 3)},
-       "bgm": BGM, "original_volume": num(0, 3), "loudnorm": "bool"}
+       "bgm": BGM, "original_volume": num(0, 3), "loudnorm": "bool", "speed": num(0.5, 2)}
 REQUIRED = {"render": {"video_id"}, "mux": {"video_id"}}
 NESTED_REQUIRED = {"title": {"text"}, "voiceover": {"tts_id"}, "overlays[]": {"url"}}
 
