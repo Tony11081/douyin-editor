@@ -1,0 +1,11 @@
+{"duration": 79.84, "segments": [
+ {"start": 0, "end": 3.34, "kind": "open"},
+ {"start": 3.34, "end": 6.56, "kind": "feature", "step": 1, "n": "01", "name": "帮你选品", "note": "5 个产品 ¥399"},
+ {"start": 6.56, "end": 12.54, "kind": "feature", "step": 2, "n": "02", "name": "爆品库", "note": "直播课学员免费"},
+ {"start": 12.54, "end": 21.02, "kind": "feature", "step": 3, "n": "03", "name": "代加工", "note": "刺绣 / 热转印 / 激光"},
+ {"start": 21.02, "end": 30.84, "kind": "feature", "step": 4, "n": "04", "name": "产品图片", "note": "10 张 ¥50 起"},
+ {"start": 30.84, "end": 44.76, "kind": "feature", "step": 5, "n": "05", "name": "店铺诊断", "note": "一对一 ¥199"},
+ {"start": 44.76, "end": 56.06, "kind": "feature", "step": 5, "n": "05", "name": "代运营", "note": "整套服务"},
+ {"start": 56.06, "end": 69.46, "kind": "tip"},
+ {"start": 69.46, "end": 79.84, "kind": "end"}
+]}

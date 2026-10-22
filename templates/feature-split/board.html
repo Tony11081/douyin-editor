@@ -1,0 +1,128 @@
+<!doctype html><html lang="zh"><head><meta charset="utf-8">
+<!-- 「网站功能介绍」分屏模板 A 的上半屏面板。透明背景，按时间轴渲染成带 alpha 的 webm，
+     叠在成片最上层（layer: base，排在录屏之后）。手机屏位置是透明的，录屏从下面透出来。
+     时间轴由 window.TIMELINE 提供（render.py 注入），render(t) 画出第 t 秒的样子。 -->
+<style>
+:root{--cream:#F4F3EC;--ink:#161616;--lime:#CFF540;--line:#DADBD0;--mute:#6B6D63;--card:#FFFFFF}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{width:1080px;height:1920px;background:transparent;overflow:hidden}
+body{font-family:"Noto Sans CJK SC","Noto Sans SC",sans-serif;color:var(--ink);position:relative}
+svg.panel{position:absolute;left:0;top:0}
+.brand{position:absolute;left:52px;top:44px;font-weight:900;font-size:44px;letter-spacing:-1px}
+.brand small{font-weight:400;font-size:26px;color:var(--mute);margin-left:14px;letter-spacing:0}
+.steps{position:absolute;right:52px;top:62px;display:flex;gap:10px}
+.steps i{display:block;width:64px;height:10px;border-radius:5px;background:#D9DACF;transition:none}
+.chip{position:absolute;left:52px;top:128px;display:flex;align-items:center;gap:16px;background:var(--ink);color:#fff;
+  border-radius:999px;padding:12px 32px 12px 14px;font-size:36px;font-weight:700;white-space:nowrap}
+.chip b{background:var(--lime);color:var(--ink);border-radius:999px;padding:2px 18px;font-size:32px;font-family:"DejaVu Sans Mono",monospace}
+.chip span{color:#C9CBBF;font-weight:400}
+.card{position:absolute;left:168px;top:210px;width:744px;height:940px;background:var(--card);border-radius:54px;
+  box-shadow:0 30px 70px rgba(22,22,22,.14);padding:64px 58px}
+.lab{font-size:30px;color:var(--mute);font-weight:700;letter-spacing:3px}
+.big{font-size:92px;font-weight:900;line-height:1.14;margin-top:18px;letter-spacing:-2px}
+.mark{background:var(--lime);border-radius:18px;padding:0 14px}
+.rows{margin-top:44px;border-top:2px solid var(--line)}
+.row{display:flex;align-items:center;gap:22px;font-size:40px;font-weight:700;padding:22px 0;border-bottom:2px solid var(--line)}
+.row b{font-family:"DejaVu Sans Mono",monospace;font-size:30px;background:var(--ink);color:var(--lime);border-radius:12px;padding:4px 12px}
+.row em{font-style:normal;font-weight:400;color:var(--mute);font-size:32px;margin-left:auto}
+.sub{font-size:40px;line-height:1.6;color:#3a3b35;margin-top:36px}
+.pill{display:inline-block;margin-top:44px;background:var(--ink);color:var(--lime);font-size:38px;font-weight:700;border-radius:999px;padding:20px 44px}
+.layer{position:absolute;left:0;top:0;width:1080px;height:1920px}
+</style></head><body>
+
+<!-- 面板：米白底，手机屏处挖空（evenodd），底部圆角 -->
+<svg class="panel layer" id="panel" width="1080" height="1920" viewBox="0 0 1080 1920">
+  <path fill="#F4F3EC" fill-rule="evenodd" d="
+    M0,0 H1080 V1250 Q1080,1306 1024,1306 H56 Q0,1306 0,1250 Z
+    M222,224 H858 Q898,224 898,264 V1096 Q898,1136 858,1136 H222 Q182,1136 182,1096 V264 Q182,224 222,224 Z"/>
+</svg>
+<!-- 手机边框（只在功能段显示） -->
+<svg class="layer" id="phone" width="1080" height="1920" viewBox="0 0 1080 1920">
+  <path fill="#161616" fill-rule="evenodd" d="
+    M222,210 H858 Q912,210 912,264 V1096 Q912,1150 858,1150 H222 Q168,1150 168,1096 V264 Q168,210 222,210 Z
+    M222,224 H858 Q898,224 898,264 V1096 Q898,1136 858,1136 H222 Q182,1136 182,1096 V264 Q182,224 222,224 Z"/>
+  <rect x="470" y="232" width="140" height="8" rx="4" fill="#161616"/>
+</svg>
+
+<div class="brand">Shopwright.<small>openaigrowth.com</small></div>
+<div class="steps" id="steps"><i></i><i></i><i></i><i></i><i></i></div>
+<div id="chips"></div>
+
+<div class="layer" id="card-open"><div class="card">
+  <div class="lab">SHOPWRIGHT · 网站更新</div>
+  <div class="big">网站上新了<br>这 <span class="mark">5</span> 个功能</div>
+  <div class="rows">
+    <div class="row"><b>01</b>帮你选品<em>¥399 起</em></div>
+    <div class="row"><b>02</b>爆品库<em>学员免费</em></div>
+    <div class="row"><b>03</b>代加工<em>刺绣 / 热转印</em></div>
+    <div class="row"><b>04</b>产品图片<em>¥50 起</em></div>
+    <div class="row"><b>05</b>诊断 · 代运营<em>整套服务</em></div>
+  </div>
+</div></div>
+
+<div class="layer" id="card-tip"><div class="card">
+  <div class="lab">旺季提醒</div>
+  <div class="big">圣诞节的品<br><span class="mark">现在就上</span></div>
+  <div class="sub">现在出单特别快<br>新手一定要多做 Etsy</div>
+  <div class="rows" style="margin-top:56px">
+    <div class="row">选品没方向<em>看爆品库</em></div>
+    <div class="row">图片来不及<em>¥50 起代做</em></div>
+  </div>
+</div></div>
+
+<div class="layer" id="card-end"><div class="card">
+  <div class="lab">有问题，直接问我</div>
+  <div class="big" style="font-size:80px">封店、选品、做图<br>都可以聊</div>
+  <div class="rows">
+    <div class="row">抖音<em>后台私信 · 直播提问</em></div>
+    <div class="row">微信<em>FionyCN</em></div>
+    <div class="row">网站<em>openaigrowth.com</em></div>
+  </div>
+  <div class="pill">openaigrowth.com →</div>
+</div></div>
+
+<script>
+const T = window.TIMELINE;            // [{start,end,kind:"open"|"feature"|"tip"|"end", n, name, note}]
+const X = 0.35;                       // 交叉淡化秒数
+const chips = document.getElementById('chips');
+T.forEach((s, i) => {
+  if (s.kind !== 'feature') return;
+  const c = document.createElement('div');
+  c.className = 'chip'; c.id = 'chip' + i;
+  c.innerHTML = `<b>${s.n}</b>${s.name}<span>· ${s.note}</span>`;
+  chips.appendChild(c);
+});
+const ease = x => x < 0 ? 0 : x > 1 ? 1 : 1 - Math.pow(1 - x, 3);
+// 某一段在 t 时刻的可见度：开头淡入、结尾淡出（首段不淡入，末段不淡出）
+function vis(s, i, t) {
+  if (t < s.start - (i ? X / 2 : 0) || t >= s.end + (i < T.length - 1 ? X / 2 : 1e9)) return 0;
+  const a = i ? ease((t - (s.start - X / 2)) / X) : 1;
+  const b = i < T.length - 1 ? ease(((s.end + X / 2) - t) / X) : 1;
+  return Math.min(a, b);
+}
+window.render = function (t) {
+  let phone = 0, step = 0;
+  T.forEach((s, i) => {
+    const v = vis(s, i, t);
+    if (s.kind === 'feature') {
+      phone = Math.max(phone, v);
+      const c = document.getElementById('chip' + i);
+      c.style.opacity = v;
+      c.style.transform = `translateY(${(1 - v) * 14}px)`;
+      if (t >= s.start - X / 2) step = Math.max(step, s.step);
+    } else {
+      const el = document.getElementById('card-' + s.kind);
+      el.style.opacity = Math.max(+el.dataset.v || 0, v);
+      el.dataset.v = el.style.opacity;
+      el.firstElementChild.style.transform = `translateY(${(1 - v) * 40}px)`;
+      if (s.kind !== 'open' && v > 0) step = 6;
+    }
+  });
+  ['open', 'tip', 'end'].forEach(k => { document.getElementById('card-' + k).dataset.v = 0; });
+  document.getElementById('phone').style.opacity = phone;
+  [...document.querySelectorAll('#steps i')].forEach((el, k) => {
+    el.style.background = step === 6 ? '#B9C87A' : k + 1 < step ? '#B9C87A' : k + 1 === step ? '#161616' : '#D9DACF';
+  });
+};
+</script>
+</body></html>
