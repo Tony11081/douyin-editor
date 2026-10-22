@@ -212,6 +212,7 @@ def render(spec: dict) -> dict:
         "front" 在字幕之上（透明动画、小窗），"behind" 在人物后面（自动抠像）。
         url 是透明 VP9 webm 或任意视频直链；video_id 是视频库里的视频（例如 record_web 的录屏）。
     - width?=1080, height?=1920, fps?=30, focus_y?=0.35（裁切时人脸偏上的位置）
+    - shift_y?：分屏模板用，整幅画面下移多少像素（上方补 shift_color，默认 #F4F3EC），人物落到下半屏
     严格模式：写错的参数名、类型、超出范围的值、超出视频时长的片段都会直接报错，不会被忽略或偷偷改。
     建议先用 validate_spec 预演，确认时间线、字幕、配音位置无误再 render。
     完成结果里 checks 是成片自检（分辨率、帧率、时长、每句配音有声、响度），warnings 是需要留意的地方。
@@ -284,7 +285,8 @@ def record_web(url: str, steps: list[dict] | None = None, name: str | None = Non
                layout: str = "mobile", settle: float = 0.8, cursor: bool = True) -> dict:
     """网站录屏：用服务器上的浏览器打开网页，按 steps 逐步点击、滚动、输入，录成 1080×1920 竖屏视频
     并导入视频库（无声），返回 job_id；wait_job 完成后给出 video_id 和 marks（每一步在视频里的秒数）。
-    - layout："mobile"（默认，手机布局，视口 540×960 CSS 像素、2 倍清晰度）或 "desktop"（电脑布局，1080 像素宽）
+    - layout："mobile"（默认，手机布局，视口 540×960 CSS 像素、2 倍清晰度，录出 1080×1920）、
+      "split"（分屏模板手机屏，视口 540×688，录出 1080×1376）或 "desktop"（电脑布局，1080 像素宽）
     - settle：每步之后停留秒数；cursor：是否显示红色小手指和点击涟漪
     - steps 每一步一个对象，按顺序执行：
         {"click": "免费工具"}  按页面文字点（优先找链接/按钮），或 Playwright 选择器（#id、.class、text=、css=）

@@ -961,6 +961,11 @@ def render(spec: dict[str, Any], progress=lambda msg: None, dry_run: bool = Fals
                 flash = ",fade=t=in:st=0:d=0.15:color=white"
             if eff["sfx"] and i > 0 and (z >= 1.08 or c.get("flash")):
                 whoosh_at.append(max(0.0, t_out - 0.12))
+            shift = int(spec.get("shift_y", 0) or 0)
+            if shift:
+                # 分屏模板：整幅画面下移 shift 像素（上面补底色），人物落到下半屏
+                sc = str(spec.get("shift_color", "#F4F3EC")).lstrip("#")
+                geo += f",crop={W}:{H - shift}:0:0,pad={W}:{H}:0:{shift}:color=0x{sc}"
             vf = f"{color}{geo}{flash},setsar=1,format=yuv420p"
             t_out += dur
             fade = min(0.015, dur / 4)

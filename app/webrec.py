@@ -39,6 +39,11 @@ LAYOUTS = {
                "is_mobile": True, "has_touch": True,
                "user_agent": ("Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 "
                               "(KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1")},
+    # 分屏模板里的手机屏：视口 540×688、2 倍像素 → 1080×1376（宽高比和模板手机屏一致）
+    "split": {"viewport": {"width": 540, "height": 688}, "device_scale_factor": 2.0,
+              "is_mobile": True, "has_touch": True,
+              "user_agent": ("Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 "
+                             "(KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1")},
     # 电脑布局（窄高）：直接 1080 CSS 像素宽
     "desktop": {"viewport": {"width": W, "height": H}, "device_scale_factor": 1.0,
                 "is_mobile": False, "has_touch": False,
@@ -177,6 +182,8 @@ def record(url: str, steps: list[dict] | None, name: str | None = None, layout: 
         if not isinstance(st, dict) or not st:
             raise EditorError(f"steps[{i}] 应该是对象，例如 {{\"click\": \"免费工具\"}}")
     settle = max(0.0, float(settle))
+    vp, dsf_ = LAYOUTS[layout]["viewport"], LAYOUTS[layout]["device_scale_factor"]
+    RW, RH = int(vp["width"] * dsf_), int(vp["height"] * dsf_)
 
     vid = uuid.uuid4().hex[:12]
     d = editor.VIDEOS / vid
@@ -199,7 +206,7 @@ def record(url: str, steps: list[dict] | None, name: str | None = None, layout: 
                                                   "--font-render-hinting=none", "--hide-scrollbars",
                                                   f"--force-device-scale-factor={dsf:g}"])
                 ctx = browser.new_context(locale="zh-CN", timezone_id="Asia/Shanghai",
-                                          record_video_dir=str(rec_dir), record_video_size={"width": W, "height": H},
+                                          record_video_dir=str(rec_dir), record_video_size={"width": RW, "height": RH},
                                           color_scheme="light", **LAYOUTS[layout])
                 ctx.set_default_timeout(12000)
                 ctx.add_init_script(_INJECT)
@@ -242,11 +249,11 @@ def record(url: str, steps: list[dict] | None, name: str | None = None, layout: 
             trim = max(0.0, t_ready - 0.25)
             src = d / "source.mp4"
             editor.run(["ffmpeg", "-y", "-v", "error", "-ss", f"{trim:.3f}", "-i", str(webm),
-                        "-vf", f"scale={W}:{H}:flags=lanczos,setsar=1,fps=30", "-c:v", "libx264",
+                        "-vf", f"scale={RW}:{RH}:flags=lanczos,setsar=1,fps=30", "-c:v", "libx264",
                         "-preset", "veryfast", "-crf", "16", "-pix_fmt", "yuv420p", "-an", str(src)])
             shutil.rmtree(rec_dir, ignore_errors=True)
             info = editor.probe(src)
-            _check_filled(src)
+            _check_filled(src, RW, RH)
         except Exception:
             shutil.rmtree(d, ignore_errors=True)
             raise
@@ -259,7 +266,7 @@ def record(url: str, steps: list[dict] | None, name: str | None = None, layout: 
     return {k: meta[k] for k in ("video_id", "name", "duration", "width", "height")} | {"marks": marks}
 
 
-def _check_filled(src: Path) -> None:
+def _check_filled(src: Path, W: int = W, H: int = H) -> None:
     """录像没铺满（右下角是录像器补的灰色）说明浏览器像素倍率没生效，直接报错而不是交出半幅画面。"""
     raw = subprocess.run(["ffmpeg", "-v", "error", "-ss", "0.3", "-i", str(src), "-frames:v", "1",
                           "-f", "rawvideo", "-pix_fmt", "rgb24", "-"], capture_output=True, timeout=120).stdout

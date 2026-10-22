@@ -60,7 +60,7 @@ RENDER = {"video_id": "str", "clips": lst(CLIP), "captions": enum("auto", "none"
           "corrections": mapping("str", "str"), "highlight_words": lst("str"),
           "caption_style": CAPTION_STYLE, "title": TITLE, "bgm": BGM, "audio": AUDIO,
           "width": integer(240, 4096), "height": integer(240, 4096), "fps": integer(10, 60),
-          "focus_y": num(0, 1), "color": COLOR, "effects": EFFECTS, "overlays": lst(OVERLAY),
+          "focus_y": num(0, 1), "shift_y": integer(0, 1800), "shift_color": "color", "color": COLOR, "effects": EFFECTS, "overlays": lst(OVERLAY),
           "matte": {"feather": num(0, 20)}, "voiceover": VOICEOVER,
           "preset": enum("ultrafast", "superfast", "veryfast", "faster", "fast", "medium", "slow", "slower")}
 MUX = {"video_id": "str", "voiceover": {"tts_id": "str", "at": lst(num(0)), "volume": num(0, 3)},
