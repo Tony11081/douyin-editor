@@ -294,6 +294,7 @@ def record_web(url: str, steps: list[dict] | None = None, name: str | None = Non
         {"tap": [x, y]}  按视口坐标点（CSS 像素）
         {"type": "ceramic mug", "into": "input[name=title]", "delay": 60}  逐字输入；{"fill": ..., "into": ...} 直接填
         {"press": "Enter"}；{"scroll": 700, "duration": 1.2}（像素，负数向上）；{"hover": 选择器}
+        {"scroll_to": 目标, "offset"?: 80, "duration"?: 1.5}  平滑滚到目标元素（不跳）
         {"highlight": 选择器, "duration": 1.5}  黄框圈出重点；{"wait": 1.5}；{"wait_for": 选择器}
         {"goto": "https://..."}；{"cursor": false}
       找不到目标时会报错并列出页面上可点的文字，照着改脚本再录。

@@ -9,6 +9,7 @@ steps 里每一步是一个对象（按顺序执行）：
   {"fill": "...", "into": 选择器}            直接填入
   {"press": "Enter"}                         按键
   {"scroll": 700, "duration": 1.2}           平滑滚动（像素，负数向上；duration 秒，默认按距离）
+  {"scroll_to": 目标, "offset": 80, "duration": 1.5}  平滑滚到目标元素（停在视口顶部往下 offset 像素）
   {"hover": 选择器}                          把手指移到元素上
   {"highlight": 选择器, "duration": 1.5}     用黄框圈出元素（讲解重点用）
   {"wait": 1.5}                              停留
@@ -346,6 +347,15 @@ def _do_step(page, st: dict, settle: float, show: bool, mark, i: int) -> None:
         ms = int(float(st.get("duration", min(2.2, 0.45 + abs(dy) / 900))) * 1000)
         mark(i, "scroll", f"{dy:.0f}")
         page.evaluate("([dy,ms]) => window.__dyScroll(dy,ms)", [dy, ms])
+    elif "scroll_to" in st:
+        # 平滑滚动，让目标元素停在视口顶部往下 offset 像素处（不会像 highlight/hover 那样瞬间跳过去）
+        loc = _resolve(page, st["scroll_to"])
+        loc.wait_for(state="attached", timeout=12000)
+        top = float(loc.evaluate("e => e.getBoundingClientRect().top"))
+        dy = top - float(st.get("offset", 80))
+        ms = int(float(st.get("duration", min(2.2, 0.5 + abs(dy) / 900))) * 1000)
+        mark(i, "scroll_to", str(st["scroll_to"]))
+        page.evaluate("([dy,ms]) => window.__dyScroll(dy,ms)", [dy, ms])
     elif "hover" in st:
         loc = _resolve(page, st["hover"])
         loc.wait_for(state="visible", timeout=12000)
@@ -379,6 +389,6 @@ def _do_step(page, st: dict, settle: float, show: bool, mark, i: int) -> None:
         mark(i, "cursor", str(st["cursor"]))
     else:
         raise EditorError(f"第 {i + 1} 步不认识：{json.dumps(st, ensure_ascii=False)}；"
-                          "可用：goto / click / tap / type / fill / press / scroll / hover / highlight / wait / wait_for / cursor")
+                          "可用：goto / click / tap / type / fill / press / scroll / scroll_to / hover / highlight / wait / wait_for / cursor")
     if "wait" not in st and "cursor" not in st:
         time.sleep(settle)
