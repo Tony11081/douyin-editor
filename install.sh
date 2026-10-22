@@ -45,6 +45,11 @@ PIP_ARGS=()
 "$APP_DIR/venv/bin/pip" install -q --upgrade pip "${PIP_ARGS[@]}"
 "$APP_DIR/venv/bin/pip" install -q -r "$APP_DIR/requirements.txt" "${PIP_ARGS[@]}"
 
+say "安装网站录屏用的浏览器（Chromium，首次约 150MB）"
+export PLAYWRIGHT_BROWSERS_PATH="$APP_DIR/ms-playwright"
+"$APP_DIR/venv/bin/playwright" install --with-deps chromium \
+  || warn "Chromium 没装上，record_web（网站录屏）暂不可用；其它功能不受影响"
+
 # 字体：有 Black 特粗用特粗，否则用粗体
 FONT="Noto Sans CJK SC Black"
 fc-list | grep -q "Noto Sans CJK SC Black" || FONT="Noto Sans CJK SC"   # 字幕样式自带加粗
@@ -105,6 +110,7 @@ After=network-online.target
 [Service]
 WorkingDirectory=$APP_DIR/app
 EnvironmentFile=$APP_DIR/.env
+Environment=PLAYWRIGHT_BROWSERS_PATH=$APP_DIR/ms-playwright
 ExecStart=$APP_DIR/venv/bin/python server.py
 Restart=always
 RestartSec=3

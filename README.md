@@ -89,6 +89,18 @@ claude.ai →「设置 → 连接器 → 添加自定义连接器」，名称填
 3. 相关工具：`heygen_avatars`（查数字人 ID）、`heygen_voices`（查音色，含克隆声音）、
    `heygen_avatar_video`（生成，`test=True` 为带水印的免费测试；`background="#00FF00"` 方便抠像）
 
+## 网站录屏（功能演示视频）
+
+`record_web(url, steps)` 用服务器上的 Chromium 按脚本打开网页、点击、滚动、输入，录成 1080×1920 竖屏视频
+（手机布局，2 倍像素，带红色小手指、点击涟漪和黄色高亮框），自动导入视频库，并返回每一步的秒数 `marks`。
+
+成片里有两种用法：
+- `overlays: [{"video_id": 录屏, "layer": "base", "start": 口播第几秒, "from": 录屏第几秒, "duration": 秒, "fade": 0.3}]`
+  ——录屏整幅盖住口播画面，口播声音和字幕照常（讲到哪个功能就切到哪个页面）。
+- `clips` 里当独立片段（这段没有声音，适合配 AI 配音）。
+
+安装脚本会执行 `playwright install --with-deps chromium`（约 150MB，浏览器装在 `/opt/douyin-editor/ms-playwright`）。
+
 ## 常用命令
 
 ```bash

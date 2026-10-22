@@ -5,3 +5,4 @@ faster-whisper>=1.0
 opencc-python-reimplemented>=0.1.7
 jieba>=0.42
 onnxruntime>=1.17
+playwright>=1.45

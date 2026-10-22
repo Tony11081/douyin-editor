@@ -25,6 +25,7 @@ import editor  # noqa: E402
 import tts as tts_mod  # noqa: E402  不能叫 tts：会被下面同名的 tts() 工具函数覆盖
 import videogen  # noqa: E402
 import heygen  # noqa: E402
+import webrec  # noqa: E402
 
 TOKEN = os.environ.get("ACCESS_TOKEN", "")
 if len(TOKEN) < 16:
@@ -47,6 +48,9 @@ render 的 clips 里每段可写自己的 video_id，把多个生成镜头和原
 mux 只合成声音，画面原样复制、不重新编码。
 数字人口播：heygen_avatars / heygen_voices 找到数字人和音色 → heygen_avatar_video(文案) → wait_job
 → 得到 video_id，之后按普通口播走 transcribe → render（精剪、字幕、标题、BGM）。
+网站功能演示（口播 + 真实录屏）：record_web(url, steps) → wait_job 得到录屏 video_id 和每一步的秒数 marks；
+再 render，clips 里口播片段和录屏片段（写各自 video_id）按口播内容穿插，口播声音在录屏段里照常保留
+（录屏没有声音，字幕按口播自动生成）。录屏可先 get_frames 看几帧确认页面和点击位置。
 耗时操作都返回 job_id，用 wait_job 轮询。"""
 
 mcp = MCPServer(name="douyin-editor", title="抖音口播剪辑", instructions=INSTRUCTIONS)
@@ -77,7 +81,7 @@ def _submit(kind: str, fn, *args, heavy: bool = True) -> str:
         job["state"] = "running"
         job["progress"] = "处理中"
         try:
-            job["result"] = fn(*args, progress=progress) if kind in ("render", "genvideo", "avatar") \
+            job["result"] = fn(*args, progress=progress) if kind in ("render", "genvideo", "avatar", "record") \
                 else fn(*args)
             job["state"] = "done"
             job["progress"] = "完成"
@@ -190,6 +194,11 @@ def render(spec: dict) -> dict:
         有 voiceover 且原片没转写时，字幕自动按配音文字生成；也可 captions: "voiceover" 强制使用。
     - effects: {drift?=0.04（缓慢推拉，0 关闭）, flash_first?=true, sfx?=true（转场音效）,
         progress_bar?=true, bar_color?, bar_height?} —— 不写就用默认值，结果的 applied 会列出来
+    - overlays: [{video_id 或 url, start（成片第几秒开始）, from?（取来源第几秒起）, duration?（叠加几秒）,
+        x?=0, y?=0, w?/h?（缩放到的像素）, fade?（淡入淡出秒数）, layer?="front"}]
+        layer："base" 在字幕之下盖住画面（网站录屏整幅铺满时用：口播声音和字幕照常），
+        "front" 在字幕之上（透明动画、小窗），"behind" 在人物后面（自动抠像）。
+        url 是透明 VP9 webm 或任意视频直链；video_id 是视频库里的视频（例如 record_web 的录屏）。
     - width?=1080, height?=1920, fps?=30, focus_y?=0.35（裁切时人脸偏上的位置）
     严格模式：写错的参数名、类型、超出范围的值、超出视频时长的片段都会直接报错，不会被忽略或偷偷改。
     建议先用 validate_spec 预演，确认时间线、字幕、配音位置无误再 render。
@@ -256,6 +265,29 @@ def generate_video(prompt: str, model: str | None = None, image_url: str | None 
     return {"job_id": _submit("genvideo", videogen.generate, prompt, model, image_url,
                               last_image_url, reference_urls, duration, resolution,
                               aspect_ratio, generate_audio, seed, name, heavy=False)}
+
+
+@mcp.tool()
+def record_web(url: str, steps: list[dict] | None = None, name: str | None = None,
+               layout: str = "mobile", settle: float = 0.8, cursor: bool = True) -> dict:
+    """网站录屏：用服务器上的浏览器打开网页，按 steps 逐步点击、滚动、输入，录成 1080×1920 竖屏视频
+    并导入视频库（无声），返回 job_id；wait_job 完成后给出 video_id 和 marks（每一步在视频里的秒数）。
+    - layout："mobile"（默认，手机布局，视口 540×960 CSS 像素、2 倍清晰度）或 "desktop"（电脑布局，1080 像素宽）
+    - settle：每步之后停留秒数；cursor：是否显示红色小手指和点击涟漪
+    - steps 每一步一个对象，按顺序执行：
+        {"click": "免费工具"}  按页面文字点（优先找链接/按钮），或 Playwright 选择器（#id、.class、text=、css=）
+        {"click": {"role": "button", "name": "计算"}} / {"placeholder": "..."} / {"label": "..."} 也可以
+        {"tap": [x, y]}  按视口坐标点（CSS 像素）
+        {"type": "ceramic mug", "into": "input[name=title]", "delay": 60}  逐字输入；{"fill": ..., "into": ...} 直接填
+        {"press": "Enter"}；{"scroll": 700, "duration": 1.2}（像素，负数向上）；{"hover": 选择器}
+        {"highlight": 选择器, "duration": 1.5}  黄框圈出重点；{"wait": 1.5}；{"wait_for": 选择器}
+        {"goto": "https://..."}；{"cursor": false}
+      找不到目标时会报错并列出页面上可点的文字，照着改脚本再录。
+    用法：先用较少的步骤录一遍，get_frames 看几帧确认页面和位置，再录正式版；
+    成片里用 overlays（layer: "base", video_id, start, from, duration）盖在口播画面上，
+    口播声音和字幕不受影响；或在 clips 里当独立片段（这段没有声音）。"""
+    return {"job_id": _submit("record", webrec.record, url, steps, name, layout, settle, cursor,
+                              heavy=False)}
 
 
 @mcp.tool()

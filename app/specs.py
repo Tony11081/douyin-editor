@@ -51,7 +51,9 @@ COLOR = {"mode": enum("auto", "sdr", "hdr"), "npl": num(10, 1000),
          "tonemap": enum("mobius", "hable", "reinhard", "clip", "linear", "gamma"), "param": num(),
          "desat": num(0, 10), "brightness": num(-1, 1), "contrast": num(0, 3), "saturation": num(0, 3),
          "gamma": num(0.1, 10), "warmth": num(-1, 1)}
-OVERLAY = {"url": "str", "start": num(0), "x": integer(), "y": integer(), "layer": enum("front", "behind")}
+OVERLAY = {"url": "str", "video_id": "str", "start": num(0), "from": num(0), "duration": num(0.1),
+           "x": integer(), "y": integer(), "w": integer(16, 4096), "h": integer(16, 4096),
+           "fade": num(0, 5), "layer": enum("front", "behind", "base")}
 VOICEOVER = {"tts_id": "str", "at": lst(num(0)), "volume": num(0, 3), "original_volume": num(0, 3)}
 
 RENDER = {"video_id": "str", "clips": lst(CLIP), "captions": enum("auto", "none", "voiceover"),
@@ -64,7 +66,7 @@ RENDER = {"video_id": "str", "clips": lst(CLIP), "captions": enum("auto", "none"
 MUX = {"video_id": "str", "voiceover": {"tts_id": "str", "at": lst(num(0)), "volume": num(0, 3)},
        "bgm": BGM, "original_volume": num(0, 3), "loudnorm": "bool", "speed": num(0.5, 2)}
 REQUIRED = {"render": {"video_id"}, "mux": {"video_id"}}
-NESTED_REQUIRED = {"title": {"text"}, "voiceover": {"tts_id"}, "overlays[]": {"url"}}
+NESTED_REQUIRED = {"title": {"text"}, "voiceover": {"tts_id"}}
 
 
 def _tname(t) -> str:

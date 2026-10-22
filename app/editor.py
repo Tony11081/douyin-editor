@@ -867,8 +867,29 @@ def plan_render(spec: dict[str, Any]) -> dict[str, Any]:
         if bgm.get("name") and not (MUSIC / Path(bgm["name"]).name).exists():
             raise EditorError(f"音乐库里没有 {bgm['name']}（用 list_music 查）")
     for i, ov in enumerate(spec.get("overlays") or []):
-        if float(ov.get("start", 0)) >= total:
+        if bool(ov.get("url")) == bool(ov.get("video_id")):
+            raise EditorError(f"overlays[{i}] 需要 url 或 video_id 二选一")
+        st = float(ov.get("start", 0))
+        if st >= total:
             raise EditorError(f"overlays[{i}].start = {ov.get('start')} 超出成片时长 {total:.2f}")
+        if ov.get("video_id"):
+            video_dir(ov["video_id"])
+            om = load_meta(ov["video_id"])
+            fr = float(ov.get("from", 0))
+            if fr >= om["duration"]:
+                raise EditorError(f"overlays[{i}].from = {fr} 超过视频 {ov['video_id']} 的时长 {om['duration']:.2f}")
+            if ov.get("duration") is not None and fr + float(ov["duration"]) > om["duration"] + TOL:
+                raise EditorError(f"overlays[{i}] from + duration = {fr + float(ov['duration']):.2f} 超过视频 "
+                                  f"{ov['video_id']} 的时长 {om['duration']:.2f}")
+            if ov.get("duration") is not None and st + float(ov["duration"]) > total + TOL:
+                warnings.append(f"overlays[{i}] 到 {st + float(ov['duration']):.2f} 秒才结束，超过成片 {total:.2f} 秒，"
+                                "多出的部分会被截掉")
+            if not ov.get("w") and not ov.get("h") and (om["width"], om["height"]) != (W, H) \
+                    and ov.get("layer") == "base":
+                warnings.append(f"overlays[{i}] 的视频是 {om['width']}x{om['height']}，和成片 {W}x{H} 不一样，"
+                                "不写 w/h 就按原尺寸叠加")
+        elif ov.get("fade") and ov.get("duration") is None:
+            warnings.append(f"overlays[{i}] 有 fade 但没写 duration，只会淡入不会淡出")
     pre = CAPTION_PRESETS.get(style.get("preset", "douyin"), CAPTION_PRESETS["douyin"])
     return {"clips": clips, "metas": metas, "timeline": timeline, "total": round(total, 3),
             "W": W, "H": H, "fps": fps, "eff": eff, "vo_placed": vo_placed, "cues": cues,
@@ -989,16 +1010,39 @@ def render(spec: dict[str, Any], progress=lambda msg: None, dry_run: bool = Fals
         nin = 1
         overlays = spec.get("overlays", []) or []
         behind = [o for o in overlays if o.get("layer") == "behind"]
-        front = [o for o in overlays if o.get("layer") != "behind"]
+        base = [o for o in overlays if o.get("layer") == "base"]
+        front = [o for o in overlays if o.get("layer") not in ("behind", "base")]
         fv: list[str] = []
         cur = "[0:v]"
 
-        def _ov_input(ov: dict) -> None:
+        def _ov_input(ov: dict) -> str:
+            """把叠加层加进 ffmpeg 输入；返回该层的预处理滤镜（透明格式、缩放、淡入淡出）。
+            来源：url（透明 webm/任意视频）或视频库里的 video_id（例如网站录屏）；
+            from/duration 截取来源的一段；w/h 缩放；fade 秒数淡入淡出（透明度）。"""
             nonlocal nin, inputs
-            opath = _cached_download(ov["url"], "overlays")
+            if ov.get("video_id"):
+                om = load_meta(ov["video_id"])
+                opath = VIDEOS / om["video_id"] / om["source"]
+            else:
+                opath = _cached_download(ov["url"], "overlays")
             dec = ["-c:v", "libvpx-vp9"] if opath.suffix.lower() == ".webm" else []
-            inputs += [*dec, "-itsoffset", f"{float(ov.get('start', 0)):.3f}", "-i", str(opath)]
+            st = float(ov.get("start", 0))
+            pre: list[str] = []
+            if ov.get("from") is not None:
+                pre += ["-ss", f"{float(ov['from']):.3f}"]
+            if ov.get("duration") is not None:
+                pre += ["-t", f"{float(ov['duration']):.3f}"]
+            inputs += [*dec, *pre, "-itsoffset", f"{st:.3f}", "-i", str(opath)]
             nin += 1
+            chain = ["format=yuva420p"]
+            if ov.get("w") or ov.get("h"):
+                chain.append(f"scale={int(ov.get('w', -2))}:{int(ov.get('h', -2))}:flags=lanczos")
+            fd = float(ov.get("fade", 0) or 0)
+            if fd > 0:
+                chain.append(f"fade=t=in:st={st:.3f}:d={fd:.3f}:alpha=1")
+                if ov.get("duration") is not None:
+                    chain.append(f"fade=t=out:st={st + float(ov['duration']) - fd:.3f}:d={fd:.3f}:alpha=1")
+            return ",".join(chain)
 
         if behind:
             # 字在人后面：背景 → 背后文字层 → 抠出的人物 → 字幕/前景层
@@ -1012,8 +1056,8 @@ def render(spec: dict[str, Any], progress=lambda msg: None, dry_run: bool = Fals
             cur = "[bg0]"
             for k, ov in enumerate(behind):
                 idx = nin
-                _ov_input(ov)
-                fv.append(f"[{idx}:v]format=yuva420p[bh{k}]")
+                chain = _ov_input(ov)
+                fv.append(f"[{idx}:v]{chain}[bh{k}]")
                 fv.append(f"{cur}[bh{k}]overlay=x={int(ov.get('x', 0))}:y={int(ov.get('y', 0))}:"
                           f"eof_action=pass:format=auto[bb{k}]")
                 cur = f"[bb{k}]"
@@ -1023,6 +1067,14 @@ def render(spec: dict[str, Any], progress=lambda msg: None, dry_run: bool = Fals
             fv.append("[fg0][mk]alphamerge[person]")
             fv.append(f"{cur}[person]overlay=0:0:format=auto[comp]")
             cur = "[comp]"
+        # 画面层（字幕之下）：例如网站录屏整幅盖住口播画面，口播声音和字幕照常
+        for k, ov in enumerate(base):
+            idx = nin
+            chain = _ov_input(ov)
+            fv.append(f"[{idx}:v]{chain}[bs{k}]")
+            fv.append(f"{cur}[bs{k}]overlay=x={int(ov.get('x', 0))}:y={int(ov.get('y', 0))}:"
+                      f"eof_action=pass:format=auto[bo{k}]")
+            cur = f"[bo{k}]"
         vlabel = "[vs]"
         fv.append(f"{cur}subtitles=filename={ass.name}:fontsdir={FONTS_DIR}{vlabel}")
         voice_expr = f"[0:a]{','.join(voice_chain)}[voice]"
@@ -1044,15 +1096,12 @@ def render(spec: dict[str, Any], progress=lambda msg: None, dry_run: bool = Fals
         fc = [";".join(fv), voice_expr]
         # 前景透明动画层（例如代码渲染的 VP9 alpha webm），按成片时间叠加
         for k, ov in enumerate(front):
-            opath = _cached_download(ov["url"], "overlays")
-            off = float(ov.get("start", 0))
-            dec = ["-c:v", "libvpx-vp9"] if opath.suffix.lower() == ".webm" else []
-            inputs += [*dec, "-itsoffset", f"{off:.3f}", "-i", str(opath)]
-            fc.append(f"[{nin}:v]format=yuva420p,setpts=PTS[ov{k}]")
+            idx = nin
+            chain = _ov_input(ov)
+            fc.append(f"[{idx}:v]{chain},setpts=PTS[ov{k}]")
             fc.append(f"{vlabel}[ov{k}]overlay=x={int(ov.get('x', 0))}:y={int(ov.get('y', 0))}:"
                       f"eof_action=pass:format=auto[vo{k}]")
             vlabel = f"[vo{k}]"
-            nin += 1
         # 顶部进度条
         if eff["progress_bar"]:
             bc = eff["bar_color"].lstrip("#")
