@@ -131,7 +131,19 @@ def _tts_view(meta: dict[str, Any]) -> dict[str, Any]:
 @mcp.tool()
 def import_video(url: str, name: str | None = None) -> dict:
     """导入一个视频。url 可以是 Google Drive 文件分享链接（需设为「知道链接的任何人可查看」）
-    或任何视频直链。返回 job_id，用 wait_job 等结果（含 video_id、时长、分辨率）。"""
+    或任何视频直链。返回 job_id，用 wait_job 等结果（含 video_id、时长、分辨率）。
+    也可以录网站：url 写成 record:{"url": "...", "steps": [...], "layout"?, "settle"?, "cursor"?}
+    （JSON，参数和 record_web 完全一样），效果等同 record_web，结果里带 marks。"""
+    if url.startswith("record:"):
+        try:
+            a = json.loads(url[len("record:"):])
+        except ValueError as e:
+            raise ValueError(f"record: 后面要跟 JSON：{e}") from e
+        if not isinstance(a, dict) or "url" not in a:
+            raise ValueError('record: 的 JSON 需要 {"url": ..., "steps": [...]}')
+        return {"job_id": _submit("record", webrec.record, a["url"], a.get("steps"), name,
+                                  a.get("layout", "mobile"), a.get("settle", 0.8), a.get("cursor", True),
+                                  heavy=False)}
     return {"job_id": _submit("import", editor.import_video, url, name, heavy=False)}
 
 
