@@ -22,7 +22,7 @@ from starlette.responses import FileResponse, JSONResponse, PlainTextResponse
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import editor  # noqa: E402
-import tts  # noqa: E402
+import tts as tts_mod  # noqa: E402  不能叫 tts：会被下面同名的 tts() 工具函数覆盖
 import videogen  # noqa: E402
 import heygen  # noqa: E402
 
@@ -221,20 +221,20 @@ def tts(segments: list[str], model: str | None = None, voice: str | None = None,
     verify=True（默认）：生成后用 Whisper 逐句听写并和原文比对，结果里 verify.flagged 是可能念错的句子。"""
     if not isinstance(segments, list) or not segments or not all(isinstance(x, str) for x in segments):
         raise ValueError("segments 需要是非空的句子列表（每项是文字）")
-    return {"job_id": _submit("tts", tts.synthesize, segments, model, voice, instructions,
+    return {"job_id": _submit("tts", tts_mod.synthesize, segments, model, voice, instructions,
                               speed, gap, True, None, verify, heavy=False)}
 
 
 @mcp.tool()
 def tts_voices(filter_text: str | None = None) -> list[dict]:
     """列出 OpenRouter 上的语音模型（含价格、可用音色 supported_voices）。filter_text 可按名称过滤，如 seed、fish。"""
-    return tts.list_voices(filter_text)
+    return tts_mod.list_voices(filter_text)
 
 
 @mcp.tool()
 def get_tts(tts_id: str) -> dict:
     """查看一次配音的每句文字、时长和试听链接。"""
-    return _tts_view(tts.load(tts_id))
+    return _tts_view(tts_mod.load(tts_id))
 
 
 @mcp.tool()
@@ -463,7 +463,7 @@ async def tts_files(request: Request):
     if not secrets.compare_digest(tok, TOKEN) or not m:
         return PlainTextResponse("not found", status_code=404)
     try:
-        path = tts.preview(m.group(1))
+        path = tts_mod.preview(m.group(1))
     except editor.EditorError:
         return PlainTextResponse("not found", status_code=404)
     return FileResponse(path, media_type="audio/mpeg", filename=f"voice_{name}")
