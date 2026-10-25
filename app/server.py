@@ -133,7 +133,11 @@ def import_video(url: str, name: str | None = None) -> dict:
     """导入一个视频。url 可以是 Google Drive 文件分享链接（需设为「知道链接的任何人可查看」）
     或任何视频直链。返回 job_id，用 wait_job 等结果（含 video_id、时长、分辨率）。
     也可以录网站：url 写成 record:{"url": "...", "steps": [...], "layout"?, "settle"?, "cursor"?}
-    （JSON，参数和 record_web 完全一样），效果等同 record_web，结果里带 marks。"""
+    （JSON，参数和 record_web 完全一样），效果等同 record_web，结果里带 marks。
+    清理历史素材：url 写成 cleanup:{"older_than_hours": 48, "dry_run": true}（参数同 cleanup），直接返回结果。"""
+    if url.startswith("cleanup:"):  # 客户端工具列表还没刷新出 cleanup 时的入口，参数同 cleanup
+        a = json.loads(url[len("cleanup:"):] or "{}")
+        return cleanup(**a)
     if url.startswith("record:"):
         try:
             a = json.loads(url[len("record:"):])
