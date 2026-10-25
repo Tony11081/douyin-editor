@@ -54,15 +54,22 @@ def _duration(path: Path) -> float:
     return float(out.strip() or 0)
 
 
+PCM_RATE = 24000  # Gemini TTS 只回原始 PCM：16-bit 单声道 24kHz
+
+
+def _fmt(model: str) -> str:
+    """有的模型（Gemini TTS）只支持 pcm 输出，其余用 mp3。"""
+    return "pcm" if "gemini" in (model or "").lower() else "mp3"
+
+
 def _speak(text: str, model: str, voice: str, instructions: str | None,
            speed: float | None, provider: dict | None) -> bytes:
-    body: dict[str, Any] = {"model": model, "input": text, "response_format": "mp3"}
+    # 语速不交给模型（很多模型不支持、会被忽略），统一在服务器上用 atempo 变速
+    body: dict[str, Any] = {"model": model, "input": text, "response_format": _fmt(model)}
     if voice:
         body["voice"] = voice
     if instructions:
         body["instructions"] = instructions
-    if speed and abs(float(speed) - 1.0) > 1e-3:
-        body["speed"] = float(speed)
     if provider:
         body["provider"] = provider
     last = ""
@@ -131,20 +138,28 @@ def synthesize(segments: list[str], model: str | None = None, voice: str | None 
             raise EditorError(f"单句太长（{len(s)} 字），请拆成多句：{s[:30]}…")
     model = model or DEFAULT_MODEL
     voice = voice if voice is not None else DEFAULT_VOICE
+    if speed is not None and not 0.5 <= float(speed) <= 2.0:
+        raise EditorError("speed 要在 0.5~2 之间（如 1.3 = 1.3 倍语速）")
+    tempo = float(speed) if speed and abs(float(speed) - 1.0) > 1e-3 else None
+    fmt = _fmt(model)
     tid = uuid.uuid4().hex[:12]
     d = TTS_DIR / tid
     d.mkdir(parents=True)
 
     def one(k: int) -> dict[str, Any]:
-        raw = d / f"raw_{k:03d}.mp3"
+        raw = d / f"raw_{k:03d}.{fmt}"
         raw.write_bytes(_speak(segs[k], model, voice, instructions, speed, provider))
         wav = d / f"seg_{k:03d}.wav"
         af = "aresample=48000,aformat=channel_layouts=stereo"
+        if tempo:  # 变速不变调，所有模型都生效
+            af = f"atempo={tempo:.4f}," + af
         if trim:  # 去掉每句首尾的静音，时长才准，方便对画面
             af += (",silenceremove=start_periods=1:start_threshold=-45dB:start_silence=0.05,"
                    "areverse,silenceremove=start_periods=1:start_threshold=-45dB:start_silence=0.08,"
                    "areverse")
-        run(["ffmpeg", "-y", "-v", "error", "-i", str(raw), "-af", af, "-c:a", "pcm_s16le", str(wav)])
+        src = ["-f", "s16le", "-ar", str(PCM_RATE), "-ac", "1", "-i", str(raw)] if fmt == "pcm" \
+            else ["-i", str(raw)]
+        run(["ffmpeg", "-y", "-v", "error", *src, "-af", af, "-c:a", "pcm_s16le", str(wav)])
         raw.unlink(missing_ok=True)
         dur = _duration(wav)
         if dur < 0.15:

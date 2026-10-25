@@ -242,7 +242,8 @@ def tts(segments: list[str], model: str | None = None, voice: str | None = None,
     - model：默认用服务器 .env 的 OPENROUTER_TTS_MODEL；可用 tts_voices 查模型
     - voice：音色 ID（随模型不同，例如 OpenAI 的 alloy、nova）
     - instructions：语气说明，如「沉稳的知识类讲解，语速稍快」（OpenAI / Gemini / Fish Audio 支持）
-    - speed：语速倍率（部分模型支持）；gap：顺排时句与句的间隔秒数
+    - speed：语速倍率（0.5~2，服务器用 atempo 变速、不变调，所有模型都生效，只影响配音）；
+      gap：顺排时句与句的间隔秒数。Gemini TTS（google/gemini-*-tts）可用，音色如 Kore、Leda
     数字、百分号建议写成汉字读法（如「百分之二」），字幕里再用 corrections 改回「2%」。
     verify=True（默认）：生成后用 Whisper 逐句听写并和原文比对，结果里 verify.flagged 是可能念错的句子。"""
     if not isinstance(segments, list) or not segments or not all(isinstance(x, str) for x in segments):
