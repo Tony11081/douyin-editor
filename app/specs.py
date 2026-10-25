@@ -34,12 +34,16 @@ def mapping(k, v):
 
 
 CLIP = {"start": num(0), "end": num(0), "zoom": num(1.0, 3.0), "text": "str", "focus_y": num(0, 1),
+        "sub": ("any_of", "str", lst("str")),
         "drift": num(0, 0.5), "flash": "bool", "video_id": "str"}
 CAPTION_STYLE = {"preset": enum("douyin", "box", "yellow"), "font_size": integer(10, 400), "y": num(0.05, 0.98),
                  "max_chars": integer(4, 30), "color": "color", "highlight_color": "color",
                  "outline_color": "color", "outline": integer(0, 40), "outline_ratio": num(0, 0.3),
                  "shadow": integer(0, 30), "box": "bool", "size_ratio": num(0.02, 0.3), "font": "str",
-                 "highlight_scale": integer(50, 200)}
+                 "highlight_scale": integer(50, 200),
+                 "sub_size_ratio": num(0.02, 0.2), "sub_font_size": integer(10, 300), "sub_color": "color",
+                 "sub_outline_color": "color", "sub_position": enum("below", "above"),
+                 "sub_gap": integer(0, 300), "sub_font": "str"}
 TITLE = {"text": "str", "duration": num(0.1), "y": num(0, 0.9), "font_size": integer(10, 400),
          "color": "color", "color2": "color", "outline_color": "color"}
 BGM = {"name": "str", "url": "str", "volume": num(0, 2), "fade_in": num(0, 30), "fade_out": num(0, 30),
@@ -54,7 +58,8 @@ COLOR = {"mode": enum("auto", "sdr", "hdr"), "npl": num(10, 1000),
 OVERLAY = {"url": "str", "video_id": "str", "start": num(0), "from": num(0), "duration": num(0.1),
            "x": integer(), "y": integer(), "w": integer(16, 4096), "h": integer(16, 4096),
            "fade": num(0, 5), "layer": enum("front", "behind", "base")}
-VOICEOVER = {"tts_id": "str", "at": lst(num(0)), "volume": num(0, 3), "original_volume": num(0, 3)}
+VOICEOVER = {"tts_id": "str", "at": lst(num(0)), "volume": num(0, 3), "original_volume": num(0, 3),
+             "subs": lst("str")}
 
 RENDER = {"video_id": "str", "clips": lst(CLIP), "captions": enum("auto", "none", "voiceover"),
           "corrections": mapping("str", "str"), "highlight_words": lst("str"),
@@ -128,6 +133,15 @@ def _check(v: Any, t, path: str, errs: list[str]) -> None:
     elif t[0] == "enum":
         if v not in t[1]:
             errs.append(f"{path} = {v!r} 不支持，应该是{_tname(t)}")
+    elif t[0] == "any_of":
+        tried = []
+        for alt in t[1:]:
+            e2: list[str] = []
+            _check(v, alt, path, e2)
+            if not e2:
+                return
+            tried.append(_tname(alt))
+        errs.append(f"{path} 应该是：{' 或 '.join(tried)}")
     elif t[0] == "list":
         if not isinstance(v, list):
             errs.append(f"{path} 应该是列表")

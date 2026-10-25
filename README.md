@@ -101,6 +101,14 @@ claude.ai →「设置 → 连接器 → 添加自定义连接器」，名称填
 
 安装脚本会执行 `playwright install --with-deps chromium`（约 150MB，浏览器装在 `/opt/douyin-editor/ms-playwright`）。
 
+## 双语字幕
+
+参考 BaoCut 的双语字幕做法：译文按句写，和原文对齐同一句话的时间，画面上两行显示（默认中文主字幕在上，译文小一号在下）。
+- 真人口播：`clips[i].sub` 写这段的译文；一句字符串显示在整段上，列表且条数与这段中文字幕条数相同时一条对一条。
+- AI 配音：`voiceover.subs` 每句配音一条译文。
+- 样式：`caption_style` 的 `sub_size_ratio`、`sub_color`、`sub_outline_color`、`sub_position`（below/above）、`sub_gap`、`sub_font`。
+- `validate_spec` 的结果里 `subs` 列出每条译文的时间，先预演再渲染。
+
 ## 常用命令
 
 ```bash

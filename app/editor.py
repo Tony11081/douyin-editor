@@ -499,16 +499,27 @@ def _tokens_from_words(words: list[dict], s: float, e: float,
     return out
 
 
+def _clip_sub(c: dict) -> list[str]:
+    sub = c.get("sub")
+    if sub is None:
+        return []
+    return [x.strip() for x in ([sub] if isinstance(sub, str) else sub) if x and x.strip()]
+
+
 def build_cues(clips: list[dict], words: list[dict] | None, max_chars: int,
-               corrections: dict[str, str]) -> list[Cue]:
+               corrections: dict[str, str], subs_out: list | None = None,
+               warnings: list | None = None) -> list[Cue]:
+    """subs_out 不为 None 时同时收集双语副字幕：clip.sub 是一句译文时覆盖整段说话的时间；
+    是列表且条数等于这段中文字幕的条数时一条对一条（同一句话的同一时间）。"""
     cues: list[Cue] = []
     offset = 0.0
     all_words = words
-    for c in clips:
+    for i, c in enumerate(clips):
         s, e = c["start"], c["end"]
         dur = e - s
         text = c.get("text")
         words = c.get("_words", all_words)
+        subs = _clip_sub(c)
         if text is not None:
             for bad, good in corrections.items():
                 text = text.replace(bad, good)
@@ -517,11 +528,24 @@ def build_cues(clips: list[dict], words: list[dict] | None, max_chars: int,
                 ss, se = _speech_span(words or [], s, e)
                 total = sum(_visual_len(x) for x in chunks)
                 t = ss
+                spans = []
                 for ch in chunks:
                     d = (se - ss) * _visual_len(ch) / total
                     cues.append(Cue(offset + t - s, offset + t + d - s, ch))
+                    spans.append((offset + t - s, offset + t + d - s))
                     t += d
+                if subs_out is not None and subs:
+                    if len(subs) == len(spans):
+                        subs_out += [Cue(a, b, x) for (a, b), x in zip(spans, subs)]
+                    else:
+                        if len(subs) > 1 and warnings is not None:
+                            warnings.append(f"clips[{i}].sub 有 {len(subs)} 条，但这段中文字幕切成了 {len(spans)} 条"
+                                            f"（{' / '.join(chunks)}），译文合成一条显示在整段上")
+                        subs_out.append(Cue(spans[0][0], spans[-1][1], " ".join(subs)))
         elif words:
+            if subs_out is not None and subs:
+                ss, se = _speech_span(words, s, e)
+                subs_out.append(Cue(offset + ss - s, offset + se - s, " ".join(subs)))
             toks = _tokens_from_words(words, s, e, corrections)
             cur, c0, c1 = "", None, None
             for tk in toks:
@@ -554,6 +578,12 @@ def _finish_cues(cues: list[Cue], total: float) -> list[Cue]:
             q.end = nxt
         q.end = max(q.end, min(q.start + 0.35, nxt if nxt > q.start else q.start + 0.35))
     return [q for q in cues if q.end > q.start and q.text]
+
+
+def voiceover_subs(placed: list[dict], subs: list[str], total: float) -> list[Cue]:
+    """配音的双语副字幕：每句配音一条译文，显示在这句配音的时间上。"""
+    return _finish_cues([Cue(p["start"], p["end"], x.strip()) for p, x in zip(placed, subs) if x and x.strip()],
+                        total)
 
 
 def voiceover_cues(placed: list[dict], max_chars: int, corrections: dict[str, str],
@@ -610,7 +640,7 @@ CAPTION_PRESETS: dict[str, dict[str, Any]] = {
 
 
 def write_ass(path: Path, cues: list[Cue], W: int, H: int, style: dict,
-              highlights: list[str], title: dict | None) -> None:
+              highlights: list[str], title: dict | None, subs: list[Cue] | None = None) -> None:
     pre = CAPTION_PRESETS.get(style.get("preset", "douyin"), CAPTION_PRESETS["douyin"])
     st = {**pre, **style}
     fs = int(st.get("font_size", round(W * st["size_ratio"])))
@@ -650,6 +680,15 @@ def write_ass(path: Path, cues: list[Cue], W: int, H: int, style: dict,
         lines.append(
             f"Style: Title2,{font},{int(tfs * 0.86)},{t2},{t2},{tout},&H96000000,-1,0,0,0,100,100,2,0,"
             f"1,{max(4, round(tfs * 0.08))},6,8,50,50,{ty + int(tfs * 1.22)},1")
+    if subs:
+        # 双语副字幕（译文）：小一号，默认在主字幕下方；英文等按空格自动折行
+        sfs = int(st.get("sub_font_size", round(W * float(st.get("sub_size_ratio", 0.045)))))
+        sc = _ass_color(st.get("sub_color", "#FFFFFF"))
+        soc = _ass_color(st.get("sub_outline_color", st["outline_color"]))
+        sout = max(2, round(sfs * 0.09))
+        sfont = st.get("sub_font", font)
+        lines.append(f"Style: Sub,{sfont},{sfs},{sc},{sc},{soc},&H96000000,-1,0,0,0,"
+                     f"100,100,0,0,1,{sout},3,2,70,70,0,1")
     lines += ["", "[Events]",
               "Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text"]
     # 行内覆盖标签用标准写法 \c&HBBGGRR&（6 位 + 结尾 &），旧版 libass 才认得
@@ -685,6 +724,16 @@ def write_ass(path: Path, cues: list[Cue], W: int, H: int, style: dict,
         else:
             body = "{" + pop + "}" + body
         lines.append(f"Dialogue: 0,{_ass_time(q.start)},{_ass_time(q.end)},Cap,,0,0,0,,{body}")
+    if subs:
+        gap = int(st.get("sub_gap", 14))
+        main_bottom = H - margin_v
+        if st.get("sub_position", "below") == "above":
+            anchor = f"\\an2\\pos({W // 2},{int(main_bottom - fs * 1.18 - gap)})"
+        else:
+            anchor = f"\\an8\\pos({W // 2},{main_bottom + gap})"
+        for q in subs:
+            lines.append(f"Dialogue: 0,{_ass_time(q.start)},{_ass_time(q.end)},Sub,,0,0,0,,"
+                         f"{{\\q0{anchor}\\fad(60,0)}}{_esc(q.text)}")
     if title:
         end = float(title.get("duration") or 36000)
         rows = [r.strip() for r in title["text"].replace("\\N", "\n").split("\n") if r.strip()]
@@ -822,6 +871,7 @@ def plan_render(spec: dict[str, Any]) -> dict[str, Any]:
     max_chars = int(style.get("max_chars", 12))
     corrections = spec.get("corrections") or {}
     cues: list[Cue] = []
+    subs: list[Cue] = []
     caption_mode = "none"
     if cap == "voiceover" and not vo:
         raise EditorError('captions = "voiceover" 但没有 voiceover')
@@ -832,6 +882,11 @@ def plan_render(spec: dict[str, Any]) -> dict[str, Any]:
         if vo and (cap == "voiceover" or (not words and not has_text)):
             cues = voiceover_cues(vo_placed, max_chars, corrections, total)
             caption_mode = "voiceover"
+            vsubs = vo.get("subs") or []
+            if vsubs:
+                if len(vsubs) != len(vo_placed):
+                    raise EditorError(f"voiceover.subs 有 {len(vsubs)} 条，配音有 {len(vo_placed)} 句，要一句一条")
+                subs = voiceover_subs(vo_placed, vsubs, total)
         else:
             if not words and not has_text:
                 raise EditorError("还没有转写，也没给片段文字：先调用 transcribe，或在 clips 里写 text，"
@@ -844,7 +899,8 @@ def plan_render(spec: dict[str, Any]) -> dict[str, Any]:
                         raise EditorError(f"clips 里来自视频 {vid} 的片段没有转写也没写 text，字幕没法生成")
                     c["_words"] = t2["words"] if t2 else []
             try:
-                cues = build_cues(clips, words, max_chars, corrections)
+                cues = build_cues(clips, words, max_chars, corrections, subs, warnings)
+                subs = _finish_cues(subs, total)
             finally:
                 for c in clips:
                     c.pop("_words", None)
@@ -892,7 +948,7 @@ def plan_render(spec: dict[str, Any]) -> dict[str, Any]:
             warnings.append(f"overlays[{i}] 有 fade 但没写 duration，只会淡入不会淡出")
     pre = CAPTION_PRESETS.get(style.get("preset", "douyin"), CAPTION_PRESETS["douyin"])
     return {"clips": clips, "metas": metas, "timeline": timeline, "total": round(total, 3),
-            "W": W, "H": H, "fps": fps, "eff": eff, "vo_placed": vo_placed, "cues": cues,
+            "W": W, "H": H, "fps": fps, "eff": eff, "vo_placed": vo_placed, "cues": cues, "subs": subs,
             "warnings": warnings,
             "applied": {"width": W, "height": H, "fps": fps, "duration": round(total, 3),
                         "effects": eff, "effects_defaults_used": defaults_used,
@@ -907,6 +963,8 @@ def plan_view(plan: dict[str, Any]) -> dict[str, Any]:
                           for p in plan["vo_placed"]],
             "captions": [{"start": round(q.start, 2), "end": round(q.end, 2), "text": q.text}
                          for q in plan["cues"]],
+            "subs": [{"start": round(q.start, 2), "end": round(q.end, 2), "text": q.text}
+                     for q in plan.get("subs") or []],
             "applied": plan["applied"], "warnings": plan["warnings"]}
 
 
@@ -1000,7 +1058,7 @@ def render(spec: dict[str, Any], progress=lambda msg: None, dry_run: bool = Fals
         style = spec.get("caption_style", {}) or {}
         title = spec.get("title")
         ass = work / "subs.ass"
-        write_ass(ass, cues, W, H, style, spec.get("highlight_words", []) or [], title)
+        write_ass(ass, cues, W, H, style, spec.get("highlight_words", []) or [], title, plan.get("subs"))
 
         # 合成：字幕 + 人声处理 + BGM
         progress("合成成片")

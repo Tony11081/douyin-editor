@@ -192,20 +192,25 @@ def render(spec: dict) -> dict:
 
     spec 字段（时间都是原视频的秒数）：
     - video_id（必填）
-    - clips: [{start, end, zoom?=1.0, text?, focus_y?}] 按成片顺序排列，可重排。
+    - clips: [{start, end, zoom?=1.0, text?, sub?, focus_y?}] 按成片顺序排列，可重排。
+        sub 是双语字幕的译文（第二行）：一句字符串 = 显示在这段说话的整段时间上；
+        字符串列表且条数等于这段中文字幕切出的条数时一条对一条（先 validate_spec 看 captions 切成几条）。
+        翻译按句：不合并、不拆分、不调序，保留否定、数字和因果转折，尽量短。
         zoom 如 1.12 表示该片段推近（跳切推镜头）。text 是该片段的正确字幕文字（可选；
         不填就用转写的字自动生成）。
     - captions: "auto"（默认）或 "none"
     - corrections: {"错字": "正确"} 自动字幕时的错字替换，例如 {"yellow88": "1688"}
     - highlight_words: ["便宜", "百分百"] 字幕里标黄的重点词
     - caption_style: {font_size?, y?=0.68（字幕底边所在高度比例）, max_chars?=12,
-        color?="#FFFFFF", highlight_color?="#FFD400", outline?, font?}
+        color?="#FFFFFF", highlight_color?="#FFD400", outline?, font?,
+        双语：sub_size_ratio?=0.045, sub_color?="#FFFFFF", sub_outline_color?, sub_position?="below"|"above",
+        sub_gap?=14（两行间距像素）, sub_font?}
     - title: {text, duration?（秒，不填=全程）, y?=0.085, font_size?, color?, color2?, outline_color?}
         顶部大标题（第一行 color，第二行起 color2）
     - bgm: {name（list_music 里的文件名）或 url, volume?=0.12, fade_in?=0.5, fade_out?=1.5}
         人声出现时 BGM 自动压低。
     - audio: {denoise?=true, loudnorm?=true}
-    - voiceover: {tts_id, at?: [每句在成片里的开始秒数，数量和配音句数一致；不填按配音顺排],
+    - voiceover: {tts_id, at?: [每句在成片里的开始秒数，数量和配音句数一致；不填按配音顺排], subs?: [每句配音的译文，双语字幕用],
         volume?=1.0, original_volume?=0（原片声音保留多少，0 = 只要配音）}
         有 voiceover 且原片没转写时，字幕自动按配音文字生成；也可 captions: "voiceover" 强制使用。
     - effects: {drift?=0.04（缓慢推拉，0 关闭）, flash_first?=true, sfx?=true（转场音效）,
