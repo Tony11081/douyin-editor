@@ -440,17 +440,28 @@ def _dir_size(p: Path) -> int:
         p.stat().st_size if p.exists() else 0)
 
 
+def _newest_mtime(p: Path) -> float:
+    if p.is_dir():
+        ts = [f.stat().st_mtime for f in p.rglob("*")]
+        return max(ts + [p.stat().st_mtime])
+    return p.stat().st_mtime if p.exists() else 0.0
+
+
 @mcp.tool()
-def cleanup(keep_video_ids: list[str] | None = None, keep_output_ids: list[str] | None = None,
-            dry_run: bool = True) -> dict:
-    """清理服务器上的历史素材：删除视频库里的视频（原片、录屏、AI 生成）、已渲染的成片、AI 配音和下载缓存，
-    keep_video_ids / keep_output_ids 里列出的保留（保留的视频，它渲染出的成片也一起保留）。
+def cleanup(older_than_hours: float = 48, keep_video_ids: list[str] | None = None,
+            keep_output_ids: list[str] | None = None, dry_run: bool = True) -> dict:
+    """清理服务器上的历史素材：只删「最后改动早于 older_than_hours 小时」的视频（原片、录屏、AI 生成）、
+    成片、AI 配音和下载缓存，所以别的对话正在剪的新素材不会被删。keep_* 里列出的一律保留
+    （保留的视频，它渲染出的成片也保留）。正在排队/运行的任务用到的视频也不删。
     默认 dry_run=True 只列出会删什么、能腾出多少空间；确认后传 dry_run=False 真删。音乐库不动。"""
+    import shutil
+    cutoff = time.time() - max(1.0, float(older_than_hours)) * 3600
     keep_v = set(keep_video_ids or [])
     keep_o = set(keep_output_ids or [])
-    gone_v, gone_o, freed = [], [], 0
+    busy = [j for j in _jobs.values() if j["state"] in ("queued", "running")]
+    gone_v, gone_o, gone_c, freed = [], [], [], 0
     for d in sorted(editor.VIDEOS.iterdir()):
-        if not d.is_dir() or d.name in keep_v:
+        if not d.is_dir() or d.name in keep_v or _newest_mtime(d) > cutoff:
             continue
         name = ""
         try:
@@ -460,30 +471,36 @@ def cleanup(keep_video_ids: list[str] | None = None, keep_output_ids: list[str] 
         gone_v.append({"video_id": d.name, "name": name})
         freed += _dir_size(d)
         if not dry_run:
-            import shutil
             shutil.rmtree(d, ignore_errors=True)
     for j in sorted(editor.OUTPUTS.glob("*.json")):
         try:
             r = json.loads(j.read_text())
         except Exception:
             continue
-        if r["output_id"] in keep_o or r["spec"].get("video_id") in keep_v:
+        f = editor.OUTPUTS / r["file"]
+        if (r["output_id"] in keep_o or r["spec"].get("video_id") in keep_v
+                or max(_newest_mtime(j), _newest_mtime(f)) > cutoff):
             continue
-        files = [j, editor.OUTPUTS / r["file"]]
         gone_o.append(r["output_id"])
-        freed += sum(_dir_size(f) for f in files)
+        freed += _dir_size(j) + _dir_size(f)
         if not dry_run:
-            for f in files:
-                f.unlink(missing_ok=True)
-    caches = [editor.DATA_DIR / k for k in ("tts", "overlays")]
-    for c in caches:
-        freed += _dir_size(c)
-        if not dry_run and c.is_dir():
-            import shutil
-            shutil.rmtree(c, ignore_errors=True)
-            c.mkdir(exist_ok=True)
-    return {"dry_run": dry_run, "videos": gone_v, "outputs": gone_o,
-            "caches": [c.name for c in caches], "freed_mb": round(freed / 1e6, 1)}
+            j.unlink(missing_ok=True)
+            f.unlink(missing_ok=True)
+    for kind in ("tts", "overlays"):
+        c = editor.DATA_DIR / kind
+        if not c.is_dir():
+            continue
+        for item in c.iterdir():
+            if _newest_mtime(item) > cutoff:
+                continue
+            gone_c.append(f"{kind}/{item.name}")
+            freed += _dir_size(item)
+            if not dry_run:
+                shutil.rmtree(item, ignore_errors=True) if item.is_dir() else item.unlink(missing_ok=True)
+    return {"dry_run": dry_run, "older_than_hours": older_than_hours,
+            "busy_jobs": [{"job_id": j["job_id"], "kind": j["kind"], "state": j["state"]} for j in busy],
+            "videos": gone_v, "outputs": gone_o, "cache_files": len(gone_c),
+            "freed_mb": round(freed / 1e6, 1)}
 
 
 # ---------------------------------------------------------------- 维护：自更新、改配置
