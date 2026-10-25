@@ -435,6 +435,57 @@ def list_outputs() -> list[dict]:
     return out
 
 
+def _dir_size(p: Path) -> int:
+    return sum(f.stat().st_size for f in p.rglob("*") if f.is_file()) if p.is_dir() else (
+        p.stat().st_size if p.exists() else 0)
+
+
+@mcp.tool()
+def cleanup(keep_video_ids: list[str] | None = None, keep_output_ids: list[str] | None = None,
+            dry_run: bool = True) -> dict:
+    """清理服务器上的历史素材：删除视频库里的视频（原片、录屏、AI 生成）、已渲染的成片、AI 配音和下载缓存，
+    keep_video_ids / keep_output_ids 里列出的保留（保留的视频，它渲染出的成片也一起保留）。
+    默认 dry_run=True 只列出会删什么、能腾出多少空间；确认后传 dry_run=False 真删。音乐库不动。"""
+    keep_v = set(keep_video_ids or [])
+    keep_o = set(keep_output_ids or [])
+    gone_v, gone_o, freed = [], [], 0
+    for d in sorted(editor.VIDEOS.iterdir()):
+        if not d.is_dir() or d.name in keep_v:
+            continue
+        name = ""
+        try:
+            name = json.loads((d / "meta.json").read_text()).get("name", "")
+        except Exception:
+            pass
+        gone_v.append({"video_id": d.name, "name": name})
+        freed += _dir_size(d)
+        if not dry_run:
+            import shutil
+            shutil.rmtree(d, ignore_errors=True)
+    for j in sorted(editor.OUTPUTS.glob("*.json")):
+        try:
+            r = json.loads(j.read_text())
+        except Exception:
+            continue
+        if r["output_id"] in keep_o or r["spec"].get("video_id") in keep_v:
+            continue
+        files = [j, editor.OUTPUTS / r["file"]]
+        gone_o.append(r["output_id"])
+        freed += sum(_dir_size(f) for f in files)
+        if not dry_run:
+            for f in files:
+                f.unlink(missing_ok=True)
+    caches = [editor.DATA_DIR / k for k in ("tts", "overlays")]
+    for c in caches:
+        freed += _dir_size(c)
+        if not dry_run and c.is_dir():
+            import shutil
+            shutil.rmtree(c, ignore_errors=True)
+            c.mkdir(exist_ok=True)
+    return {"dry_run": dry_run, "videos": gone_v, "outputs": gone_o,
+            "caches": [c.name for c in caches], "freed_mb": round(freed / 1e6, 1)}
+
+
 # ---------------------------------------------------------------- 维护：自更新、改配置
 APP_DIR = Path(__file__).resolve().parents[1]
 ENV_FILE = APP_DIR / ".env"
