@@ -24,12 +24,13 @@ def fake_post(url, json=None, timeout=None, headers=None):  # noqa: A002
     calls.append({"url": url, "body": json, "auth": headers["Authorization"]})
     # 0.4 秒静音 + 按字数长度的"语音" + 0.5 秒静音，测试首尾静音裁剪
     dur = 0.2 * len(json["input"])
-    with tempfile.NamedTemporaryFile(suffix=".mp3") as f:
+    with tempfile.TemporaryDirectory() as folder:
+        path = Path(folder) / "voice.mp3"
         subprocess.run(["ffmpeg", "-y", "-v", "error", "-f", "lavfi", "-i",
                         f"sine=f=300:d={dur}:r=24000", "-af",
-                        "adelay=400,apad=pad_dur=0.5,volume=0.5", "-c:a", "libmp3lame", f.name],
+                        "adelay=400,apad=pad_dur=0.5,volume=0.5", "-c:a", "libmp3lame", str(path)],
                        check=True)
-        return FakeResp(Path(f.name).read_bytes())
+        return FakeResp(path.read_bytes())
 
 
 tts.requests.post = fake_post

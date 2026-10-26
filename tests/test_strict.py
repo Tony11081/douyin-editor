@@ -27,10 +27,11 @@ class FakeResp:
 
 
 def fake_post(url, json=None, timeout=None, headers=None):  # noqa: A002
-    with tempfile.NamedTemporaryFile(suffix=".mp3") as f:
+    with tempfile.TemporaryDirectory() as folder:
+        path = Path(folder) / "voice.mp3"
         subprocess.run(["ffmpeg", "-y", "-v", "error", "-f", "lavfi", "-i", "sine=f=300:d=1.5:r=24000",
-                        "-af", "volume=0.5", "-c:a", "libmp3lame", f.name], check=True)
-        return FakeResp(Path(f.name).read_bytes())
+                        "-af", "volume=0.5", "-c:a", "libmp3lame", str(path)], check=True)
+        return FakeResp(path.read_bytes())
 
 
 tts.requests.post = fake_post

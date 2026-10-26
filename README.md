@@ -109,6 +109,84 @@ claude.ai →「设置 → 连接器 → 添加自定义连接器」，名称填
 - 样式：`caption_style` 的 `sub_size_ratio`、`sub_color`、`sub_outline_color`、`sub_position`（below/above）、`sub_gap`、`sub_font`。
 - `validate_spec` 的结果里 `subs` 列出每条译文的时间，先预演再渲染。
 
+## 长视频切短视频
+
+`get_transcript(video_id, start=600, end=900, words=false)` 只读取与原片 600–900 秒相交的句子；
+省略 `words` 会附逐字时间，省略全部新参数时输出格式保持不变。句子保留原编号和完整文字，
+逐字列表按区间筛选，时间不从零重新计数。
+
+`render_batch(specs=[方案一, 方案二], names=["直播切片一", "直播切片二"])` 先校验全部方案，
+任一条有误就整批拒绝并指出第几条；全部通过后返回 `job_ids`，逐条 `wait_job` 获取成片。
+`names` 可省略；提供时必须与方案数量相同，名称写入成片 JSON，`list_outputs` 也会返回。
+批量校验不保证后续下载或编码一定成功，各任务失败仍通过 `wait_job` 报告。
+
+超过一小时的原片每 10 分钟解码、转写一段，合并回原片时间轴，报告「已转写 X/Y 分钟」。
+不会一次解码整段长视频到内存；原片仍需保留，磁盘空间和运行时间取决于视频长度。
+切段交界的词可能被 ASR 截断，选剪辑点前请核对交界附近的原声。
+
+## 专属词表
+
+首次启动创建 `DATA_DIR/glossary.json`，已有词表保持原样。默认八条：
+IC→Etsy、意见代发→一件代发、亚罗巴巴→阿里巴巴、报品→爆品、代价工→代加工、
+直播客→直播课、实效→时效、上船→上传。
+
+- `glossary_list()`：读取当前词表。
+- `glossary_set(entries={"IC": "Etsy", "新错词": "正确写法"})`：追加或覆盖指定词条，其他条目保留。
+- `glossary_remove(keys=["新错词"])`：删除指定词条。
+
+转写提示会包含词表的正确写法，并保留原中文提示。渲染时，片段文字、逐字转写和配音字幕
+都会应用词表；`spec.corrections` 的同名键优先，可以用 `{"IC":"IC"}` 禁用这一条自动更正。
+匹配区分大小写，重叠时优先较长词，不会对替换结果再次替换；`applied.corrections` 只列实际生效的词条。
+更新采用进程内锁和原子文件替换，适用于当前单服务进程的并发调用；修改不会重写已有成片。
+
+## 首帧封面
+
+```python
+make_cover(video_id="原片编号", time=12.5, title="直播爆品\nEtsy 一件代发",
+           subtitle="从选品到交付", style={"highlight": ["Etsy"], "y": 0.20})
+# 也可传 output_id，和 video_id 二选一。
+# wait_job 返回 cover_id、PNG download_url。
+render({"video_id": "原片编号", "clips": [{"start": 10, "end": 30}],
+        "cover": {"cover_id": "封面编号", "duration": 0.5}})
+```
+
+封面为 1080×1920 PNG，存于 `DATA_DIR/covers/`，下载路由 `/files/{token}/covers/{name}`。
+HLG/PQ 原片复用 render 的 HDR 色调映射；默认标题位于画面上三分之一，白色 Noto Sans CJK 粗体、
+黑描边，指定词标黄。标题最多两行、60 字符，过长会要求精简；`style.y` 范围 0–0.8。
+安装脚本已安装 Noto CJK，也可将字体置于现有 `FONTS_DIR`。
+
+`cover.duration` 默认 0.5 秒，必须大于零且不超过成片长度。封面按成片分辨率缩放，覆盖所有视觉层，
+包括开头该时段的烧录字幕；声音连续播放，字幕与后续视频时间不位移，导出的字幕也保留原时间。
+`get_frames(output_id=..., times=[0, 0.8])` 可核对封面帧及封面结束后的画面。
+
+## 导出字幕文件
+
+`export_subtitles(output_id="成片编号", format="srt", bilingual=true)` 返回下载链接，
+格式可选 `srt` 或 `vtt`，默认单语 SRT。文件为 UTF-8，存于 `DATA_DIR/subtitles/`，
+下载路由 `/files/{token}/subtitles/{name}`，与视频及封面使用相同的访问令牌。
+
+来源是成片 JSON 的 `captions` / `subs`，不重新转写、不自动翻译。双语按原文与译文区间的交集切段：
+每条第一行原文、第二行译文，长译文覆盖多个原文片段时会重复显示；一个原文片段跨越两条译文时，
+在译文交界处分成两条。文本内部换行合并为空格，保证每条两行。缺失译文或译文重叠时明确报错。
+
+对本服务成片做变速时使用 `mux({"output_id":"成片编号", "speed":1.4, "original_volume":1})`，
+字幕和译文的开始、结束时间均除以 speed，再从 mux 返回的新 `output_id` 导出。
+原有 `mux({"video_id":...})` 用法保留；外部导入视频没有可靠的成片字幕来源，导出时会报错，
+即使导入链接曾来自本服务也不通过文件名或 URL 猜测来源。没有字幕的成片同样会明确报错。
+
+## 离线测试
+
+安装 Python 依赖、pytest、ffmpeg（含 libx264、libx265、zscale、libass）及 Noto CJK 后运行：
+
+```bash
+python -m pip install -r requirements.txt pytest
+python -m pytest -q
+```
+
+测试在临时目录使用 lavfi 假视频和 API / ASR 替身，不调用付费服务或下载转写模型。
+原有六份脚本测试通过 pytest 在独立进程运行，以免各自的请求替身互相影响。
+新测试涵盖批量拒绝、并发词表、长片时间戳、HLG 封面、首帧音画验证、双语文件解析和 mux 变速。
+
 ## 常用命令
 
 ```bash

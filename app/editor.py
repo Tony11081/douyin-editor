@@ -8,6 +8,7 @@ import os
 import re
 import shutil
 import subprocess
+import threading
 import uuid
 from dataclasses import dataclass
 from pathlib import Path
@@ -47,6 +48,62 @@ BREAK_PUNCT = set("，。！？、；：,.!?;:…")
 
 class EditorError(Exception):
     pass
+
+
+GLOSSARY_DEFAULTS = {"IC": "Etsy", "意见代发": "一件代发", "亚罗巴巴": "阿里巴巴", "报品": "爆品",
+                     "代价工": "代加工", "直播客": "直播课", "实效": "时效", "上船": "上传"}
+_glossary_lock = threading.RLock()
+
+
+def _save_glossary(entries: dict[str, str]) -> None:
+    path = DATA_DIR / "glossary.json"
+    tmp = path.with_name(f".glossary-{uuid.uuid4().hex}.json")
+    try:
+        tmp.write_text(json.dumps(entries, ensure_ascii=False, indent=2), encoding="utf-8")
+        tmp.replace(path)
+    finally:
+        tmp.unlink(missing_ok=True)
+
+
+def glossary_list() -> dict[str, str]:
+    """读取专属词表；首次使用时写入八条默认词，不覆盖已有文件。"""
+    with _glossary_lock:
+        path = DATA_DIR / "glossary.json"
+        if not path.exists():
+            _save_glossary(GLOSSARY_DEFAULTS)
+        try:
+            entries = json.loads(path.read_text(encoding="utf-8"))
+            _check_glossary(entries)
+        except (OSError, ValueError) as e:
+            raise EditorError("glossary.json 不是有效的词表，请修正为 {错写: 正确写法}") from e
+        return entries
+
+
+def _check_glossary(entries: Any) -> None:
+    if not isinstance(entries, dict) or any(not isinstance(k, str) or not k.strip()
+            or not isinstance(v, str) or not v.strip() for k, v in entries.items()):
+        raise EditorError("词表需要 {错写: 正确写法}，键和值都必须是非空文字")
+
+
+def glossary_set(entries: dict[str, str]) -> dict[str, str]:
+    """追加或覆盖指定词条，保留其他词条；写入期间不会暴露半个 JSON。"""
+    _check_glossary(entries)
+    with _glossary_lock:
+        merged = {**glossary_list(), **entries}
+        _save_glossary(merged)
+        return merged
+
+
+def glossary_remove(keys: list[str]) -> dict[str, str]:
+    """删除指定词条；不存在的键不改变词表。"""
+    if not isinstance(keys, list) or any(not isinstance(k, str) or not k.strip() for k in keys):
+        raise EditorError("keys 需要非空文字组成的列表")
+    with _glossary_lock:
+        entries = glossary_list()
+        for key in keys:
+            entries.pop(key, None)
+        _save_glossary(entries)
+        return entries
 
 
 # ---------------------------------------------------------------- 工具函数
@@ -96,6 +153,16 @@ def video_dir(video_id: str) -> Path:
 
 def load_meta(video_id: str) -> dict[str, Any]:
     return json.loads((video_dir(video_id) / "meta.json").read_text())
+
+
+def load_output(output_id: str) -> dict[str, Any]:
+    """读取已有成片信息，拒绝目录路径和不存在的成片。"""
+    if not isinstance(output_id, str) or not re.fullmatch(r"[a-z0-9]{12}", output_id):
+        raise EditorError("output_id 格式不对")
+    path = OUTPUTS / f"{output_id}.json"
+    if not path.exists() or not (OUTPUTS / f"{output_id}.mp4").exists():
+        raise EditorError(f"找不到成片 {output_id}")
+    return json.loads(path.read_text())
 
 
 def fmt_t(t: float) -> str:
@@ -299,36 +366,54 @@ def _to_simplified(text: str) -> str:
     return _cc.convert(text) if _cc else text
 
 
-def transcribe(video_id: str, language: str = "zh") -> dict[str, Any]:
+def transcribe(video_id: str, language: str = "zh", progress=lambda msg: None) -> dict[str, Any]:
     global _model
     d = video_dir(video_id)
     meta = load_meta(video_id)
+    duration = float(meta["duration"])
+    if not meta.get("has_audio") or not math.isfinite(duration) or duration < 1:
+        raise EditorError("音频太短或没有声音")
+    if not isinstance(language, str) or not re.fullmatch(r"[a-z]{2,3}", language):
+        raise EditorError("language 请使用语言代码，例如 zh 或 en")
     # 直接用 ffmpeg 解码成 16kHz 单声道 float32 数组交给 Whisper，
     # 不经过 PyAV（新版 PyAV 和 faster-whisper 的 decode_audio 不兼容）
     import numpy as np
-    p = subprocess.run(["ffmpeg", "-v", "error", "-i", str(d / meta["source"]), "-vn",
-                        "-ac", "1", "-ar", "16000", "-f", "f32le", "-"],
-                       capture_output=True, timeout=1800)
-    if p.returncode != 0:
-        raise EditorError(f"提取音频失败:\n{p.stderr.decode(errors='ignore')[-1500:]}")
-    audio = np.frombuffer(p.stdout, dtype=np.float32)
-    if audio.size < 16000:
-        raise EditorError("音频太短或没有声音")
     from faster_whisper import WhisperModel  # 延迟导入，启动快
     if _model is None:
         _model = WhisperModel(WHISPER_MODEL, device="auto", compute_type="int8")
     prompt = "以下是普通话口播，使用简体中文和标点。" if language.startswith("zh") else None
-    segs, _ = _model.transcribe(audio, language=language, word_timestamps=True,
-                                vad_filter=True, initial_prompt=prompt, beam_size=5)
+    terms = list(dict.fromkeys(glossary_list().values()))
+    if terms:
+        prompt = (prompt or "") + " 专属词汇：" + "、".join(terms)
     words, segments = [], []
-    for sg in segs:
-        first = len(words)
-        for w in sg.words or []:
-            t = _to_simplified(w.word.strip())
-            if t:
-                words.append({"i": len(words), "s": round(w.start, 2), "e": round(w.end, 2), "w": t})
-        segments.append({"s": round(sg.start, 2), "e": round(sg.end, 2),
-                         "text": _to_simplified(sg.text.strip()), "w0": first, "w1": len(words) - 1})
+    chunk = 600 if duration > 3600 else duration
+    for offset in range(0, math.ceil(duration), math.ceil(chunk)):
+        span = min(chunk, duration - offset)
+        p = subprocess.run(["ffmpeg", "-v", "error", "-ss", str(offset), "-i", str(d / meta["source"]),
+                            "-t", str(span), "-vn", "-ac", "1", "-ar", "16000", "-f", "f32le", "-"],
+                           capture_output=True, timeout=1800)
+        if p.returncode != 0:
+            raise EditorError(f"提取音频失败:\n{p.stderr.decode(errors='ignore')[-1500:]}")
+        audio = np.frombuffer(p.stdout, dtype=np.float32)
+        if not audio.size:
+            raise EditorError(f"第 {offset / 60:.1f} 分钟提取不到音频，请检查原片")
+        segs, _ = _model.transcribe(audio, language=language, word_timestamps=True,
+                                  vad_filter=True, initial_prompt=prompt, beam_size=5)
+        for sg in segs:
+            start, end = max(0, min(span, sg.start)), max(0, min(span, sg.end))
+            if end <= start:
+                continue
+            first = len(words)
+            for w in sg.words or []:
+                t = _to_simplified(w.word.strip())
+                ws, we = max(start, min(end, w.start)), max(start, min(end, w.end))
+                if t and we > ws:
+                    words.append({"i": len(words), "s": round(offset + ws, 2),
+                                  "e": round(offset + we, 2), "w": t})
+            segments.append({"s": round(offset + start, 2), "e": round(offset + end, 2),
+                             "text": _to_simplified(sg.text.strip()), "w0": first, "w1": len(words) - 1})
+            progress(f"已转写 {(offset + min(span, sg.end)) / 60:.1f}/{duration / 60:.1f} 分钟")
+        progress(f"已转写 {(offset + span) / 60:.1f}/{duration / 60:.1f} 分钟")
     data = {"language": language, "segments": segments, "words": words}
     (d / "transcript.json").write_text(json.dumps(data, ensure_ascii=False))
     return data
@@ -352,14 +437,26 @@ def whisper_file(path: Path, language: str = "zh") -> str:
     return _to_simplified("".join(sg.text for sg in segs).strip())
 
 
-def transcript_text(data: dict[str, Any]) -> str:
-    """紧凑格式：每句一行 + 逐字时间，方便精确下刀。"""
+def transcript_text(data: dict[str, Any], start: float | None = None,
+                    end: float | None = None, words: bool = True) -> str:
+    """按原时间读取相交的句子；words=false 只返回逐句文本，不改变默认输出。"""
+    for key, value in (("start", start), ("end", end)):
+        if value is not None and (isinstance(value, bool) or not isinstance(value, (int, float))
+                                  or not math.isfinite(value) or value < 0):
+            raise EditorError(f"{key} 必须是非负、有限的秒数")
+    if end is not None and end <= (start or 0):
+        raise EditorError("end 必须大于 start")
+    if not isinstance(words, bool):
+        raise EditorError("words 必须是 true 或 false")
     lines = []
     W = data["words"]
     for k, sg in enumerate(data["segments"]):
+        if (start is not None and sg["e"] <= start) or (end is not None and sg["s"] >= end):
+            continue
         lines.append(f"S{k} [{fmt_t(sg['s'])}-{fmt_t(sg['e'])}] {sg['text']}")
         ws = W[sg["w0"]: sg["w1"] + 1]
-        if ws:
+        ws = [w for w in ws if (start is None or w["e"] > start) and (end is None or w["s"] < end)]
+        if words and ws:
             lines.append("   " + " ".join(f"{fmt_t(w['s'])}~{fmt_t(w['e'])}{w['w']}" for w in ws))
     return "\n".join(lines)
 
@@ -465,7 +562,7 @@ def _speech_span(words: list[dict], s: float, e: float) -> tuple[float, float]:
 
 
 def _tokens_from_words(words: list[dict], s: float, e: float,
-                       corrections: dict[str, str]) -> list[dict]:
+                       corrections: dict[str, str], applied: dict | None = None) -> list[dict]:
     """取片段内的字，套用错字更正（更正项会合并成一个带时间的 token）。"""
     ws = [dict(w) for w in words if s - 0.05 <= (w["s"] + w["e"]) / 2 <= e + 0.05]
     if not ws or not corrections:
@@ -481,22 +578,52 @@ def _tokens_from_words(words: list[dict], s: float, e: float,
             if any(not (b <= x or a >= y) for x, y, _ in repl):
                 continue
             repl.append((a, b, good))
+            if applied is not None and bad != good:
+                applied[bad] = good
     if not repl:
         return ws
-    out, used = [], set()
-    starts = {owner[a]: (a, b, g) for a, b, g in repl}
-    i = 0
-    while i < len(ws):
-        if i in starts:
-            a, b, g = starts[i]
-            last = owner[b - 1]
-            out.append({"s": ws[i]["s"], "e": ws[last]["e"], "w": g})
-            used.update(range(i, last + 1))
-            i = last + 1
-        else:
-            out.append(ws[i])
-            i += 1
+    out = []
+    offsets, cursor = [], 0
+    for w in ws:
+        offsets.append(cursor)
+        cursor += len(w["w"])
+
+    def piece(a, b, text):
+        if not text:
+            return
+        first, last = owner[a], owner[b - 1]
+        wa, wb = ws[first], ws[last]
+        start = wa["s"] + (wa["e"] - wa["s"]) * (a - offsets[first]) / len(wa["w"])
+        end = wb["s"] + (wb["e"] - wb["s"]) * (b - offsets[last]) / len(wb["w"])
+        out.append({"s": start, "e": end, "w": text})
+
+    def unchanged(a, b):
+        while a < b:
+            i = owner[a]
+            stop = min(b, offsets[i] + len(ws[i]["w"]))
+            piece(a, stop, joined[a:stop])
+            a = stop
+
+    cursor = 0
+    for a, b, good in sorted(repl):
+        unchanged(cursor, a)
+        piece(a, b, good)
+        cursor = b
+    unchanged(cursor, len(joined))
     return out
+
+
+def _correct_text(text: str, corrections: dict[str, str], applied: dict | None) -> str:
+    if not corrections:
+        return text
+    pattern = "|".join(re.escape(k) for k in sorted(corrections, key=len, reverse=True))
+    def replace(match):
+        bad = match.group()
+        good = corrections[bad]
+        if applied is not None and bad != good:
+            applied[bad] = good
+        return good
+    return re.sub(pattern, replace, text)
 
 
 def _clip_sub(c: dict) -> list[str]:
@@ -508,7 +635,7 @@ def _clip_sub(c: dict) -> list[str]:
 
 def build_cues(clips: list[dict], words: list[dict] | None, max_chars: int,
                corrections: dict[str, str], subs_out: list | None = None,
-               warnings: list | None = None) -> list[Cue]:
+               warnings: list | None = None, applied: dict | None = None) -> list[Cue]:
     """subs_out 不为 None 时同时收集双语副字幕：clip.sub 是一句译文时覆盖整段说话的时间；
     是列表且条数等于这段中文字幕的条数时一条对一条（同一句话的同一时间）。"""
     cues: list[Cue] = []
@@ -521,8 +648,7 @@ def build_cues(clips: list[dict], words: list[dict] | None, max_chars: int,
         words = c.get("_words", all_words)
         subs = _clip_sub(c)
         if text is not None:
-            for bad, good in corrections.items():
-                text = text.replace(bad, good)
+            text = _correct_text(text, corrections, applied)
             chunks = split_text(text, max_chars)
             if chunks:
                 ss, se = _speech_span(words or [], s, e)
@@ -546,7 +672,7 @@ def build_cues(clips: list[dict], words: list[dict] | None, max_chars: int,
             if subs_out is not None and subs:
                 ss, se = _speech_span(words, s, e)
                 subs_out.append(Cue(offset + ss - s, offset + se - s, " ".join(subs)))
-            toks = _tokens_from_words(words, s, e, corrections)
+            toks = _tokens_from_words(words, s, e, corrections, applied)
             cur, c0, c1 = "", None, None
             for tk in toks:
                 piece = tk["w"]
@@ -587,13 +713,11 @@ def voiceover_subs(placed: list[dict], subs: list[str], total: float) -> list[Cu
 
 
 def voiceover_cues(placed: list[dict], max_chars: int, corrections: dict[str, str],
-                   total: float) -> list[Cue]:
+                   total: float, applied: dict | None = None) -> list[Cue]:
     """配音字幕：每句文字按长度切成短行，在这句配音的时长里按字数分配时间。"""
     cues: list[Cue] = []
     for p in placed:
-        text = p["text"]
-        for bad, good in corrections.items():
-            text = text.replace(bad, good)
+        text = _correct_text(p["text"], corrections, applied)
         chunks = split_text(text, max_chars)
         if not chunks:
             continue
@@ -856,6 +980,12 @@ def plan_render(spec: dict[str, Any]) -> dict[str, Any]:
                          "out_end": round(t_out + dur, 3), "zoom": c.get("zoom", 1.0)})
         t_out += dur
     total = t_out
+    cover = spec.get("cover")
+    if cover:
+        import covers
+        covers.cover_path(cover["cover_id"])
+        if cover.get("duration", 0.5) > total:
+            raise EditorError("cover.duration 不能超过成片时长，请缩短封面显示时间")
 
     eff = {**EFFECT_DEFAULTS, **(spec.get("effects") or {})}
     defaults_used = sorted(set(EFFECT_DEFAULTS) - set(spec.get("effects") or {}))
@@ -869,7 +999,10 @@ def plan_render(spec: dict[str, Any]) -> dict[str, Any]:
     cap = spec.get("captions", "auto")
     style = spec.get("caption_style") or {}
     max_chars = int(style.get("max_chars", 12))
-    corrections = spec.get("corrections") or {}
+    corrections = {**glossary_list(), **(spec.get("corrections") or {})}
+    if any(not key for key in corrections):
+        raise EditorError("corrections 的错写键不能为空")
+    applied_corrections: dict[str, str] = {}
     cues: list[Cue] = []
     subs: list[Cue] = []
     caption_mode = "none"
@@ -880,7 +1013,7 @@ def plan_render(spec: dict[str, Any]) -> dict[str, Any]:
         words = tr["words"] if tr else None
         has_text = any("text" in c for c in clips)
         if vo and (cap == "voiceover" or (not words and not has_text)):
-            cues = voiceover_cues(vo_placed, max_chars, corrections, total)
+            cues = voiceover_cues(vo_placed, max_chars, corrections, total, applied_corrections)
             caption_mode = "voiceover"
             vsubs = vo.get("subs") or []
             if vsubs:
@@ -899,7 +1032,7 @@ def plan_render(spec: dict[str, Any]) -> dict[str, Any]:
                         raise EditorError(f"clips 里来自视频 {vid} 的片段没有转写也没写 text，字幕没法生成")
                     c["_words"] = t2["words"] if t2 else []
             try:
-                cues = build_cues(clips, words, max_chars, corrections, subs, warnings)
+                cues = build_cues(clips, words, max_chars, corrections, subs, warnings, applied_corrections)
                 subs = _finish_cues(subs, total)
             finally:
                 for c in clips:
@@ -954,6 +1087,7 @@ def plan_render(spec: dict[str, Any]) -> dict[str, Any]:
                         "effects": eff, "effects_defaults_used": defaults_used,
                         "caption_mode": caption_mode, "caption_style": {**pre, **style},
                         "audio": {"denoise": True, "loudnorm": True, **(spec.get("audio") or {})},
+                        **({"corrections": applied_corrections} if applied_corrections else {}),
                         "preset": spec.get("preset", "medium")}}
 
 
@@ -968,7 +1102,8 @@ def plan_view(plan: dict[str, Any]) -> dict[str, Any]:
             "applied": plan["applied"], "warnings": plan["warnings"]}
 
 
-def render(spec: dict[str, Any], progress=lambda msg: None, dry_run: bool = False) -> dict[str, Any]:
+def render(spec: dict[str, Any], progress=lambda msg: None, dry_run: bool = False,
+           name: str | None = None) -> dict[str, Any]:
     plan = plan_render(spec)
     if dry_run:
         return {"dry_run": True, **plan_view(plan)}
@@ -1143,7 +1278,8 @@ def render(spec: dict[str, Any], progress=lambda msg: None, dry_run: bool = Fals
                       f"eof_action=pass:format=auto[bo{k}]")
             cur = f"[bo{k}]"
         vlabel = "[vs]"
-        fv.append(f"{cur}subtitles=filename={ass.name}:fontsdir={FONTS_DIR}{vlabel}")
+        fonts_dir = FONTS_DIR.replace("\\", "/").replace(":", "\\:").replace("'", "'\\''")
+        fv.append(f"{cur}subtitles=filename={ass.name}:fontsdir='{fonts_dir}'{vlabel}")
         voice_expr = f"[0:a]{','.join(voice_chain)}[voice]"
         if vo_track:
             vi = nin
@@ -1176,6 +1312,15 @@ def render(spec: dict[str, Any], progress=lambda msg: None, dry_run: bool = Fals
             inputs += ["-f", "lavfi", "-i", f"color=c=0x{bc}:s={W}x{bh_}:r={fps}:d={total + 1:.3f}"]
             fc.append(f"{vlabel}[{nin}:v]overlay=x='-w+W*t/{total:.3f}':y=0:shortest=1[vb]")
             vlabel = "[vb]"
+            nin += 1
+        cover = spec.get("cover")
+        if cover:
+            import covers
+            progress("叠加首帧封面（保持声音与字幕时间轴）")
+            inputs += ["-loop", "1", "-framerate", str(fps), "-i", str(covers.cover_path(cover["cover_id"]))]
+            fc.append(f"[{nin}:v]scale={W}:{H},setsar=1[cover]")
+            fc.append(f"{vlabel}[cover]overlay=0:0:enable='lt(t,{cover.get('duration', 0.5)})'[vc]")
+            vlabel = "[vc]"
             nin += 1
         fc.append(f"{vlabel}null[v]")
         mix = ["[voice]"]
@@ -1228,6 +1373,11 @@ def render(spec: dict[str, Any], progress=lambda msg: None, dry_run: bool = Fals
                       {"start": round(p["start"], 2), "end": round(p["end"], 2), "text": p["text"]}
                       for p in vo_placed], "captions": [
                       {"start": round(q.start, 2), "end": round(q.end, 2), "text": q.text} for q in cues]}
+        if name is not None:
+            result["name"] = name
+        if plan.get("subs"):
+            result["subs"] = [{"start": round(q.start, 2), "end": round(q.end, 2), "text": q.text}
+                              for q in plan["subs"]]
         (OUTPUTS / f"{out_id}.json").write_text(json.dumps({"spec": spec, **result}, ensure_ascii=False))
         return result
     finally:
@@ -1298,13 +1448,19 @@ def mux(spec: dict[str, Any], progress=lambda msg: None) -> dict[str, Any]:
                      不为 1 时画面要重新编码）}"""
     import specs  # 延迟导入，避免循环引用
     specs.validate(spec, "mux")
-    video_id = spec["video_id"]
-    d = video_dir(video_id)
-    meta = load_meta(video_id)
-    src = d / meta["source"]
+    source_output = None
+    if spec.get("output_id"):
+        source_output = load_output(spec["output_id"])
+        src = OUTPUTS / f"{spec['output_id']}.mp4"
+        meta = probe(src)
+    else:
+        video_id = spec["video_id"]
+        d = video_dir(video_id)
+        meta = load_meta(video_id)
+        src = d / meta["source"]
     total = float(meta["duration"])
     speed = float(spec.get("speed", 1.0))
-    sped = abs(speed - 1.0) > 1e-3
+    sped = speed != 1.0
     final = total / speed  # 变速后的成片时长
     tempo = f",atempo={speed:.4f}" if sped else ""  # atempo 变速不变调
     vo = spec.get("voiceover") or None
@@ -1380,6 +1536,13 @@ def mux(spec: dict[str, Any], progress=lambda msg: None) -> dict[str, Any]:
                   "speed": speed, "checks": checks,
                   "voiceover": [{"start": round(p["start"], 2), "end": round(p["end"], 2),
                                  "text": p["text"]} for p in placed], "captions": []}
+        if source_output:
+            # 只继承有本地成片 JSON 的时间轴；不从导入视频的文件名或 URL 猜字幕来源。
+            result["source_output_id"] = spec["output_id"]
+            for key in ("captions", "subs"):
+                if key in source_output:
+                    result[key] = [{**cue, "start": cue["start"] / speed, "end": cue["end"] / speed}
+                                   for cue in source_output[key]]
         (OUTPUTS / f"{out_id}.json").write_text(json.dumps({"spec": spec, **result}, ensure_ascii=False))
         return result
     finally:

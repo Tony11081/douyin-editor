@@ -10,6 +10,7 @@ import time
 import traceback
 import uuid
 from concurrent.futures import ThreadPoolExecutor
+from functools import partial
 from typing import Any
 
 import sys
@@ -26,6 +27,10 @@ import tts as tts_mod  # noqa: E402  不能叫 tts：会被下面同名的 tts()
 import videogen  # noqa: E402
 import heygen  # noqa: E402
 import webrec  # noqa: E402
+import covers  # noqa: E402
+import subtitles  # noqa: E402
+
+editor.glossary_list()  # 首次启动创建默认词表，已有文件保持不变
 
 TOKEN = os.environ.get("ACCESS_TOKEN", "")
 if len(TOKEN) < 16:
@@ -81,7 +86,7 @@ def _submit(kind: str, fn, *args, heavy: bool = True) -> str:
         job["state"] = "running"
         job["progress"] = "处理中"
         try:
-            job["result"] = fn(*args, progress=progress) if kind in ("render", "genvideo", "avatar", "record") \
+            job["result"] = fn(*args, progress=progress) if kind in ("render", "genvideo", "avatar", "record", "transcribe", "cover") \
                 else fn(*args)
             job["state"] = "done"
             job["progress"] = "完成"
@@ -111,6 +116,8 @@ def _job_view(job: dict[str, Any]) -> dict[str, Any]:
             v["transcript"] = editor.transcript_text(r)
         elif job["kind"] == "render":
             v["result"] = {**r, "download_url": _file_url(r["file"])}
+        elif job["kind"] == "cover":
+            v["result"] = {**r, "download_url": _file_url("covers/" + r["file"])}
         elif job["kind"] == "tts":
             v["result"] = _tts_view(r)
         else:
@@ -178,12 +185,54 @@ def transcribe(video_id: str, language: str = "zh") -> dict:
 
 
 @mcp.tool()
-def get_transcript(video_id: str) -> str:
-    """读取已有的转写结果（格式：S序号 [开始-结束] 句子，下一行是逐字时间）。"""
+def get_transcript(video_id: str, start: float | None = None, end: float | None = None,
+                   words: bool = True) -> str:
+    """读取已有转写；start/end 按原片秒数筛选相交的句子，words=false 不显示逐字时间。
+    不传新参数时格式不变：S序号 [开始-结束] 句子，下一行是逐字时间。"""
     tr = editor.load_transcript(video_id)
     if not tr:
         return "还没有转写，请先调用 transcribe"
-    return editor.transcript_text(tr)
+    return editor.transcript_text(tr, start, end, words)
+
+
+@mcp.tool()
+def glossary_list() -> dict:
+    """读取错写→正确写法词表，首次启动默认八条；用于转写提示和所有 render 字幕来源。"""
+    return editor.glossary_list()
+
+
+@mcp.tool()
+def glossary_set(entries: dict) -> dict:
+    """追加或覆盖词条，不删除其他条目，例如 {\"IC\": \"Etsy\"}；仅影响后续任务。"""
+    return editor.glossary_set(entries)
+
+
+@mcp.tool()
+def glossary_remove(keys: list[str]) -> dict:
+    """删除指定错写词条，返回剩余词表；不存在的键不改变数据。"""
+    return editor.glossary_remove(keys)
+
+
+@mcp.tool()
+def make_cover(video_id: str | None = None, output_id: str | None = None, time: float = 0,
+               title: str = "", subtitle: str | None = None, style: dict | None = None) -> dict:
+    """生成 1080×1920 封面 PNG，返回 job_id；wait_job 返回 cover_id 和 download_url。
+    video_id / output_id 二选一；time 是抽帧秒数。标题最多两行，自动换行；subtitle 可省略。
+    style={highlight:[标题中标黄的词], y:0.20}；y 是标题顶部占画面高度的比例（0–0.8）。
+    HDR 使用 render 同样的色调映射。render 可用 cover={cover_id,duration:0.5} 覆盖开头画面。"""
+    spec = {k: v for k, v in {"video_id": video_id, "output_id": output_id, "time": time,
+                              "title": title, "subtitle": subtitle, "style": style}.items() if v is not None}
+    covers.validate(spec)
+    return {"job_id": _submit("cover", covers.make, spec)}
+
+
+@mcp.tool()
+def export_subtitles(output_id: str, format: str = "srt", bilingual: bool = False) -> dict:
+    """从成片 JSON 导出 UTF-8 srt/vtt，返回 download_url；不重新转写。
+    bilingual=true 按原文和译文的相交区间分段，每条两行；缺失或重叠译文会报错。
+    mux 变速请直接使用 render 的 output_id，才能继承并换算字幕时间。"""
+    result = subtitles.export(output_id, format, bilingual)
+    return {**result, "download_url": _file_url("subtitles/" + result["file"])}
 
 
 @mcp.tool()
@@ -229,6 +278,27 @@ def render(spec: dict) -> dict:
     spec = json.loads(json.dumps(spec))
     editor.plan_render(json.loads(json.dumps(spec)))  # 先同步校验，有问题马上报错
     return {"job_id": _submit("render", editor.render, spec)}
+
+
+@mcp.tool()
+def render_batch(specs: list[dict], names: list[str] | None = None) -> dict:
+    """先校验整批剪辑方案，任一条错误就拒绝全部并指出序号；全通过才提交各条后台任务。
+    names 可选，与 specs 一一对应；名称写进成片信息，并由 list_outputs 返回。"""
+    if not isinstance(specs, list) or not specs:
+        raise editor.EditorError("specs 需要非空的剪辑方案列表")
+    if names is not None and (not isinstance(names, list) or len(names) != len(specs)
+                             or any(not isinstance(n, str) or not n.strip() for n in names)):
+        raise editor.EditorError("names 需要与 specs 数量相同，且每项是非空文字")
+    copies = []
+    for i, spec in enumerate(specs):
+        try:
+            copy = json.loads(json.dumps(spec))
+            editor.plan_render(json.loads(json.dumps(copy)))
+        except (editor.EditorError, TypeError, ValueError) as e:
+            raise editor.EditorError(f"第 {i + 1} 条剪辑方案有误，整批未提交：{e}") from e
+        copies.append(copy)
+    return {"job_ids": [_submit("render", partial(editor.render, name=names[i] if names else None), spec)
+                        for i, spec in enumerate(copies)]}
 
 
 @mcp.tool()
@@ -327,7 +397,7 @@ def mux(spec: dict) -> dict:
     只把 AI 配音和背景音乐合进去。用于画面已经做好的成片（例如 Claude 用代码渲染的动画）。
     返回 job_id；wait_job 完成后给出 download_url。
     spec 字段：
-    - video_id（必填）：先用 import_video 导入做好的成片
+    - video_id / output_id 二选一：导入视频用 video_id；本服务的成片用 output_id，可继承字幕时间
     - voiceover: {tts_id, at?: [每句开始秒数], volume?=1.0}
     - bgm: {name 或 url, volume?=0.12, fade_in?=0.5, fade_out?=1.5, start?=0}，有配音时自动避让
     - original_volume?=0：成片原有声音保留多少；loudnorm?=true
@@ -336,7 +406,10 @@ def mux(spec: dict) -> dict:
     import specs
     spec = json.loads(json.dumps(spec))
     specs.validate(spec, "mux")
-    editor.video_dir(spec["video_id"])
+    if spec.get("output_id"):
+        editor.load_output(spec["output_id"])
+    else:
+        editor.video_dir(spec["video_id"])
     return {"job_id": _submit("render", editor.mux, spec)}
 
 
@@ -440,8 +513,11 @@ def list_outputs() -> list[dict]:
     out = []
     for p in sorted(editor.OUTPUTS.glob("*.json"), key=lambda p: p.stat().st_mtime, reverse=True)[:30]:
         r = json.loads(p.read_text())
-        out.append({"output_id": r["output_id"], "video_id": r["spec"]["video_id"],
-                    "duration": r["duration"], "download_url": _file_url(r["file"])})
+        out.append({"output_id": r["output_id"],
+                    **({"video_id": r["spec"]["video_id"]} if "video_id" in r["spec"] else
+                       {"source_output_id": r["spec"]["output_id"]}),
+                    "duration": r["duration"], "download_url": _file_url(r["file"]),
+                    **({"name": r["name"]} if "name" in r else {})})
     return out
 
 
@@ -594,6 +670,29 @@ async def tts_files(request: Request):
     except editor.EditorError:
         return PlainTextResponse("not found", status_code=404)
     return FileResponse(path, media_type="audio/mpeg", filename=f"voice_{name}")
+
+
+@mcp.custom_route("/files/{token}/covers/{name}", methods=["GET", "HEAD"], include_in_schema=False)
+async def cover_files(request: Request):
+    tok, name = request.path_params["token"], request.path_params["name"]
+    if not secrets.compare_digest(tok, TOKEN) or not re.fullmatch(r"[a-z0-9]{12}\.png", name):
+        return PlainTextResponse("not found", status_code=404)
+    path = editor.DATA_DIR / "covers" / name
+    if not path.exists():
+        return PlainTextResponse("not found", status_code=404)
+    return FileResponse(path, media_type="image/png", filename=name)
+
+
+@mcp.custom_route("/files/{token}/subtitles/{name}", methods=["GET", "HEAD"], include_in_schema=False)
+async def subtitle_files(request: Request):
+    tok, name = request.path_params["token"], request.path_params["name"]
+    if not secrets.compare_digest(tok, TOKEN) or not re.fullmatch(r"[a-z0-9]{12}(_bilingual)?\.(srt|vtt)", name):
+        return PlainTextResponse("not found", status_code=404)
+    path = editor.DATA_DIR / "subtitles" / name
+    if not path.exists():
+        return PlainTextResponse("not found", status_code=404)
+    return FileResponse(path, media_type="text/vtt" if name.endswith(".vtt") else "application/x-subrip",
+                        filename=name)
 
 
 @mcp.custom_route("/health", methods=["GET"], include_in_schema=False)

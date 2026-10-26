@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import difflib
+import math
 import re
 from typing import Any
 
@@ -60,18 +61,21 @@ OVERLAY = {"url": "str", "video_id": "str", "start": num(0), "from": num(0), "du
            "fade": num(0, 5), "layer": enum("front", "behind", "base")}
 VOICEOVER = {"tts_id": "str", "at": lst(num(0)), "volume": num(0, 3), "original_volume": num(0, 3),
              "subs": lst("str")}
+COVER = {"cover_id": "str", "duration": num(0.01)}
+MAKE_COVER = {"video_id": "str", "output_id": "str", "time": num(0), "title": "str", "subtitle": "str",
+              "style": {"highlight": lst("str"), "y": num(0, 0.8)}}
 
 RENDER = {"video_id": "str", "clips": lst(CLIP), "captions": enum("auto", "none", "voiceover"),
           "corrections": mapping("str", "str"), "highlight_words": lst("str"),
           "caption_style": CAPTION_STYLE, "title": TITLE, "bgm": BGM, "audio": AUDIO,
           "width": integer(240, 4096), "height": integer(240, 4096), "fps": integer(10, 60),
           "focus_y": num(0, 1), "shift_y": integer(0, 1800), "shift_color": "color", "color": COLOR, "effects": EFFECTS, "overlays": lst(OVERLAY),
-          "matte": {"feather": num(0, 20)}, "voiceover": VOICEOVER,
+          "matte": {"feather": num(0, 20)}, "voiceover": VOICEOVER, "cover": COVER,
           "preset": enum("ultrafast", "superfast", "veryfast", "faster", "fast", "medium", "slow", "slower")}
-MUX = {"video_id": "str", "voiceover": {"tts_id": "str", "at": lst(num(0)), "volume": num(0, 3)},
+MUX = {"video_id": "str", "output_id": "str", "voiceover": {"tts_id": "str", "at": lst(num(0)), "volume": num(0, 3)},
        "bgm": BGM, "original_volume": num(0, 3), "loudnorm": "bool", "speed": num(0.5, 2)}
-REQUIRED = {"render": {"video_id"}, "mux": {"video_id"}}
-NESTED_REQUIRED = {"title": {"text"}, "voiceover": {"tts_id"}}
+REQUIRED = {"render": {"video_id"}, "mux": set(), "cover": {"title", "time"}}
+NESTED_REQUIRED = {"title": {"text"}, "voiceover": {"tts_id"}, "cover": {"cover_id"}}
 
 
 def _tname(t) -> str:
@@ -124,7 +128,8 @@ def _check(v: Any, t, path: str, errs: list[str]) -> None:
         if not isinstance(v, str) or not COLOR_RE.match(v):
             errs.append(f"{path} 应该是 #RRGGBB 颜色，现在是 {v!r}")
     elif t[0] in ("num", "int"):
-        if isinstance(v, bool) or not isinstance(v, (int, float)) or (t[0] == "int" and float(v) != int(v)):
+        if isinstance(v, bool) or not isinstance(v, (int, float)) or not math.isfinite(v) \
+                or (t[0] == "int" and float(v) != int(v)):
             errs.append(f"{path} 应该是{_tname(t)}，现在是 {v!r}")
             return
         lo, hi = t[1], t[2]
@@ -158,7 +163,7 @@ def _check(v: Any, t, path: str, errs: list[str]) -> None:
 
 
 def validate(spec: Any, kind: str) -> None:
-    schema = {"render": RENDER, "mux": MUX}[kind]
+    schema = {"render": RENDER, "mux": MUX, "cover": MAKE_COVER}[kind]
     errs: list[str] = []
     if not isinstance(spec, dict):
         raise EditorError("spec 应该是对象")
@@ -166,5 +171,7 @@ def validate(spec: Any, kind: str) -> None:
         if req not in spec:
             errs.append(f"缺少必填项 {req}")
     _check(spec, schema, "spec", errs)
+    if kind in ("mux", "cover") and (bool(spec.get("video_id")) == bool(spec.get("output_id"))):
+        errs.append("video_id 和 output_id 必须二选一，不能同时提供或都省略")
     if errs:
         raise EditorError("剪辑方案有问题，没有执行（请改好后重试）：\n- " + "\n- ".join(errs))
