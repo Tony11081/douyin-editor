@@ -1364,8 +1364,8 @@ def mux(spec: dict[str, Any], progress=lambda msg: None) -> dict[str, Any]:
             placed = [{**p, "start": p["start"] / speed, "end": p["end"] / speed} for p in placed]
             fps = meta.get("fps") or "30"
             fc.append(f"[0:v]setpts=PTS/{speed:.4f}[v]")
-            vmap = ["-map", "[v]", "-c:v", "libx264", "-preset", "medium", "-crf", "18",
-                    "-pix_fmt", "yuv420p", "-r", str(fps)]
+            vmap = ["-map", "[v]", "-c:v", "libx264", "-preset", "medium", "-crf", "19",
+                    *_RATE_CAP, "-profile:v", "high", "-pix_fmt", "yuv420p", "-r", str(fps)]
         else:
             vmap = ["-map", "0:v:0", "-c:v", "copy"]
         out = OUTPUTS / f"{out_id}.mp4"
@@ -1386,11 +1386,15 @@ def mux(spec: dict[str, Any], progress=lambda msg: None) -> dict[str, Any]:
         shutil.rmtree(work, ignore_errors=True)
 
 
+# 码率上限：手机边下边播不卡（车里、户外这类噪点多的画面 crf19 会冲到 20M+，手机播几秒就停）
+_RATE_CAP = ["-maxrate", "10M", "-bufsize", "20M", "-level:v", "4.1"]
+
+
 def _final(work: Path, inputs: list[str], fc: list[str], total: float, fps: int,
            spec: dict, out: Path) -> None:
     cmd = ["ffmpeg", "-y", "-v", "error", *inputs, "-filter_complex", ";".join(fc),
            "-map", "[v]", "-map", "[a]", "-t", f"{total:.3f}",
-           "-c:v", "libx264", "-preset", spec.get("preset", "medium"), "-crf", "19",
+           "-c:v", "libx264", "-preset", spec.get("preset", "medium"), "-crf", "19", *_RATE_CAP,
            "-profile:v", "high", "-pix_fmt", "yuv420p", "-r", str(fps),
            "-color_primaries", "bt709", "-color_trc", "bt709", "-colorspace", "bt709",
            "-c:a", "aac", "-b:a", "192k", "-ar", "48000", "-movflags", "+faststart", str(out)]
