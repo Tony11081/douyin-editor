@@ -132,6 +132,90 @@ body{font-family:var(--sans);color:#fff;-webkit-font-smoothing:antialiased;posit
 .a .tag{position:absolute;left:56px;top:1170px;font:500 30px/1.5 "JetBrains Mono",monospace;color:#d8e6cf;background:rgba(8,12,8,.75);padding:14px 22px;border-radius:12px;border:2px solid rgba(200,255,0,.35)}
 .a .tag .g{color:var(--lime)}
 .a .scan{position:absolute;inset:0;background:repeating-linear-gradient(rgba(255,255,255,.03) 0 2px,transparent 2px 5px);pointer-events:none}
+/* ---------- 10 播客访谈 ---------- */
+.p .onair{position:absolute;left:60px;top:100px;display:flex;align-items:center;gap:14px;background:rgba(14,14,16,.78);padding:14px 22px;border-radius:999px;font:700 28px/1 var(--latin);letter-spacing:.12em}
+.p .onair i{width:16px;height:16px;border-radius:50%;background:#FF3B30;box-shadow:0 0 12px #FF3B30}
+.p .onair span{color:#9a9aa0;font-weight:600;margin-left:6px;letter-spacing:.04em;font-family:var(--sans)}
+.p .topic{position:absolute;left:60px;right:60px;top:180px;background:rgba(14,14,16,.78);border-radius:28px;padding:30px 36px}
+.p .topic .l{font:700 26px/1 var(--sans);color:var(--lime);letter-spacing:.2em}
+.p .topic h2{font:900 70px/1.2 var(--sans);margin-top:14px}
+.p .host{position:absolute;left:60px;right:60px;top:1080px;display:flex;align-items:center;gap:24px;background:rgba(14,14,16,.74);border-radius:28px;padding:22px 28px}
+.p .av{width:96px;height:96px;border-radius:50%;background:var(--lime);color:#111;font:800 48px/96px var(--latin);text-align:center;flex:none}
+.p .host b{display:block;font:800 46px/1.1 var(--latin)}
+.p .host small{font:500 30px/1.4 var(--sans);color:#bbb}
+.p .wave{margin-left:auto;display:flex;gap:7px;align-items:center;height:80px}
+.p .wave i{width:9px;border-radius:5px;background:var(--lime);display:block}
+.p .cap{position:absolute;left:80px;right:80px;top:1300px;font:800 64px/1.3 var(--sans);text-shadow:0 3px 14px rgba(0,0,0,.6)}
+.p .cap:before{content:"“";position:absolute;left:-58px;top:-34px;font:900 130px/1 var(--serif);color:var(--lime)}
+.p .cap b{color:var(--lime)}
+/* ---------- 11 综艺花字 ---------- */
+.v .hz{position:absolute;left:40px;right:40px;top:170px;text-align:center;transform:rotate(-4deg)}
+.v .hz div{font:400 136px/1.15 "ZCOOL KuaiLe",var(--sans);color:#FFE14D;-webkit-text-stroke:14px #3A1D6E;paint-order:stroke fill;text-shadow:0 10px 0 #3A1D6E,0 14px 24px rgba(0,0,0,.35)}
+.v .hz div.p2{color:#FF5FA2;font-size:120px}
+.v .burst{position:absolute;width:230px;height:230px;background:#FF3B30;clip-path:polygon(50% 0,61% 24%,88% 12%,78% 39%,100% 50%,78% 61%,88% 88%,61% 76%,50% 100%,39% 76%,12% 88%,22% 61%,0 50%,22% 39%,12% 12%,39% 24%);display:flex;align-items:center;justify-content:center;font:900 44px/1.1 var(--sans);color:#fff;text-align:center;transform:rotate(10deg)}
+.v .sfx{position:absolute;font:400 84px/1 "ZCOOL KuaiLe",var(--sans);color:#fff;-webkit-text-stroke:10px #FF5FA2;paint-order:stroke fill;transform:rotate(12deg)}
+.v .cap{position:absolute;left:30px;right:30px;top:1310px;text-align:center;font:900 76px/1.2 var(--sans);color:#fff;-webkit-text-stroke:14px #1b1b1b;paint-order:stroke fill}
+.v .cap b{color:#FFE14D}
+.v .bub{position:absolute;left:70px;right:120px;top:220px;background:#fff;color:#222;border:8px solid #3A1D6E;border-radius:60px;padding:36px 44px;box-shadow:12px 12px 0 #3A1D6E}
+.v .bub:after{content:"";position:absolute;left:180px;bottom:-62px;border:30px solid transparent;border-top:36px solid #3A1D6E}
+.v .bub h3{font:400 82px/1.1 "ZCOOL KuaiLe",var(--sans);color:#FF5FA2}
+.v .bub p{font:700 40px/1.45 var(--sans);margin-top:12px}
+.v .nm{position:absolute;left:60px;top:1130px;background:#FFE14D;color:#3A1D6E;border:6px solid #3A1D6E;border-radius:20px;padding:12px 24px;font:400 52px/1 "ZCOOL KuaiLe",var(--sans);transform:rotate(-4deg);box-shadow:6px 6px 0 #3A1D6E}
+/* ---------- 12 商务清单 ---------- */
+.b .logo{position:absolute;left:60px;top:100px;display:flex;align-items:center;gap:14px;background:#fff;color:#0E1B3D;padding:14px 22px 14px 14px;border-radius:12px;font:800 28px/1 var(--latin);letter-spacing:.14em;box-shadow:0 6px 20px rgba(0,0,0,.15)}
+.b .logo i{width:34px;height:34px;background:#1E5EFF;border-radius:8px;display:block}
+.b .dt{position:absolute;right:60px;top:114px;font:600 28px/1 var(--latin);color:#fff;letter-spacing:.1em;text-shadow:0 2px 8px rgba(0,0,0,.4)}
+.b .hero{position:absolute;left:60px;right:60px;top:200px;background:#fff;color:#0E1B3D;border-radius:22px;padding:34px 40px 38px;box-shadow:0 16px 40px rgba(0,0,0,.2)}
+.b .hero .l{font:800 26px/1 var(--latin);color:#1E5EFF;letter-spacing:.16em}
+.b .hero h2{font:900 72px/1.2 var(--sans);margin-top:16px}
+.b .hero .pg{height:10px;background:#E4EAF7;border-radius:5px;margin-top:24px;overflow:hidden}
+.b .hero .pg i{display:block;height:100%;width:22%;background:#1E5EFF}
+.b .cap{position:absolute;left:0;right:0;top:1320px;text-align:center}
+.b .cap span{display:inline-block;background:#1E5EFF;font:700 60px/1.3 var(--sans);padding:16px 34px;border-radius:14px;box-shadow:0 10px 24px rgba(30,94,255,.35)}
+.b .cap b{color:#FFE14D}
+.b .nm{position:absolute;left:60px;top:1150px;background:#fff;color:#0E1B3D;border-radius:12px;padding:16px 24px;font:800 40px/1 var(--latin);box-shadow:0 6px 20px rgba(0,0,0,.18)}
+.b .nm span{font:500 30px var(--sans);color:#5b6680;margin-left:12px}
+.b .list{position:absolute;left:60px;right:60px;top:200px;background:#fff;color:#0E1B3D;border-radius:22px;padding:34px 40px;box-shadow:0 16px 40px rgba(0,0,0,.2)}
+.b .list h3{font:900 52px/1.2 var(--sans)}
+.b .list li{list-style:none;display:flex;align-items:center;gap:18px;font:700 42px/1.2 var(--sans);margin-top:24px}
+.b .list li i{width:52px;height:52px;border-radius:50%;background:#1E5EFF;color:#fff;font:800 32px/52px var(--latin);text-align:center;font-style:normal;flex:none}
+/* ---------- 13 通知气泡 ---------- */
+.q .ntf{position:absolute;left:44px;right:44px;background:rgba(245,245,247,.86);backdrop-filter:blur(30px) saturate(1.6);-webkit-backdrop-filter:blur(30px) saturate(1.6);color:#111;border-radius:40px;padding:28px 32px;display:flex;gap:24px;box-shadow:0 14px 40px rgba(0,0,0,.25)}
+.q .ntf .ic{width:92px;height:92px;border-radius:22px;background:#111;color:var(--lime);font:800 38px/92px var(--latin);text-align:center;flex:none}
+.q .ntf .hd{display:flex;justify-content:space-between;font:500 28px/1 var(--sans);color:#6b6b70}
+.q .ntf h3{font:800 46px/1.25 var(--sans);margin-top:10px}
+.q .ntf p{font:500 36px/1.4 var(--sans);color:#333;margin-top:6px}
+.q .ntf.back{transform:scale(.92);opacity:.6;filter:blur(1px)}
+.q .cap{position:absolute;right:60px;top:1300px;max-width:880px;background:var(--lime);color:#111;font:800 58px/1.3 var(--sans);padding:20px 34px;border-radius:44px 44px 10px 44px}
+.q .cap b{background:#111;color:var(--lime);padding:0 8px;border-radius:8px}
+.q .who{position:absolute;left:60px;top:1180px;display:flex;align-items:center;gap:16px;font:700 36px/1 var(--sans);text-shadow:0 2px 8px rgba(0,0,0,.5)}
+.q .who i{width:70px;height:70px;border-radius:50%;background:#fff;color:#111;font:800 34px/70px var(--latin);text-align:center;font-style:normal}
+.q .who small{font-weight:500;opacity:.85;margin-left:6px}
+/* ---------- 14 复古录像带 ---------- */
+.r .vhs{position:absolute;inset:0;background:repeating-linear-gradient(rgba(0,0,0,.10) 0 2px,transparent 2px 6px)}
+.r .osd{position:absolute;font:800 46px/1 "JetBrains Mono",monospace;color:#fff;text-shadow:3px 0 0 rgba(255,0,60,.6),-3px 0 0 rgba(0,180,255,.6),0 0 10px rgba(0,0,0,.4)}
+.r .ttl{position:absolute;left:60px;right:60px;top:250px;font:900 118px/1.15 var(--sans);color:#fff;text-shadow:6px 0 0 rgba(255,0,60,.7),-6px 0 0 rgba(0,190,255,.7),0 8px 24px rgba(0,0,0,.4)}
+.r .ttl small{display:block;font:800 40px/1.6 "JetBrains Mono",monospace;letter-spacing:.06em;margin-top:10px}
+.r .cap{position:absolute;left:30px;right:30px;top:1320px;text-align:center;font:800 64px/1.3 var(--sans);color:#FFE600;text-shadow:0 0 2px #000,3px 3px 0 #000,-2px -2px 0 #000,2px -2px 0 #000,-2px 2px 0 #000}
+.r .menu{position:absolute;left:60px;right:60px;top:260px;background:#1B2BD8;border:6px solid #fff;padding:30px 36px;font:700 44px/1.5 "JetBrains Mono",var(--sans);color:#fff;box-shadow:0 0 0 6px #1B2BD8}
+.r .menu .cn{font-family:var(--sans);font-weight:800}
+/* ---------- 15 瑞士海报 ---------- */
+.w .red{position:absolute;left:0;right:0;top:0;height:560px;background:#E8341C}
+.w .grid{position:absolute;left:0;right:0;top:0;height:560px;background:linear-gradient(90deg,rgba(0,0,0,.14) 1px,transparent 1px) 0 0/270px 100%}
+.w .meta{position:absolute;left:60px;right:60px;top:100px;display:flex;justify-content:space-between;font:600 26px/1.3 var(--latin);color:#111;letter-spacing:.06em}
+.w .no{position:absolute;right:40px;top:150px;font:800 300px/0.85 "Inter Display",var(--latin);color:#fff;letter-spacing:-.06em}
+.w .tt{position:absolute;left:60px;top:200px;font:900 104px/1.12 var(--sans);color:#111}
+.w .tt .wh{color:#fff}
+.w .cap{position:absolute;left:0;right:0;top:1320px;text-align:center}
+.w .cap span{display:inline-block;background:#fff;color:#111;font:900 62px/1.3 var(--sans);padding:14px 30px}
+.w .cap b{color:#E8341C}
+.w .nm{position:absolute;left:0;top:1150px;background:#111;color:#fff;padding:18px 30px 18px 60px;font:800 40px/1 var(--latin);letter-spacing:.1em}
+.w .nm span{font:500 30px var(--sans);letter-spacing:0;color:#bbb;margin-left:14px}
+.w .def{position:absolute;left:0;right:60px;top:600px;display:flex;background:#fff;color:#111}
+.w .def .side{background:#E8341C;color:#fff;writing-mode:vertical-rl;font:900 40px/1 var(--sans);padding:30px 22px;letter-spacing:.3em}
+.w .def .bd{padding:30px 36px}
+.w .def h3{font:800 76px/1 "Inter Display",var(--latin);letter-spacing:-.02em}
+.w .def p{font:700 38px/1.45 var(--sans);margin-top:14px}
 </style></head>
 <body>
 <img id="bg"><div id="vig"></div>
@@ -218,6 +302,60 @@ body{font-family:var(--sans);color:#fff;-webkit-font-smoothing:antialiased;posit
 <div class="t a" data-s="card">
   <div class="win"><div class="bar"><i></i><i></i><i></i><span>glossary.md</span></div>
   <div class="body"><span class="d">&gt;</span> define <span class="g">"Claude"</span><br><span class="cn" style="font-size:48px">Anthropic 推出的 AI 助手</span><br><span class="d">#</span> 在公司里：读数据 · 定 OKR · 派任务<span class="cur"></span><div class="scan"></div></div></div>
+  <div class="cap"><span><b>Claude</b>他会把我们</span></div></div>
+<!-- 10 播客访谈 -->
+<div class="t p" data-s="hook"><div class="onair"><i></i>ON AIR<span>Etsy-Tony 电台 · EP.05</span></div>
+  <div class="topic"><div class="l">本期话题</div><h2>让 AI 管公司，<br>我先道个歉</h2></div>
+  <div class="host"><div class="av">T</div><div><b>Tony</b><small>Etsy 跨境卖家 · 主播</small></div><div class="wave"><i style="height:30px"></i><i style="height:62px"></i><i style="height:44px"></i><i style="height:76px"></i><i style="height:36px"></i><i style="height:58px"></i><i style="height:24px"></i><i style="height:50px"></i></div></div>
+  <div class="cap">今天想给个哥们<b>道歉</b></div></div>
+<div class="t p" data-s="card"><div class="onair"><i></i>ON AIR<span>Etsy-Tony 电台 · EP.05</span></div>
+  <div class="topic"><div class="l">本期关键词</div><h2>Claude</h2><p style="font:500 38px/1.45 var(--sans);color:#ddd;margin-top:10px">Anthropic 推出的 AI 助手<br>在我们公司管数据、派任务</p></div>
+  <div class="cap"><b>Claude</b>他会把我们</div></div>
+<!-- 11 综艺花字 -->
+<div class="t v" data-s="hook"><div class="hz"><div>让AI管公司</div><div class="p2">我先道个歉！</div></div>
+  <div class="burst" style="left:760px;top:560px">翻车<br>现场</div>
+  <div class="nm">Tony · Etsy 跨境卖家</div>
+  <div class="cap">今天想给个哥们<b>道歉</b></div></div>
+<div class="t v" data-s="card"><div class="bub"><h3>Claude 是谁？</h3><p>Anthropic 推出的 AI 助手，<br>在我们公司管数据、派任务</p></div>
+  <div class="sfx" style="left:800px;top:640px">叮~</div>
+  <div class="cap"><b>Claude</b>他会把我们</div></div>
+<!-- 12 商务清单 -->
+<div class="t b" data-s="hook"><div class="logo"><i></i>SHOPWRIGHT</div><div class="dt">2026.10.28</div>
+  <div class="hero"><div class="l">CASE 05 · 管理实验</div><h2>让 AI 管公司，<br>我先道个歉</h2><div class="pg"><i></i></div></div>
+  <div class="nm">Tony<span>Etsy 跨境卖家</span></div>
+  <div class="cap"><span>今天想给个哥们<b>道歉</b></span></div></div>
+<div class="t b" data-s="card"><div class="logo"><i></i>SHOPWRIGHT</div><div class="dt">2026.10.28</div>
+  <div class="list"><h3>AI 在我们公司做什么</h3><ul><li><i>✓</i>读取网站上的全部数据</li><li><i>✓</i>自己定 OKR</li><li><i>✓</i>给每个人派当天的任务</li></ul></div>
+  <div class="cap"><span><b>Claude</b>他会把我们</span></div></div>
+<!-- 13 通知气泡 -->
+<div class="t q" data-s="hook">
+  <div class="ntf back" style="top:110px"><div class="ic">AI</div><div><div class="hd"><span>Etsy-Tony</span><span>刚刚</span></div><h3>新视频</h3></div></div>
+  <div class="ntf" style="top:150px"><div class="ic">AI</div><div><div class="hd"><span>Etsy-Tony</span><span>现在</span></div><h3>让 AI 管公司，我先道个歉</h3><p>车上聊聊今天这件事</p></div></div>
+  <div class="who"><i>T</i>Tony<small>Etsy 跨境卖家</small></div>
+  <div class="cap">今天想给个哥们<b>道歉</b></div></div>
+<div class="t q" data-s="card">
+  <div class="ntf" style="top:150px"><div class="ic">AI</div><div><div class="hd"><span>名词卡</span><span>现在</span></div><h3>Claude</h3><p>Anthropic 推出的 AI 助手，在我们公司管数据、派任务</p></div></div>
+  <div class="cap"><b>Claude</b>他会把我们</div></div>
+<!-- 14 复古录像带 -->
+<div class="t r" data-s="hook"><div class="vhs"></div>
+  <div class="osd" style="left:60px;top:100px">▶ PLAY</div><div class="osd" style="right:60px;top:100px">SP</div>
+  <div class="ttl">让AI管公司<small>TAPE 05 · 我先道个歉</small></div>
+  <div class="osd" style="left:60px;top:1180px;font-size:40px">OCT. 28 2026<br>PM 6:41</div>
+  <div class="cap">今天想给个哥们道歉</div></div>
+<div class="t r" data-s="card"><div class="vhs"></div>
+  <div class="osd" style="left:60px;top:100px">▶ PLAY</div><div class="osd" style="right:60px;top:100px">00:21</div>
+  <div class="menu">► CLAUDE<br><span class="cn">Anthropic 推出的 AI 助手</span><br><span class="cn">在我们公司管数据、派任务</span></div>
+  <div class="cap">Claude 他会把我们</div></div>
+<!-- 15 瑞士海报 -->
+<div class="t w" data-s="hook"><div class="red"></div><div class="grid"></div>
+  <div class="meta"><span>ETSY-TONY</span><span>2026.10.28</span><span>车上 · 实录</span></div>
+  <div class="no">05</div>
+  <div class="tt">让AI<br>管公司，<br><span class="wh">我先道个歉</span></div>
+  <div class="nm">TONY<span>Etsy 跨境卖家 · Shopwright</span></div>
+  <div class="cap"><span>今天想给个哥们<b>道歉</b></span></div></div>
+<div class="t w" data-s="card"><div class="red" style="height:160px"></div>
+  <div class="meta"><span>ETSY-TONY</span><span>02</span><span>AI 怎么管公司</span></div>
+  <div class="def" style="top:200px"><div class="side">名词</div><div class="bd"><h3>Claude</h3><p>Anthropic 推出的 AI 助手<br>在我们公司管数据、派任务</p></div></div>
   <div class="cap"><span><b>Claude</b>他会把我们</span></div></div>
 
 <script>
