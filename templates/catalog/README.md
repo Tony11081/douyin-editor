@@ -21,5 +21,17 @@ gallery.html 是所有模板的静态样式（?tpl=<代号>&s=hook|card，背景
 | 13 | 通知气泡 | q | 仅静态样式 |
 | 14 | 复古录像带 | r | 仅静态样式 |
 | 15 | 瑞士海报 | w | 仅静态样式 |
+| 16 | 发布会 | kn | 仅静态样式 |
+| 17 | 报纸头条 | np | 仅静态样式 |
+| 18 | 漫画分镜 | cm | 仅静态样式 |
+| 19 | 霓虹夜色 | ne | 仅静态样式 |
+| 20 | 黑板粉笔 | ch | 仅静态样式 |
+| 21 | 游戏任务 | gm | 仅静态样式 |
+| 22 | 国风水墨 | gf | 仅静态样式 |
+| 23 | 杂志封面 | mg | 仅静态样式 |
+| 24 | 全息科技 | ho | 仅静态样式 |
+| 25 | 拍立得 | pl | 仅静态样式 |
+
+字体：ZCOOL KuaiLe、Ma Shan Zheng、Long Cang、JetBrains Mono 来自 google/fonts 仓库 ofl/（git sparse-checkout 后装进 ~/.fonts）。
 
 做动画版：照 docu_tpl.html 的结构（window.render(t) 逐帧驱动、CFG 配置），把对应代号的 CSS 搬过去。
