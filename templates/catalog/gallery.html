@@ -1,0 +1,228 @@
+<!doctype html>
+<html><head><meta charset="utf-8">
+<style>
+:root{--lime:#C8FF00;--sans:"Noto Sans CJK SC",sans-serif;--serif:"Noto Serif CJK SC",serif;--latin:"Inter",sans-serif}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:1080px;height:1920px;overflow:hidden;background:#000}
+body{font-family:var(--sans);color:#fff;-webkit-font-smoothing:antialiased;position:relative}
+#vig{position:absolute;inset:0;background:linear-gradient(rgba(0,0,0,.28),transparent 30%,transparent 52%,rgba(0,0,0,.38) 78%,rgba(0,0,0,.2))}
+#bg{position:absolute;inset:0;width:1080px;height:1920px;object-fit:cover;}
+.t{position:absolute;inset:0;display:none}
+.lime{color:var(--lime)}
+/* ---------- 2 纪录片 ---------- */
+.d .kick{position:absolute;left:64px;right:64px;top:96px;white-space:nowrap;display:flex;align-items:center;gap:16px;font:600 30px/1 var(--latin);letter-spacing:.14em;color:#fff;text-shadow:0 2px 12px rgba(0,0,0,.5)}
+.d .kick i{width:18px;height:18px;background:var(--lime);display:block;border-radius:3px}
+.d .kick .date{margin-left:auto}
+.d .kick span.r{position:absolute;right:0;white-space:nowrap;opacity:.85}
+.d .head{position:absolute;left:64px;right:64px;top:170px;font:900 124px/1.14 var(--serif);text-shadow:0 6px 30px rgba(0,0,0,.45)}
+.d .head u{text-decoration:none;background:linear-gradient(transparent 70%,rgba(200,255,0,.85) 70%,rgba(200,255,0,.85) 92%,transparent 92%);color:#fff}
+.d .chap{position:absolute;left:64px;top:500px;display:flex;align-items:center;gap:14px;font:700 34px/1 var(--sans);background:rgba(10,10,12,.72);padding:16px 26px 16px 18px;border-radius:12px}
+.d .chap b{font:800 30px/1 var(--latin);color:#111;background:var(--lime);padding:8px 12px;border-radius:7px}
+.d .name{position:absolute;left:64px;top:1060px;display:flex;gap:22px;align-items:stretch}
+.d .name .bar{width:10px;background:var(--lime);border-radius:5px}
+.d .name .n1{font:900 64px/1.1 var(--sans)}
+.d .name .n1 small{font:500 40px var(--sans);opacity:.85;margin-left:10px}
+.d .name .n2{font:500 34px/1.5 var(--sans);opacity:.92;margin-top:6px}
+.d .name .box{background:rgba(10,10,12,.62);padding:20px 30px 22px 26px;border-radius:14px}
+.d .cap{position:absolute;left:0;right:0;top:1310px;text-align:center}
+.d .cap span{display:inline-block;background:rgba(0,0,0,.74);font:700 62px/1.25 var(--sans);padding:14px 30px;border-radius:12px}
+.d .card{position:absolute;left:64px;right:64px;top:150px;background:#fff;color:#111;border-radius:30px;padding:34px 36px;display:flex;gap:28px;align-items:center;box-shadow:0 20px 60px rgba(0,0,0,.35)}
+.d .card .ic{width:118px;height:118px;border-radius:26px;background:#111;color:var(--lime);font:800 50px/118px var(--latin);text-align:center;flex:none}
+.d .card h3{font:800 60px/1.1 var(--latin)}
+.d .card h3 em{font:500 30px var(--sans);font-style:normal;color:#666;margin-left:14px}
+.d .card p{font:500 34px/1.45 var(--sans);color:#333;margin-top:10px}
+.d .chap2{top:470px}
+/* ---------- 3 资讯快报 ---------- */
+.n .top{position:absolute;left:0;right:0;top:110px;background:rgba(12,12,14,.9);padding:30px 56px 30px}
+.n .top .row{display:flex;align-items:center;gap:22px}
+.n .top .tag{background:#FF2D3A;font:900 40px/1 var(--sans);padding:12px 16px;border-radius:8px;flex:none}
+.n .top h1{white-space:nowrap;font:900 68px/1.15 var(--sans)}
+.n .top .sub{margin-top:18px;font:500 30px/1 var(--sans);color:#bbb;letter-spacing:.04em;border-top:2px solid #FF2D3A;padding-top:16px}
+.n .lt{position:absolute;left:56px;top:1080px;display:flex;font:900 46px/1 var(--sans)}
+.n .lt .a{background:#FF2D3A;padding:20px 24px}
+.n .lt .b{background:#fff;color:#111;padding:20px 26px;font-weight:700;font-size:40px;line-height:46px}
+.n .cap{position:absolute;left:40px;right:40px;top:1300px;text-align:center;font:900 76px/1.2 var(--sans);color:#FFE14D;-webkit-text-stroke:14px #000;paint-order:stroke fill;text-shadow:0 6px 0 rgba(0,0,0,.35)}
+.n .cap .w{color:#fff}
+.n .tick{position:absolute;left:0;right:0;top:1490px;height:76px;background:rgba(12,12,14,.88);display:flex;align-items:center;font:600 32px/1 var(--sans);white-space:nowrap;overflow:hidden}
+.n .tick b{background:var(--lime);color:#111;height:100%;display:flex;align-items:center;padding:0 22px;font-weight:900;flex:none}
+.n .tick span{padding-left:24px;color:#eee}
+.n .kp{position:absolute;left:56px;right:56px;top:440px;background:#fff;color:#111;border-left:16px solid #FF2D3A;padding:30px 34px;box-shadow:0 16px 40px rgba(0,0,0,.3)}
+.n .kp .l{display:inline-block;font:900 30px/1 var(--sans);color:#FF2D3A;margin-bottom:14px;letter-spacing:.1em}
+.n .kp h3{font:900 56px/1.15 var(--latin)}
+.n .kp p{font:600 34px/1.45 var(--sans);color:#333;margin-top:8px}
+/* ---------- 4 极简杂志 ---------- */
+.m .issue{position:absolute;left:72px;right:72px;top:110px;display:flex;justify-content:space-between;font:500 26px/1 var(--latin);letter-spacing:.32em;color:rgba(255,255,255,.92);border-bottom:2px solid rgba(255,255,255,.75);padding-bottom:20px}
+.m .ttl{position:absolute;left:72px;right:72px;top:170px;font:600 112px/1.18 var(--serif);letter-spacing:.02em;text-shadow:0 4px 24px rgba(0,0,0,.35)}
+.m .ttl .dot{color:var(--lime)}
+.m .ttl small{display:block;font:400 34px/1.6 var(--sans);letter-spacing:.12em;opacity:.9;margin-top:14px}
+.m .sig{position:absolute;left:52px;top:1110px;padding:22px 26px;border-radius:18px;background:rgba(0,0,0,.32);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);text-shadow:0 2px 10px rgba(0,0,0,.7),0 0 2px rgba(0,0,0,.6);font:600 28px/1 var(--latin);letter-spacing:.3em}
+.m .sig div{width:80px;height:3px;background:var(--lime);margin-bottom:18px}
+.m .sig p{font:400 30px/1.6 var(--sans);letter-spacing:.08em;margin-top:12px;opacity:.9}
+.m .cap{position:absolute;left:0;right:0;top:1330px;text-align:center;font:600 60px/1.3 var(--sans);text-shadow:0 2px 6px rgba(0,0,0,.65),0 0 24px rgba(0,0,0,.45)}
+.m .cap .k{border-bottom:6px solid var(--lime);padding-bottom:2px}
+.m .glass{position:absolute;left:72px;right:72px;top:170px;padding:38px 40px;border-radius:34px;background:rgba(255,255,255,.16);backdrop-filter:blur(26px) saturate(1.3);-webkit-backdrop-filter:blur(26px) saturate(1.3);border:2px solid rgba(255,255,255,.35)}
+.m .glass .l{font:600 24px/1 var(--latin);letter-spacing:.34em;color:var(--lime)}
+.m .glass h3{font:600 78px/1.1 var(--latin);margin-top:18px}
+.m .glass p{font:400 36px/1.5 var(--sans);margin-top:12px}
+/* ---------- 5 知识黑框 ---------- */
+.k .band{position:absolute;left:0;right:0;background:#0B0B0C}
+.k .bt{top:0;height:430px}.k .bb{top:1470px;height:450px}
+.k .acc{position:absolute;left:0;right:0;top:96px;text-align:center;font:600 30px/1 var(--sans);color:#8d8d92;letter-spacing:.08em}
+.k .acc b{color:#FFD60A}
+.k .tt{position:absolute;left:40px;right:40px;top:150px;text-align:center;font:900 96px/1.18 var(--sans);letter-spacing:.02em}
+.k .tt .y{color:#FFD60A}
+.k .cap{position:absolute;left:40px;right:40px;top:1510px;text-align:center;font:800 64px/1.25 var(--sans)}
+.k .cap b{color:#FFD60A}
+.k .ft{position:absolute;left:0;right:0;top:1640px;text-align:center;font:500 28px/1 var(--sans);color:#77777c}
+.k .note{position:absolute;left:44px;top:470px;background:#FFD60A;color:#111;padding:22px 30px;border-radius:6px;box-shadow:0 10px 30px rgba(0,0,0,.35);max-width:760px}
+.k .note .l{font:900 30px/1 var(--sans);letter-spacing:.12em;opacity:.7}
+.k .note h3{font:900 64px/1.15 var(--latin);margin-top:10px}
+.k .note p{font:700 36px/1.4 var(--sans);margin-top:6px}
+.k .nm{position:absolute;left:44px;top:1380px;font:700 34px/1 var(--sans);background:#0B0B0C;padding:16px 22px;border-radius:6px;border-left:8px solid #FFD60A}
+.k .nm span{color:#9a9aa0;font-weight:500;margin-left:12px}
+/* ---------- 6 逐字大字幕 ---------- */
+.h .ep{position:absolute;left:60px;top:100px;font:800 30px/1 var(--latin);background:#fff;color:#111;padding:12px 18px;border-radius:999px;letter-spacing:.06em}
+.h .ep i{font-style:normal;color:#7c7c7c;margin-left:8px;font-weight:600}
+.h .big{position:absolute;left:30px;right:30px;top:1180px;text-align:center;font:900 124px/1.12 var(--sans);color:#fff;-webkit-text-stroke:18px #000;paint-order:stroke fill;filter:drop-shadow(0 10px 0 rgba(0,0,0,.25))}
+.h .big .on{color:var(--lime);display:inline-block;transform:rotate(-3deg) scale(1.08)}
+.h .stk{position:absolute;font:900 44px/1 var(--sans);color:#111;background:var(--lime);border:6px solid #000;border-radius:18px;padding:16px 22px;transform:rotate(6deg);box-shadow:8px 8px 0 #000}
+.h .emo{position:absolute;font:110px/1 "Noto Color Emoji";transform:rotate(-10deg)}
+/* ---------- 7 电影宽银幕 ---------- */
+.c .lb{position:absolute;left:0;right:0;background:#050505}
+.c .lt{top:0;height:400px}.c .lbm{top:1520px;height:400px}
+.c .grain{position:absolute;left:0;right:0;top:400px;height:1120px;background:radial-gradient(ellipse at center,rgba(0,0,0,0) 55%,rgba(0,0,0,.45) 100%),linear-gradient(rgba(255,170,90,.06),rgba(40,80,120,.08))}
+.c .pres{position:absolute;left:0;right:0;top:170px;text-align:center;font:500 26px/1 var(--latin);letter-spacing:.6em;color:#9b9b9b}
+.c .mt{position:absolute;left:0;right:0;top:225px;text-align:center;font:600 76px/1.2 var(--serif);letter-spacing:.14em;color:#f2efe8}
+.c .mt small{display:block;font:italic 400 30px/1.6 "DejaVu Serif",serif;letter-spacing:.06em;color:#a9a39a;margin-top:6px}
+.c .sub{position:absolute;left:60px;right:60px;top:1575px;text-align:center;font:500 54px/1.35 var(--serif);color:#f2efe8}
+.c .sub small{display:block;font:italic 400 30px/1.5 "DejaVu Serif",serif;color:#b3ada4;margin-top:6px}
+.c .who{position:absolute;left:64px;top:1400px;font:500 30px/1.5 var(--serif);color:#f2efe8;text-shadow:0 2px 10px rgba(0,0,0,.6);letter-spacing:.1em}
+.c .who b{font:600 40px var(--latin);letter-spacing:.2em;display:block}
+.c .chap{position:absolute;left:0;right:0;top:210px;text-align:center;font:500 28px/1 var(--latin);letter-spacing:.5em;color:#C8A86A}
+.c .chap+.mt{top:260px}
+/* ---------- 8 手账便利贴 ---------- */
+.j .paper{position:absolute;left:70px;right:90px;top:150px;background:#FFF9EA;color:#2b2620;border-radius:10px;padding:56px 48px 44px;transform:rotate(-2.5deg);box-shadow:0 18px 40px rgba(0,0,0,.25);background-image:repeating-linear-gradient(transparent 0 66px,rgba(80,120,200,.18) 66px 68px)}
+.j .tape{position:absolute;width:220px;height:58px;background:rgba(200,255,0,.78);top:-26px;left:50%;margin-left:-110px;transform:rotate(3deg)}
+.j .paper h2{font:400 92px/1.25 "ZCOOL KuaiLe",var(--sans)}
+.j .mk{background:linear-gradient(transparent 55%,#FFE14D 55%,#FFE14D 92%,transparent 92%)}
+.j .paper p{font:400 40px/1.5 "Ma Shan Zheng",var(--sans);color:#6a5f52;margin-top:10px}
+.j .circ{position:absolute;right:30px;bottom:30px;width:150px;height:90px;border:5px solid #FF5A4E;border-radius:50%;transform:rotate(-8deg)}
+.j .cap{position:absolute;left:0;right:0;top:1320px;text-align:center}
+.j .cap span{display:inline-block;background:#fff;color:#1d1b18;font:800 58px/1.3 var(--sans);padding:16px 32px;border-radius:999px;box-shadow:0 8px 20px rgba(0,0,0,.18)}
+.j .sticky{position:absolute;right:70px;top:190px;width:600px;background:#FFE14D;color:#2b2620;padding:44px 40px 40px;transform:rotate(3deg);box-shadow:0 18px 30px rgba(0,0,0,.25)}
+.j .sticky h3{font:400 76px/1.1 "ZCOOL KuaiLe",var(--sans)}
+.j .sticky p{font:400 42px/1.45 "ZCOOL KuaiLe",var(--sans);margin-top:14px}
+.j .pin{position:absolute;top:-18px;left:50%;width:40px;height:40px;margin-left:-20px;border-radius:50%;background:#FF5A4E;box-shadow:0 4px 6px rgba(0,0,0,.3)}
+.j .nmt{position:absolute;left:60px;top:1150px;background:#fff;color:#2b2620;padding:18px 26px;border-radius:8px;transform:rotate(-3deg);font:400 56px/1 "ZCOOL KuaiLe",var(--sans);box-shadow:0 8px 16px rgba(0,0,0,.2)}
+.j .nmt small{font:400 38px "ZCOOL KuaiLe";color:#7a6f62;margin-left:10px}
+/* ---------- 9 AI 终端 ---------- */
+.a .win{position:absolute;left:56px;right:56px;top:140px;background:rgba(8,12,8,.86);border:2px solid rgba(200,255,0,.35);border-radius:22px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.4)}
+.a .bar{height:58px;display:flex;align-items:center;gap:12px;padding:0 24px;background:rgba(255,255,255,.06);font:500 24px/1 "JetBrains Mono",monospace;color:#8a9a80}
+.a .bar i{width:16px;height:16px;border-radius:50%;background:#FF5F57;display:block}.a .bar i:nth-child(2){background:#FEBC2E}.a .bar i:nth-child(3){background:#28C840}
+.a .bar span{margin-left:14px}
+.a .body{padding:30px 34px 36px;font:500 44px/1.55 "JetBrains Mono",var(--sans);color:#d8e6cf}
+.a .body .g{color:var(--lime)}.a .body .d{color:#6f7d68}
+.a .body .cn{font-family:var(--sans);font-weight:800;font-size:64px;color:#fff}
+.a .cur{display:inline-block;width:26px;height:56px;background:var(--lime);vertical-align:-10px;margin-left:6px}
+.a .cap{position:absolute;left:0;right:0;top:1320px;text-align:center}
+.a .cap span{display:inline-block;position:relative;font:800 60px/1.3 var(--sans);padding:14px 36px;background:rgba(8,12,8,.72)}
+.a .cap span:before,.a .cap span:after{content:"";position:absolute;width:30px;height:30px;border:6px solid var(--lime)}
+.a .cap span:before{left:0;top:0;border-right:0;border-bottom:0}.a .cap span:after{right:0;bottom:0;border-left:0;border-top:0}
+.a .cap b{color:var(--lime)}
+.a .tag{position:absolute;left:56px;top:1170px;font:500 30px/1.5 "JetBrains Mono",monospace;color:#d8e6cf;background:rgba(8,12,8,.75);padding:14px 22px;border-radius:12px;border:2px solid rgba(200,255,0,.35)}
+.a .tag .g{color:var(--lime)}
+.a .scan{position:absolute;inset:0;background:repeating-linear-gradient(rgba(255,255,255,.03) 0 2px,transparent 2px 5px);pointer-events:none}
+</style></head>
+<body>
+<img id="bg"><div id="vig"></div>
+<!-- 2 纪录片 -->
+<div class="t d" data-s="hook">
+  <div class="kick"><i></i>ETSY-TONY · 车上随拍<span class="r">2026.10.28</span></div>
+  <div class="head">让 AI 管公司<br><u>我先道个歉</u></div>
+  <div class="chap" style="top:470px"><b>01</b>发生了什么</div>
+  <div class="name"><div class="bar"></div><div class="box"><div class="n1">Tony<small>程亚东</small></div><div class="n2">Etsy 跨境卖家 · Shopwright</div></div></div>
+  <div class="cap"><span>今天想给个哥们<b class="lime">道歉</b></span></div>
+</div>
+<div class="t d" data-s="card">
+  <div class="kick"><i></i>ETSY-TONY · 车上随拍<span class="r">02 AI 怎么管公司</span></div>
+  <div class="card" style="top:170px"><div class="ic">AI</div><div><h3>Claude<em>名词卡</em></h3><p>Anthropic 推出的 AI 助手，<br>在我们公司负责数据和任务调度</p></div></div>
+  <div class="cap"><span><b class="lime">Claude</b>他会把我们</span></div>
+</div>
+<!-- 3 资讯快报 -->
+<div class="t n" data-s="hook">
+  <div class="top"><div class="row"><div class="tag">实录</div><h1>让AI管公司，我先道个歉</h1></div><div class="sub">ETSY-TONY 跨境日记 · 2026.10.28 · 车上</div></div>
+  <div class="lt"><div class="a">Tony</div><div class="b">Etsy 跨境卖家 · Shopwright</div></div>
+  <div class="cap"><span class="w">今天想给个哥们</span>道歉</div>
+  <div class="tick"><b>关注</b><span>@Etsy-Tony ｜ openaigrowth.com ｜ AI 公司实验持续更新</span></div>
+</div>
+<div class="t n" data-s="card">
+  <div class="top"><div class="row"><div class="tag">实录</div><h1>让AI管公司，我先道个歉</h1></div><div class="sub">ETSY-TONY 跨境日记 · 02 AI 怎么管公司</div></div>
+  <div class="kp"><div class="l">● 知识点</div><h3>Claude</h3><p>Anthropic 推出的 AI 助手，<br>在我们公司负责数据和任务调度</p></div>
+  <div class="cap">Claude<span class="w">他会把我们</span></div>
+  <div class="tick"><b>关注</b><span>@Etsy-Tony ｜ openaigrowth.com ｜ AI 公司实验持续更新</span></div>
+</div>
+<!-- 4 极简杂志 -->
+<div class="t m" data-s="hook">
+  <div class="issue"><span>ETSY-TONY</span><span>NO.05 · 10.28</span></div>
+  <div class="ttl">让AI管公司<span class="dot">·</span><br>我先道个歉<small>一次关于 AI 和人情味的反思</small></div>
+  <div class="sig"><div></div>TONY<p>Etsy 跨境卖家 · Shopwright</p></div>
+  <div class="cap">今天想给个哥们<span class="k">道歉</span></div>
+</div>
+<div class="t m" data-s="card">
+  <div class="issue"><span>ETSY-TONY</span><span>CH.02 · AI</span></div>
+  <div class="glass"><div class="l">GLOSSARY</div><h3>Claude</h3><p>Anthropic 推出的 AI 助手，<br>在我们公司负责数据和任务调度</p></div>
+  <div class="cap"><span class="k">Claude</span>他会把我们</div>
+</div>
+<!-- 5 知识黑框 -->
+<div class="t k" data-s="hook"><div class="band bt"></div><div class="band bb"></div>
+  <div class="acc">@Etsy-Tony · <b>AI 管公司</b> 实验记录</div>
+  <div class="tt">让 AI 管公司<br><span class="y">我先道个歉</span></div>
+  <div class="nm">Tony<span>Etsy 跨境卖家 · Shopwright</span></div>
+  <div class="cap">今天想给个哥们<b>道歉</b></div><div class="ft">关注我 · 看 AI 管公司的后续</div></div>
+<div class="t k" data-s="card"><div class="band bt"></div><div class="band bb"></div>
+  <div class="acc">@Etsy-Tony · <b>AI 管公司</b> 实验记录</div>
+  <div class="tt">让 AI 管公司<br><span class="y">我先道个歉</span></div>
+  <div class="note"><div class="l">名词解释</div><h3>Claude</h3><p>Anthropic 推出的 AI 助手<br>在我们公司负责数据和任务调度</p></div>
+  <div class="cap"><b>Claude</b>他会把我们</div><div class="ft">关注我 · 看 AI 管公司的后续</div></div>
+<!-- 6 逐字大字幕 -->
+<div class="t h" data-s="hook"><div class="ep">EP.05<i>AI 管公司</i></div>
+  <div class="emo" style="left:800px;top:1000px">🙏</div>
+  <div class="big">今天想给个<br>哥们<span class="on">道歉</span></div></div>
+<div class="t h" data-s="card"><div class="ep">EP.05<i>AI 管公司</i></div>
+  <div class="stk" style="left:620px;top:960px">AI 助手</div>
+  <div class="big"><span class="on">CLAUDE</span><br>全部知道</div></div>
+<!-- 7 电影宽银幕 -->
+<div class="t c" data-s="hook"><div class="grain"></div><div class="lb lt"></div><div class="lb lbm"></div>
+  <div class="pres">ETSY-TONY PRESENTS</div>
+  <div class="mt">让 AI 管公司<small>Letting AI Run the Company</small></div>
+  <div class="who"><b>TONY</b>Etsy 跨境卖家 · Shopwright</div>
+  <div class="sub">今天想给个哥们道歉<small>Today I owe a friend an apology.</small></div></div>
+<div class="t c" data-s="card"><div class="grain"></div><div class="lb lt"></div><div class="lb lbm"></div>
+  <div class="chap">CHAPTER II</div>
+  <div class="mt">AI 怎么管公司<small>Claude knows everything on our website</small></div>
+  <div class="sub">Claude 他会把我们网站里面所有的数据<small>Claude reads all the data on our website.</small></div></div>
+<!-- 8 手账便利贴 -->
+<div class="t j" data-s="hook">
+  <div class="paper"><div class="tape"></div><h2>让 AI 管公司<br><span class="mk">我先道个歉</span></h2><p>Tony 的创业手记 · 10.28</p><div class="circ"></div></div>
+  <div class="nmt">Tony<small>Etsy 跨境卖家</small></div>
+  <div class="cap"><span>今天想给个哥们<b style="background:linear-gradient(transparent 55%,#FFE14D 55%)">道歉</b></span></div></div>
+<div class="t j" data-s="card">
+  <div class="sticky"><div class="pin"></div><h3>Claude 是谁？</h3><p>Anthropic 推出的 AI 助手，<br>在我们公司管数据、派任务</p></div>
+  <div class="cap"><span><b style="background:linear-gradient(transparent 55%,#FFE14D 55%)">Claude</b>他会把我们</span></div></div>
+<!-- 9 AI 终端 -->
+<div class="t a" data-s="hook">
+  <div class="win"><div class="bar"><i></i><i></i><i></i><span>tony@shopwright: ~/ai-company</span></div>
+  <div class="body"><span class="d">$</span> run <span class="g">ai_company</span> --day 10.28<br><span class="cn">让 AI 管公司</span><br><span class="cn">我先道个歉</span><span class="cur"></span><div class="scan"></div></div></div>
+  <div class="tag"><span class="g">user</span>: Tony &nbsp;<span class="g">role</span>: Etsy 跨境卖家</div>
+  <div class="cap"><span>今天想给个哥们<b>道歉</b></span></div></div>
+<div class="t a" data-s="card">
+  <div class="win"><div class="bar"><i></i><i></i><i></i><span>glossary.md</span></div>
+  <div class="body"><span class="d">&gt;</span> define <span class="g">"Claude"</span><br><span class="cn" style="font-size:48px">Anthropic 推出的 AI 助手</span><br><span class="d">#</span> 在公司里：读数据 · 定 OKR · 派任务<span class="cur"></span><div class="scan"></div></div></div>
+  <div class="cap"><span><b>Claude</b>他会把我们</span></div></div>
+
+<script>
+const q=new URLSearchParams(location.search);const tpl=q.get('tpl'),s=q.get('s');
+document.getElementById('bg').src='bg/'+s+'.jpg';
+document.querySelectorAll('.t.'+tpl+'[data-s="'+s+'"]').forEach(e=>e.style.display='block');
+</script>
+</body></html>
