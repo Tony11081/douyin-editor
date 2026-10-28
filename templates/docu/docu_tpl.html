@@ -1,0 +1,115 @@
+<!doctype html>
+<html><head><meta charset="utf-8">
+<!-- 2 号模板「纪录片」：前景透明层，window.render(t) 逐帧驱动 -->
+<style>
+:root{--lime:#C8FF00;--sans:"Noto Sans CJK SC",sans-serif;--serif:"Noto Serif CJK SC",serif;--latin:"Inter",sans-serif}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:1080px;height:1920px;overflow:hidden;background:transparent}
+body{font-family:var(--sans);color:#fff;-webkit-font-smoothing:antialiased;position:relative}
+.ab{position:absolute;will-change:transform,opacity}
+#vig{position:absolute;inset:0;background:linear-gradient(rgba(0,0,0,.30),rgba(0,0,0,0) 26%)}
+#kick{left:64px;right:64px;top:96px;height:34px;font:600 30px/34px var(--latin);letter-spacing:.14em;text-shadow:0 2px 12px rgba(0,0,0,.55);white-space:nowrap}
+#kick i{position:absolute;left:0;top:8px;width:18px;height:18px;background:var(--lime);border-radius:3px}
+#kick .l{position:absolute;left:34px}
+#kick .r{position:absolute;right:0;top:0}
+#head{left:64px;right:64px;top:170px;font:900 124px/1.14 var(--serif);text-shadow:0 6px 30px rgba(0,0,0,.45)}
+#head .l2{position:relative;display:inline-block}
+#head .ul{position:absolute;left:0;right:0;bottom:12px;height:30px;background:rgba(200,255,0,.9);transform-origin:left center;z-index:-1}
+#chap{left:64px;top:478px;display:flex;align-items:center;gap:14px;font:700 34px/1 var(--sans);background:rgba(10,10,12,.72);padding:16px 26px 16px 18px;border-radius:12px}
+#chap b,#ci b{font:800 30px/1 var(--latin);color:#111;background:var(--lime);padding:8px 12px;border-radius:7px}
+#ci{left:64px;top:190px;display:flex;flex-direction:column;gap:18px}
+#ci .no{font:800 190px/0.9 var(--latin);color:var(--lime);letter-spacing:-.03em;text-shadow:0 8px 30px rgba(0,0,0,.35)}
+#ci .tt{font:900 92px/1.1 var(--serif);text-shadow:0 6px 26px rgba(0,0,0,.5)}
+#ci .ln{height:6px;width:320px;background:#fff;transform-origin:left}
+#name{left:64px;top:1050px;display:flex;gap:22px;align-items:stretch}
+#name .bar{width:10px;background:var(--lime);border-radius:5px;transform-origin:center bottom}
+#name .box{background:rgba(10,10,12,.66);padding:20px 30px 22px 26px;border-radius:14px}
+#name .n1{font:900 64px/1.1 var(--sans)}
+#name .n1 small{font:500 40px var(--sans);opacity:.85;margin-left:12px}
+#name .n2{font:500 34px/1.5 var(--sans);opacity:.92;margin-top:6px}
+.card{left:64px;right:64px;top:170px;background:#fff;color:#111;border-radius:30px;padding:34px 36px;display:flex;gap:28px;align-items:center;box-shadow:0 20px 60px rgba(0,0,0,.35)}
+.card .ic{width:118px;height:118px;border-radius:26px;background:#111;color:var(--lime);font:800 50px/118px var(--latin);text-align:center;flex:none}
+.card .ic.s{font-size:34px}
+.card h3{font:800 60px/1.1 var(--latin)}
+.card h3.cn{font:900 56px/1.1 var(--sans)}
+.card h3.sm{font-size:50px}
+.card h3 em{font:500 30px var(--sans);font-style:normal;color:#666;margin-left:14px}
+.card p{font:500 36px/1.45 var(--sans);color:#333;margin-top:10px}
+.card.end{background:#111;color:#fff;border:3px solid var(--lime)}
+.card.end .ic{background:var(--lime);color:#111}
+.card.end h3 em{color:#aaa}.card.end p{color:#ddd}
+#cap{left:40px;right:40px;top:1310px;text-align:center}
+#cap span{display:inline-block;background:rgba(0,0,0,.74);font:700 62px/1.25 var(--sans);padding:14px 30px;border-radius:12px}
+#cap b{color:var(--lime);font-weight:900}
+</style></head>
+<body>
+<div id="vig"></div>
+<div id="kick" class="ab"><i></i><span class="l"></span><span class="r" id="kr"></span></div>
+<div id="head" class="ab"><div id="h1"></div><div class="l2"><span id="h2"></span><i class="ul" id="ul"></i></div></div>
+<div id="chap" class="ab"><b id="cb"></b><span id="ct"></span></div>
+<div id="ci" class="ab"><div class="no" id="cino"></div><div class="tt" id="citt"></div><div class="ln" id="ciln"></div></div>
+<div id="name" class="ab"><div class="bar" id="nbar"></div><div class="box" id="nbox"><div class="n1" id="nn"></div><div class="n2" id="ns"></div></div></div>
+<div id="cards"></div>
+<div id="cap" class="ab"><span id="capt"></span></div>
+<script src="cfg05.js"></script>
+<script>
+const $=id=>document.getElementById(id);
+const C=window.CFG;
+const P=(t,a,b)=>Math.max(0,Math.min(1,(t-a)/(b-a)));
+const oE=k=>1-Math.pow(1-k,3), oX=k=>k>=1?1:1-Math.pow(2,-10*k), iO=k=>k<.5?4*k*k*k:1-Math.pow(-2*k+2,3)/2;
+const oB=k=>{const c=1.5;return 1+(c+1)*Math.pow(k-1,3)+c*Math.pow(k-1,2)};
+function S(el,o,x=0,y=0,s=1){el.style.opacity=o.toFixed(3);el.style.transform=`translate(${x.toFixed(1)}px,${y.toFixed(1)}px) scale(${s.toFixed(4)})`}
+document.querySelector('#kick .l').textContent=C.kick;
+$('h1').textContent=C.head.l1;$('h2').textContent=C.head.l2;
+$('nn').innerHTML=C.name.n+'<small>'+C.name.cn+'</small>';$('ns').textContent=C.name.sub;
+C.cards.forEach((c,i)=>{const d=document.createElement('div');d.className='ab card'+(c.end?' end':'');d.id='card'+i;
+  d.innerHTML=`<div class="ic${c.ic.length>2?' s':''}">${c.ic}</div><div><h3 class="${c.cn?'cn':''} ${c.small?'sm':''}">${c.t}<em>${c.em}</em></h3><p>${c.p}</p></div>`;$('cards').appendChild(d)});
+const esc=s=>s.replace(/[&<>]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[m]));
+function capHTML(txt){const mark=new Array(txt.length).fill(0);
+  for(const k of C.keys){let p=txt.indexOf(k);while(p>=0){for(let j=p;j<p+k.length;j++)mark[j]=1;p=txt.indexOf(k,p+k.length)}}
+  let h='',on=0;[...txt].forEach((ch,j)=>{if(mark[j]&&!on){h+='<b>';on=1}if(!mark[j]&&on){h+='</b>';on=0}h+=esc(ch)});if(on)h+='</b>';return h}
+let capI=-2,chI=-1;
+function render(t){
+  // 顶部小字 + 当前章节
+  let ci=0;C.chapters.forEach((c,i)=>{if(t>=c[0])ci=i});
+  const kr=$('kr');const cur=C.chapters[ci];
+  const txt=ci===0?C.date:cur[1]+' '+cur[2];
+  if(kr.textContent!==txt)kr.textContent=txt;
+  const since=t-cur[0];kr.style.opacity=(ci===0?1:P(since,0.3,0.7)).toFixed(3);
+  S($('kick'),1);
+  // 开场大标题（第 0 帧就在）
+  const h=C.head;const hin=oE(P(t,0,0.5)),hout=iO(P(t,h.b-0.4,h.b));
+  S($('head'),1-hout,0,-30*hout,1.03-0.03*hin);
+  $('ul').style.transform=`scaleX(${oE(P(t,0.15,0.75)).toFixed(3)})`;
+  // 01 章节标签（跟着大标题）
+  $('cb').textContent='01';$('ct').textContent=C.chapters[0][2];
+  const ck=oE(P(t,0.25,0.6));S($('chap'),ck*(1-hout),-20*(1-ck),-20*hout);
+  // 章节过场卡
+  let shown=false;
+  for(let i=1;i<C.chapters.length;i++){const a=C.chapters[i][0],b=a+2.5;
+    if(t>=a-0.05&&t<b){shown=true;
+      if(chI!==i){$('cino').textContent=C.chapters[i][1];$('citt').textContent=C.chapters[i][2];chI=i}
+      const k=oX(P(t,a,a+0.45)),out=iO(P(t,b-0.35,b));
+      S($('ci'),k*(1-out),-60*(1-k),-24*out);
+      $('ciln').style.transform=`scaleX(${oE(P(t,a+0.2,a+0.8)).toFixed(3)})`;}}
+  if(!shown)$('ci').style.opacity=0;
+  // 名字条
+  const n=C.name;const nk=oE(P(t,n.a,n.a+0.45)),no=iO(P(t,n.b-0.35,n.b));
+  $('nbar').style.transform=`scaleY(${oE(P(t,n.a,n.a+0.3)).toFixed(3)})`;
+  S($('name'),(t<n.a||t>n.b)?0:1-no,-24*no,0);
+  S($('nbox'),nk,-50*(1-nk),0);
+  // 名词卡 / 结尾卡
+  C.cards.forEach((c,i)=>{const el=$('card'+i);
+    if(t<c.a||t>c.b){el.style.opacity=0;return}
+    const k=P(t,c.a,c.a+0.42),out=iO(P(t,c.b-0.3,c.b));
+    S(el,Math.min(1,k*2.2)*(1-out),0,(1-oE(k))*-40-20*out,0.94+0.06*oB(k))});
+  // 字幕：整句出，黑底条
+  const i=C.cues.findIndex(c=>t>=c[0]&&t<c[1]);
+  if(i<0){$('cap').style.opacity=0;return}
+  if(i!==capI){$('capt').innerHTML=capHTML(C.cues[i][2]);capI=i}
+  const [a,b]=C.cues[i];const k=P(t,a,a+0.12);
+  S($('cap'),i===0?1:oE(k),0,i===0?0:10*(1-oE(k)));
+}
+window.render=render;render(0);
+</script>
+</body></html>
