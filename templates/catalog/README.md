@@ -31,6 +31,18 @@ gallery.html 是所有模板的静态样式（?tpl=<代号>&s=hook|card，背景
 | 23 | 杂志封面 | mg | 仅静态样式 |
 | 24 | 全息科技 | ho | 仅静态样式 |
 | 25 | 拍立得 | pl | 仅静态样式 |
+| 26 | 购物小票 | rc | 仅静态样式 |
+| 27 | 地铁导视 | mt2 | 仅静态样式 |
+| 28 | 复古电脑 | os | 仅静态样式 |
+| 29 | 快递面单 | sh | 仅静态样式 |
+| 30 | 任务看板 | kb | 仅静态样式 |
+| 31 | 警示胶带 | wt | 仅静态样式 |
+| 32 | 时间轴 | tl | 仅静态样式 |
+| 33 | 日历撕页 | cal | 仅静态样式 |
+| 34 | 片头字幕 | cr | 仅静态样式 |
+| 35 | Y2K 千禧 | y2 | 仅静态样式 |
+
+注意：模板内部不要用 class="t"（它是模板容器的类名，默认隐藏）。
 
 字体：ZCOOL KuaiLe、Ma Shan Zheng、Long Cang、JetBrains Mono 来自 google/fonts 仓库 ofl/（git sparse-checkout 后装进 ~/.fonts）。
 
