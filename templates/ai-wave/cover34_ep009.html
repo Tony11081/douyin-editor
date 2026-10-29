@@ -1,0 +1,37 @@
+<!doctype html>
+<html><head><meta charset="utf-8">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:1080px;height:1440px;overflow:hidden;background:#0038FF}
+body{font-family:'Noto Sans CJK SC',sans-serif;font-weight:900;color:#fff;position:relative}
+.a{position:absolute}
+.dots{inset:0;background-image:radial-gradient(rgba(255,255,255,.10) 2.2px,transparent 2.8px);background-size:30px 30px}
+.yel{inset:0;background:#F2FF00;clip-path:polygon(0 0,100% 0,100% 44%,0 58%)}
+</style></head><body>
+<div class="a dots"></div>
+<div class="a yel"></div>
+<div class="a" style="left:70px;top:70px;background:#0A0A0A;color:#F2FF00;font-size:46px;line-height:1;padding:14px 22px 18px">AI浪潮</div>
+<div class="a" style="left:300px;top:84px;color:#0A0A0A;font-size:36px;font-weight:700;letter-spacing:3px">每日AI情报 · <span id="md">10.30</span></div>
+<svg class="a" id="bc" style="left:830px;top:70px" width="180" height="64"></svg>
+<div class="a" style="left:66px;top:190px;color:#0A0A0A;font-size:340px;line-height:1;letter-spacing:-14px">$500</div>
+<div class="a" style="left:78px;top:540px;color:#0A0A0A;font-size:92px;line-height:1.1;letter-spacing:-2px">Pro每月能领的</div>
+<div class="a" style="left:70px;top:780px;font-size:168px;line-height:1;letter-spacing:-6px">API额度</div>
+<svg class="a" style="left:0;top:960px" width="1080" height="200">
+ <defs><linearGradient id="ch" x1="0" x2="1"><stop offset="0" stop-color="#fff"/><stop offset=".35" stop-color="#9fb2ff"/><stop offset=".5" stop-color="#fff"/><stop offset=".7" stop-color="#F2FF00"/><stop offset="1" stop-color="#fff"/></linearGradient></defs>
+ <path id="w1" fill="none" stroke="url(#ch)" stroke-width="30" stroke-linecap="round"/>
+ <path id="w2" fill="none" stroke="#0A0A0A" stroke-width="8" stroke-linecap="round"/>
+</svg>
+<div class="a" style="left:70px;top:1180px;display:flex;gap:18px;flex-wrap:wrap;width:760px">
+ <span style="background:#fff;color:#0A0A0A;font-size:40px;padding:12px 22px 16px;border:5px solid #0A0A0A;line-height:1">+ Gemini 4 Carbon登顶</span>
+ <span style="background:#fff;color:#0A0A0A;font-size:40px;padding:12px 22px 16px;border:5px solid #0A0A0A;line-height:1">+ 15分钟抓到模型越界</span>
+</div>
+<div class="a" style="left:800px;top:1110px;width:220px;height:220px;border-radius:50%;background:#F2FF00;border:6px solid #0A0A0A;box-shadow:10px 10px 0 #0A0A0A;color:#0A0A0A;display:flex;align-items:center;justify-content:center;text-align:center;font-size:50px;line-height:1.05;transform:rotate(12deg)">每月<br>能领</div>
+<script>
+const mk=(yb,amp,len,ph)=>{let s='';for(let x=-20;x<=1100;x+=20){s+=(x<0?'M':'L')+x+' '+(yb+amp*Math.sin(x/len*Math.PI*2+ph)).toFixed(1)+' ';}return s};
+document.getElementById('w1').setAttribute('d',mk(100,60,540,0.6));
+document.getElementById('w2').setAttribute('d',mk(118,46,420,1.8));
+let x=0,h='',seed=7;const r=()=>{seed=(seed*9301+49297)%233280;return seed/233280};
+while(x<176){const w=2+Math.floor(r()*7);if(r()>.4)h+=`<rect x="${x}" y="0" width="${w}" height="56" fill="#0A0A0A"/>`;x+=w+2;}
+document.getElementById('bc').innerHTML=h;
+</script>
+</body></html>

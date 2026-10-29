@@ -1,0 +1,293 @@
+<!doctype html>
+<html><head><meta charset="utf-8">
+<style>
+:root{--blue:#0038FF;--yel:#F2FF00;--ink:#0A0A0A;--wh:#FFFFFF}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:1080px;height:1920px;overflow:hidden;background:var(--blue)}
+body{font-family:'Noto Sans CJK SC',sans-serif;font-weight:900;color:var(--wh)}
+.abs{position:absolute}
+.scene{position:absolute;inset:0;overflow:hidden;display:none;background:var(--blue)}
+.dots{position:absolute;inset:0;background-image:radial-gradient(rgba(255,255,255,.10) 2.2px,transparent 2.8px);background-size:30px 30px}
+.mask{overflow:hidden;display:block;padding-bottom:6px}
+.ln{display:block;white-space:nowrap}
+.k{color:var(--yel)}
+.card{background:var(--wh);border:8px solid var(--ink);box-shadow:20px 20px 0 var(--ink);color:var(--ink);transform-origin:50% 50%}
+.idx{font-size:250px;line-height:1;color:transparent;-webkit-text-stroke:6px var(--yel);letter-spacing:-8px}
+.tag{background:var(--ink);color:var(--yel);font-size:44px;padding:10px 24px 14px;line-height:1}
+.head{font-size:106px;line-height:1.13;letter-spacing:-3px}
+.stk{width:260px;height:260px;border-radius:50%;background:var(--yel);border:6px solid var(--ink);color:var(--ink);display:flex;align-items:center;justify-content:center;text-align:center;font-size:58px;line-height:1.05;box-shadow:10px 10px 0 var(--ink)}
+.chip{background:var(--ink);color:var(--wh);font-size:30px;padding:8px 18px 11px;border-radius:30px;line-height:1;display:inline-block}
+#topbar{position:absolute;left:70px;top:178px;width:940px;height:64px;display:none;z-index:20}
+#topbar .brand{position:absolute;left:0;top:0;background:var(--yel);color:var(--ink);font-size:40px;line-height:1;padding:12px 18px 14px}
+#topbar .date{position:absolute;left:200px;top:14px;font-size:34px;color:var(--wh);line-height:1;font-weight:700}
+#topbar .seg{position:absolute;top:26px;width:70px;height:14px;background:rgba(255,255,255,.28)}
+#side{position:absolute;left:24px;top:1250px;transform-origin:0 0;transform:rotate(-90deg);font-size:24px;letter-spacing:6px;color:rgba(255,255,255,.55);font-weight:700;white-space:nowrap;display:none;z-index:20}
+#sub{position:absolute;left:0;top:1402px;width:1080px;height:120px;display:flex;align-items:center;justify-content:center;z-index:30}
+#sub span{font-size:60px;line-height:1;color:var(--wh);-webkit-text-stroke:12px var(--ink);paint-order:stroke fill;white-space:nowrap;letter-spacing:1px;display:inline-block}
+#wipe{position:absolute;left:0;top:0;z-index:50;width:1080px;height:2600px}
+.row{position:absolute;left:36px;width:812px;height:52px;border-bottom:3px solid #e5e5e5;font-size:30px;font-weight:700;display:flex;align-items:center;gap:18px}
+.row .id{color:#888;width:110px}
+.row .st{margin-left:auto}
+</style></head>
+<body>
+
+<!-- ============ COVER ============ -->
+<div class="scene" id="cover">
+  <div class="dots"></div>
+  <div class="abs" id="c-yel" style="inset:0;background:var(--yel)"></div>
+  <div class="abs" id="c-date" style="left:76px;top:200px;font-size:34px;color:var(--ink);font-weight:700;letter-spacing:4px"><span data-ep="full"></span></div>
+  <div class="abs" id="c-no" style="left:780px;top:196px;font-size:40px;color:var(--ink);letter-spacing:2px">№<span data-ep="no"></span></div>
+  <svg class="abs" id="c-barc" style="left:780px;top:250px" width="230" height="80"></svg>
+  <div class="abs" id="c-ai" style="left:50px;top:200px;font-size:600px;line-height:1;color:var(--ink);letter-spacing:-40px">AI</div>
+  <div class="abs" id="c-stk" style="left:110px;top:900px;background:var(--wh);color:var(--ink);font-size:46px;padding:16px 30px 20px;border:6px solid var(--ink);box-shadow:12px 12px 0 var(--ink);line-height:1">每日AI情报 · 第<span data-ep="no"></span>期</div>
+  <div class="abs" id="c-lc" style="left:110px;top:975px;font-size:410px;line-height:1;letter-spacing:-20px">浪潮</div>
+  <svg class="abs" id="c-wave" style="left:0;top:1150px" width="1080" height="300">
+    <defs><linearGradient id="chrome" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#ffffff"/><stop offset=".35" stop-color="#9fb2ff"/><stop offset=".5" stop-color="#ffffff"/><stop offset=".7" stop-color="#F2FF00"/><stop offset="1" stop-color="#ffffff"/></linearGradient></defs>
+    <path id="w1" fill="none" stroke="url(#chrome)" stroke-width="34" stroke-linecap="round"/>
+    <path id="w2" fill="none" stroke="var(--yel)" stroke-width="12" stroke-linecap="round"/>
+    <path id="w3" fill="none" stroke="var(--ink)" stroke-width="8" stroke-linecap="round"/>
+  </svg>
+  <div class="abs" id="c-arrow" style="left:900px;top:1010px;font-size:120px;color:var(--yel);line-height:1">↘</div>
+</div>
+
+<!-- ============ N1 Pro API credits ============ -->
+<div class="scene" id="n1">
+  <div class="dots"></div>
+  <div class="abs idx" id="n1-idx" style="left:64px;top:280px">01</div>
+  <div class="abs tag" id="n1-tag" style="left:400px;top:372px">OpenAI · API</div>
+  <div class="abs card" id="n1-card" style="left:90px;top:560px;width:900px;height:470px">
+    <div class="abs" style="left:40px;top:30px;font-size:42px">API 额度 · 每月</div>
+    <div class="abs" style="left:40px;top:92px;font-size:26px;color:#888;font-weight:700">ChatGPT Pro 三档</div>
+    <div class="abs" style="left:40px;top:400px;width:470px;height:6px;background:var(--ink)"></div>
+    <div class="abs" id="n1-c0" style="left:50px;top:362px;width:130px;height:38px;background:var(--blue);border:5px solid var(--ink);transform-origin:50% 100%"></div>
+    <div class="abs" id="n1-c1" style="left:210px;top:324px;width:130px;height:76px;background:var(--blue);border:5px solid var(--ink);transform-origin:50% 100%"></div>
+    <div class="abs" id="n1-c2" style="left:370px;top:210px;width:130px;height:190px;background:var(--yel);border:5px solid var(--ink);transform-origin:50% 100%"></div>
+    <div class="abs" id="n1-v0" style="left:50px;top:306px;width:130px;text-align:center;font-size:44px;line-height:1">$100</div>
+    <div class="abs" id="n1-v1" style="left:210px;top:268px;width:130px;text-align:center;font-size:44px;line-height:1">$200</div>
+    <div class="abs" id="n1-v2" style="left:370px;top:150px;width:130px;text-align:center;font-size:52px;line-height:1">$500</div>
+    <div class="abs" style="left:50px;top:414px;width:450px;display:flex;justify-content:space-between;font-size:24px;color:#888;font-weight:700"><span style="width:130px;text-align:center">Pro 100</span><span style="width:130px;text-align:center">Pro 200</span><span style="width:130px;text-align:center">Pro 500</span></div>
+    <div class="abs" style="left:550px;top:40px;width:6px;height:390px;background:#e5e5e5"></div>
+    <div class="abs" id="n1-r0" style="left:590px;top:140px;width:270px"><div style="font-size:26px;color:#888;font-weight:700">Business</div><div style="font-size:40px;line-height:1.2">上限 $500</div></div>
+    <div class="abs" id="n1-r1" style="left:590px;top:240px"><span class="chip" style="font-size:34px">订阅满7天</span></div>
+    <div class="abs" id="n1-r2" style="left:590px;top:310px"><span class="chip" style="font-size:34px;background:#FF5A36">Plus 不参与</span></div>
+    <div class="abs" id="n1-r3" style="left:590px;top:380px"><span class="chip" style="font-size:34px">额度不结转</span></div>
+  </div>
+  <div class="abs stk" id="n1-stkA" style="left:790px;top:440px">每月<br>能领</div>
+  <div class="abs stk" id="n1-stkB" style="left:790px;top:440px">看清<br>条件</div>
+  <div class="abs head" id="n1-head" style="left:90px;top:1090px">
+    <span class="mask"><span class="ln">Pro每月最高领</span></span>
+    <span class="mask"><span class="ln"><span class="k">$500</span> API额度</span></span>
+  </div>
+</div>
+
+<!-- ============ N2 Gemini 4 Carbon ============ -->
+<div class="scene" id="n2">
+  <div class="dots"></div>
+  <div class="abs idx" id="n2-idx" style="left:64px;top:280px">02</div>
+  <div class="abs tag" id="n2-tag" style="left:400px;top:372px">Google · Gemini</div>
+  <div class="abs card" id="n2-card" style="left:90px;top:560px;width:900px;height:470px">
+    <div id="n2-a" class="abs" style="inset:0">
+      <div class="abs" style="left:40px;top:30px;font-size:28px;color:#888;font-weight:700">Artificial Analysis 智能指数 v5</div>
+      <div class="abs" id="n2-num" style="left:30px;top:70px;font-size:260px;line-height:1;letter-spacing:-8px">0</div>
+      <div class="abs" style="left:370px;top:230px;font-size:70px">分</div>
+      <div class="abs" id="n2-no1" style="left:530px;top:110px;background:var(--ink);color:var(--yel);font-size:72px;padding:14px 30px 20px;line-height:1;transform-origin:50% 50%">No.1</div>
+      <div class="abs" style="left:40px;top:380px;display:flex;gap:16px">
+        <span class="chip" id="n2-b1" style="font-size:28px">SEC-bench Pro 88.2%</span>
+        <span class="chip" id="n2-b2" style="font-size:28px">CWE-bench 71.0%</span>
+      </div>
+    </div>
+    <div id="n2-b" class="abs" style="inset:0;opacity:0">
+      <div class="abs" style="left:40px;top:30px;font-size:42px">开放顺序</div>
+      <div class="row" id="n2-q0" style="top:150px;height:84px;font-size:40px;background:rgba(242,255,0,.85);padding-left:14px"><span>① 网络安全防护方</span><span class="st chip" style="font-size:30px">本周起 ✓</span></div>
+      <div class="row" id="n2-q1" style="top:250px;height:84px;font-size:40px;padding-left:14px"><span>② 开发者</span><span class="st" style="color:#888;font-size:34px">陆续开放 …</span></div>
+      <div class="row" id="n2-q2" style="top:350px;height:84px;font-size:40px;padding-left:14px"><span>③ 普通用户</span><span class="st" style="color:#888;font-size:34px">陆续开放 …</span></div>
+    </div>
+  </div>
+  <div class="abs stk" id="n2-stkA" style="left:790px;top:440px">智能<br>第一</div>
+  <div class="abs stk" id="n2-stkB" style="left:790px;top:440px">还要<br>再等</div>
+  <div class="abs head" id="n2-head" style="left:90px;top:1090px;font-size:96px">
+    <span class="mask"><span class="ln">Gemini 4 Carbon</span></span>
+    <span class="mask"><span class="ln"><span class="k">59分</span>登顶</span></span>
+  </div>
+</div>
+
+<!-- ============ N3 Connected Apps ============ -->
+<div class="scene" id="n3">
+  <div class="dots"></div>
+  <div class="abs idx" id="n3-idx" style="left:64px;top:280px">03</div>
+  <div class="abs tag" id="n3-tag" style="left:400px;top:372px">Google · Gemini</div>
+  <div class="abs card" id="n3-card" style="left:90px;top:560px;width:900px;height:470px">
+    <svg class="abs" style="left:0;top:0" width="900" height="470">
+      <g stroke="#0A0A0A" stroke-width="6" stroke-dasharray="14 10">
+        <line id="n3-l0" x1="210" y1="115" x2="380" y2="200"/>
+        <line id="n3-l1" x1="210" y1="335" x2="380" y2="250"/>
+        <line id="n3-l2" x1="690" y1="215" x2="520" y2="200"/>
+        <line id="n3-l3" x1="690" y1="355" x2="520" y2="250"/>
+      </g>
+    </svg>
+    <div class="abs" id="n3-hub" style="left:350px;top:125px;width:200px;height:200px;border-radius:50%;background:var(--blue);border:7px solid var(--ink);color:#fff;font-size:42px;display:flex;align-items:center;justify-content:center">Gemini</div>
+    <div class="abs" id="n3-t0" style="left:40px;top:60px;width:170px;height:110px;border:6px solid var(--ink);background:var(--yel);font-size:46px;display:flex;align-items:center;justify-content:center">修图</div>
+    <div class="abs" id="n3-t1" style="left:40px;top:280px;width:170px;height:110px;border:6px solid var(--ink);background:#fff;font-size:46px;display:flex;align-items:center;justify-content:center">冥想</div>
+    <div class="abs" id="n3-t2" style="left:690px;top:160px;width:170px;height:110px;border:6px solid var(--ink);background:#FF5A36;color:#fff;font-size:46px;display:flex;align-items:center;justify-content:center">健身</div>
+    <div class="abs" id="n3-t3" style="left:690px;top:300px;width:170px;height:110px;border:6px solid var(--ink);background:var(--ink);color:var(--yel);font-size:60px;display:flex;align-items:center;justify-content:center">50+</div>
+    <div class="abs" id="n3-chip" style="left:250px;top:400px"><span class="chip" style="font-size:30px">Search · 未来几周陆续开放</span></div>
+  </div>
+  <div class="abs stk" id="n3-stk" style="left:790px;top:440px">一处<br>直连</div>
+  <div class="abs head" id="n3-head" style="left:90px;top:1090px">
+    <span class="mask"><span class="ln">Gemini直连</span></span>
+    <span class="mask"><span class="ln"><span class="k">50+</span>个应用</span></span>
+  </div>
+</div>
+
+<!-- ============ N4 misalignment monitor ============ -->
+<div class="scene" id="n4">
+  <div class="dots"></div>
+  <div class="abs idx" id="n4-idx" style="left:64px;top:280px">04</div>
+  <div class="abs tag" id="n4-tag" style="left:400px;top:372px">OpenAI · 安全</div>
+  <div class="abs card" id="n4-card" style="left:90px;top:560px;width:900px;height:470px">
+    <div class="abs" style="left:40px;top:30px;font-size:36px;display:flex;align-items:center;gap:14px">隔离训练环境<span id="n4-try" style="font-size:30px;color:#FF5A36;display:inline-flex;align-items:center;gap:10px"><span id="n4-dot" style="width:20px;height:20px;border-radius:50%;background:#FF5A36;display:inline-block"></span>模型试图联网</span></div>
+    <div class="abs" style="left:620px;top:140px;font-size:28px;font-weight:700">15分 告警</div>
+    <div class="abs" style="left:40px;top:180px;width:820px;height:44px;border:6px solid var(--ink);background:#f0f0f0"><div id="n4-fill" style="height:100%;width:0;background:var(--blue)"></div></div>
+    <div class="abs" style="left:719px;top:170px;width:8px;height:64px;background:#FF5A36"></div>
+    <div class="abs" style="left:40px;top:236px;font-size:26px;color:#888;font-weight:700">0</div>
+    <div class="abs" style="left:620px;top:236px;width:240px;text-align:right;font-size:26px;color:#888;font-weight:700">+3分 人工接手</div>
+    <div class="abs" id="n4-time" style="left:34px;top:290px;font-size:150px;line-height:1;letter-spacing:-4px">00:00</div>
+    <div class="abs" id="n4-alert" style="left:600px;top:290px;background:#FF5A36;color:#fff;font-size:54px;padding:12px 26px 16px;line-height:1;border:5px solid var(--ink);transform-origin:50% 50%">⚠ 告警</div>
+    <div class="abs" id="n4-hand" style="left:560px;top:380px;background:var(--yel);color:var(--ink);font-size:46px;padding:12px 24px 16px;line-height:1;border:5px solid var(--ink);transform-origin:50% 50%">人工接手 ✓</div>
+  </div>
+  <div class="abs stk" id="n4-stk" style="left:790px;top:440px">15分<br>告警</div>
+  <div class="abs head" id="n4-head" style="left:90px;top:1090px">
+    <span class="mask"><span class="ln"><span class="k">15分钟</span>抓到</span></span>
+    <span class="mask"><span class="ln">模型越界</span></span>
+  </div>
+</div>
+
+<!-- ============ OUTRO ============ -->
+<div class="scene" id="outro" style="background:var(--yel)">
+  <div class="abs" style="inset:0;background-image:radial-gradient(rgba(0,0,0,.08) 2.2px,transparent 2.8px);background-size:30px 30px"></div>
+  <div class="abs" id="o-lab" style="left:90px;top:250px;font-size:38px;color:var(--ink);letter-spacing:3px">AI浪潮 · 第<span data-ep="no"></span>期 · 完</div>
+  <div class="abs" id="o-head" style="left:90px;top:360px;color:var(--ink);font-size:132px;line-height:1.14;letter-spacing:-4px">
+    <span class="mask"><span class="ln">你最想让AI</span></span>
+    <span class="mask"><span class="ln">替你干</span></span>
+    <span class="mask"><span class="ln"><span style="background:var(--blue);color:#fff;padding:0 18px">哪件活？</span></span></span>
+  </div>
+  <div class="abs" id="o-bub" style="left:90px;top:900px;background:var(--ink);color:#fff;font-size:56px;padding:22px 36px 28px;line-height:1;border-radius:14px">评论区告诉我 ↓</div>
+  <div class="abs" id="o-fol" style="left:90px;top:1060px;background:var(--blue);color:#fff;font-size:70px;padding:22px 44px 30px;line-height:1;border:6px solid var(--ink);box-shadow:12px 12px 0 var(--ink);transform-origin:50% 50%">+ 关注 AI浪潮</div>
+  <div class="abs" id="o-foot" style="left:90px;top:1250px;font-size:42px;color:var(--ink);font-weight:700">每天一分钟 · 不错过一个浪头</div>
+</div>
+
+<div id="topbar"><div class="brand">AI浪潮</div><div class="date">每日AI情报 · <span data-ep="md"></span></div>
+  <div class="seg" style="left:620px"></div><div class="seg" style="left:700px"></div><div class="seg" style="left:780px"></div><div class="seg" style="left:860px"></div></div>
+<div id="side">AI WAVE · DAILY BRIEF · №<span data-ep="no"></span> · <span data-ep="ymd"></span></div>
+<div id="tick" style="position:absolute;left:0;top:1610px;width:1080px;height:78px;background:#0A0A0A;overflow:hidden;z-index:25"><div id="tickin" style="position:absolute;left:0;top:16px;white-space:nowrap;font-size:40px;line-height:1;color:#F2FF00;letter-spacing:2px"></div></div>
+<div id="sub"><span id="subt"></span></div>
+<svg id="wipe" viewBox="0 0 1080 2600"><path id="wipeY" fill="#F2FF00"/><path id="wipeK" fill="none" stroke="#0A0A0A" stroke-width="14"/></svg>
+
+<script>
+// ===== 每期只改这里的期号和日期 =====
+window.EP = window.EP || {no:'009', md:'10.30', ymd:'2026.10.30', full:'2026.10.30 FRI'};
+document.querySelectorAll('[data-ep]').forEach(e=>{e.textContent=EP[e.dataset.ep];});
+const E={oc:x=>1-Math.pow(1-x,3),ob:x=>{const c1=1.9,c3=c1+1;return 1+c3*Math.pow(x-1,3)+c1*Math.pow(x-1,2)},io:x=>x<.5?4*x*x*x:1-Math.pow(-2*x+2,3)/2,ox:x=>x>=1?1:1-Math.pow(2,-10*x)};
+const cl=x=>Math.max(0,Math.min(1,x));
+const P=(t,a,d)=>cl((t-a)/d);
+const L=(a,b,k)=>a+(b-a)*k;
+const $=id=>document.getElementById(id);
+function T(el,o){if(typeof el==='string')el=$(el);const{x=0,y=0,s=1,r=0,op=1}=o;el.style.transform=`translate(${x}px,${y}px) rotate(${r}deg) scale(${s})`;el.style.opacity=op}
+
+// ---- timeline (seconds) ----
+window.TL = window.TL || {"scenes": [["cover", 0.0, 8.416], ["n1", 8.416, 27.935, 16.555], ["n2", 27.935, 41.441, 35.11], ["n3", 41.441, 59.951, 52.132], ["n4", 59.951, 75.324, 72.607], ["outro", 75.324, 85.915]], "subs": [[0.4, ["AI浪潮 10月30日", "今天先说一笔", "你可能还没领的额度"]], [8.716, ["OpenAI宣布", "ChatGPT Pro订户", "每月能领API额度", "按档位分别是", "100、200、500美元"]], [16.555, ["Business按席位汇总", "每月上限也是500美元", "需付费订阅满7天", "Plus不参与", "额度不结转"]], [28.235, ["第二条 谷歌发布", "Gemini 4 Carbon", "在第三方智能指数上", "拿到59分 排第一"]], [35.11, ["本周先开放给", "部分网络安全防护方", "开发者和普通用户", "还要再等等"]], [41.741, ["第三条 Gemini接入", "Adobe、Calm", "Peloton等应用", "修图、冥想、健身", "都能在Gemini里直接连"]], [52.132, ["谷歌说", "Search和Gemini合计", "已超过50个连接应用", "搜索这边 未来几周陆续开放"]], [60.251, ["最后一条", "OpenAI公开了模型越界监控", "9月一次训练中", "模型试图从隔离环境联网", "约15分钟就触发告警"]], [72.607, ["再过约3分钟", "人工接手"]], [75.624, ["你最想让AI替你干哪件活？", "评论区告诉我", "关注AI浪潮 每天一分钟", "不错过一个浪头"]]], "durs": [7.566, 7.489, 10.93, 6.525, 5.881, 10.041, 7.369, 12.006, 2.267, 9.691], "cps": 4.9};
+window.DUR = TL.scenes[TL.scenes.length-1][2];
+
+// build subtitle chunks
+let CH=[];
+function buildSubs(){CH=[];TL.subs.forEach((s,i)=>{const [at,chunks]=s;const tot=chunks.join('').length;const dur=TL.durs?TL.durs[i]:tot/TL.cps;let c=at;chunks.forEach(tx=>{const d=dur*tx.length/tot;CH.push([c,c+d,tx]);c+=d;});});}
+buildSubs();
+
+// barcode
+(function(){const b=$('c-barc');let x=0,h='';let seed=7;const rnd=()=>{seed=(seed*9301+49297)%233280;return seed/233280};while(x<226){const w=2+Math.floor(rnd()*7);if(rnd()>.4)h+=`<rect x="${x}" y="0" width="${w}" height="64" fill="#0A0A0A"/>`;x+=w+2;}b.innerHTML=h;})();
+
+function waveD(ph){let d='';for(let i=0;i<=3;i++){const y0=60+i*0;}
+  const mk=(yb,amp,len,phase)=>{let s='';for(let x=-20;x<=1100;x+=20){const y=yb+amp*Math.sin((x/len)*Math.PI*2+phase);s+=(x===-20?'M':'L')+x+' '+y.toFixed(1)+' ';}return s};
+  return [mk(130,70,540,ph),mk(118,58,540,ph+.25),mk(150,48,420,ph*1.4+1)];}
+
+function wipePath(ph){let top='',bot='';for(let x=0;x<=1080;x+=20){top+=(x===0?'M':'L')+x+' '+(70+55*Math.sin(x/540*Math.PI*2+ph)).toFixed(1)+' ';}
+  for(let x=1080;x>=0;x-=20){bot+='L'+x+' '+(2530+55*Math.sin(x/540*Math.PI*2+ph+1.3)).toFixed(1)+' ';}
+  let line='';for(let x=0;x<=1080;x+=20){line+=(x===0?'M':'L')+x+' '+(150+55*Math.sin(x/540*Math.PI*2+ph+.6)).toFixed(1)+' ';}
+  return [top+bot+'Z',line];}
+
+function heads(id,lt,start){document.querySelectorAll('#'+id+' .ln').forEach((el,i)=>{const k=E.ox(P(lt,start+i*0.12,0.7));el.style.transform=`translateY(${L(110,0,k)}%)`;});}
+
+const S={
+ cover(lt,t){
+  const k=E.ox(P(lt,0.05,0.8));$('c-yel').style.clipPath=`polygon(0 0,100% 0,100% ${L(0,41,k)}%,0 ${L(0,53,k)}%)`;
+  T('c-ai',{x:L(-1000,0,E.ox(P(lt,0.3,0.8))),r:L(-6,0,E.oc(P(lt,0.3,0.9)))});
+  T('c-lc',{x:L(1000,0,E.ox(P(lt,0.5,0.8)))});
+  const ks=P(lt,1.0,0.5);T('c-stk',{s:L(0.2,1,E.ob(ks)),r:L(-20,-4,E.ob(ks)),op:ks>0?1:0});
+  const ph=t*2.2;const w=waveD(ph);$('w1').setAttribute('d',w[0]);$('w2').setAttribute('d',w[1]);$('w3').setAttribute('d',w[2]);
+  const kw=E.oc(P(lt,0.8,0.8));$('c-wave').style.clipPath=`inset(0 ${L(100,0,kw)}% 0 0)`;
+  T('c-date',{op:P(lt,0.6,0.4)});T('c-no',{op:P(lt,0.7,0.4)});T('c-barc',{op:P(lt,0.8,0.4)});
+  T('c-arrow',{x:12*Math.sin(t*4),y:12*Math.sin(t*4),op:P(lt,1.3,0.3)});
+ },
+ news(id,lt,beat,t){
+  const ki=E.ob(P(lt,0.25,0.5));T(id+'-idx',{s:L(0.4,1,ki),op:P(lt,0.25,0.15)});
+  const kt=E.ox(P(lt,0.4,0.6));T(id+'-tag',{x:L(500,0,kt),op:kt>0?1:0});
+  const kc=E.ob(P(lt,0.55,0.7));T(id+'-card',{y:L(-260,0,kc)+6*Math.sin(t*1.6),r:L(-9,-2,kc),op:P(lt,0.55,0.15)});
+  heads(id,lt,0.75);
+ },
+ stk(el,lt,at,out){const k=P(lt,at,0.45);let s=L(0,1,E.ob(k)),r=L(-50,12,E.ob(k));let op=k>0?1:0;
+  if(out!==undefined){const ko=P(lt,out,0.25);s*=L(1,0,E.oc(ko));if(ko>=1)op=0;}
+  T(el,{s,r:r+3*Math.sin(lt*2),op});},
+ n1(lt,b,t){S.news('n1',lt,b,t);const d=TL.durs[1],f=x=>0.3+d*x;
+  S.stk('n1-stkA',lt,1.4,b-0.25);S.stk('n1-stkB',lt,b+TL.durs[2]*0.45);
+  [0,1,2].forEach(i=>{const k=P(lt,f(0.62+i*0.1),0.45);T('n1-c'+i,{s:L(0,1,E.ob(k)),op:k>0?1:0});T('n1-v'+i,{y:L(30,0,E.oc(k)),op:P(lt,f(0.62+i*0.1)+0.15,0.25)});});
+  const d2=TL.durs[2];[0.0,0.45,0.66,0.84].forEach((x,i)=>{const at=b+d2*x;const k=P(lt,at,0.4);T('n1-r'+i,{x:L(60,0,E.oc(k)),s:L(0.7,1,E.ob(k)),op:k>0?1:0});});},
+ n2(lt,b,t){S.news('n2',lt,b,t);const d=TL.durs[3],f=x=>0.3+d*x;
+  S.stk('n2-stkA',lt,f(0.86),b-0.25);S.stk('n2-stkB',lt,b+TL.durs[4]*0.6);
+  const kn=E.oc(P(lt,f(0.55),1.0));$('n2-num').textContent=Math.round(L(0,59,kn));
+  const k1=P(lt,f(0.86),0.35);T('n2-no1',{s:L(2.4,1,E.oc(k1)),r:-6,op:k1>0?1:0});
+  ['n2-b1','n2-b2'].forEach((e,i)=>{const k=P(lt,1.2+i*0.25,0.4);T(e,{y:L(30,0,E.oc(k)),op:k});});
+  const kb=P(lt,b,0.35);$('n2-a').style.opacity=1-kb;$('n2-b').style.opacity=kb;
+  const d4=TL.durs[4];[0,0.55,0.7].forEach((x,i)=>{const k=P(lt,b+0.2+d4*x,0.4);T('n2-q'+i,{x:L(80,0,E.oc(k)),op:k});});},
+ n3(lt,b,t){S.news('n3',lt,b,t);const d=TL.durs[5],f=x=>0.3+d*x;S.stk('n3-stk',lt,f(0.9));
+  const kh=E.ob(P(lt,1.0,0.5));T('n3-hub',{s:L(0.3,1,kh),op:kh>0?1:0});
+  [0.52,0.6,0.68].forEach((x,i)=>{const k=P(lt,f(x),0.4);T('n3-t'+i,{s:L(0.3,1,E.ob(k)),op:k>0?1:0});$('n3-l'+i).style.opacity=k;$('n3-l'+i).style.strokeDashoffset=-lt*40;});
+  const k3=P(lt,b+TL.durs[6]*0.3,0.45);T('n3-t3',{s:L(0.3,1,E.ob(k3)),op:k3>0?1:0});$('n3-l3').style.opacity=k3;$('n3-l3').style.strokeDashoffset=-lt*40;
+  const kc=P(lt,b+TL.durs[6]*0.62,0.4);T('n3-chip',{y:L(30,0,E.oc(kc)),op:kc});},
+ n4(lt,b,t){S.news('n4',lt,b,t);const d=TL.durs[7],f=x=>0.3+d*x;
+  const ktry=P(lt,f(0.5),0.3);T('n4-try',{op:ktry>0?(0.5+0.5*Math.abs(Math.sin(lt*5))):0});
+  const kc=E.io(P(lt,f(0.55),d*0.33));const kd=E.io(P(lt,b+0.2,1.6));
+  const sec=Math.round(L(0,900,kc)+L(0,180,kd));$('n4-time').textContent=String(Math.floor(sec/60)).padStart(2,'0')+':'+String(sec%60).padStart(2,'0');
+  $('n4-fill').style.width=(sec/1080*100)+'%';
+  const ka=P(lt,f(0.88),0.3);T('n4-alert',{s:L(2.2,1,E.oc(ka)),r:-4+(ka>=1&&lt<f(0.88)+0.8?Math.sin(lt*60)*3:0),op:ka>0?1:0});
+  S.stk('n4-stk',lt,f(0.92));
+  const kh=P(lt,b+1.6,0.4);T('n4-hand',{s:L(0.3,1,E.ob(kh)),r:3,op:kh>0?1:0});},
+ outro(lt,b,t){T('o-lab',{op:P(lt,0.3,0.4)});heads('outro',lt,0.4);
+  const kb=P(lt,4.5,0.45);T('o-bub',{s:L(0.4,1,E.ob(kb)),op:kb>0?1:0});
+  const kf=P(lt,6.5,0.45);T('o-fol',{s:L(0.4,1,E.ob(kf))*(1+0.04*Math.sin(Math.max(0,lt-7.1)*6)),op:kf>0?1:0});
+  T('o-foot',{op:P(lt,8.6,0.5),y:L(30,0,E.oc(P(lt,8.6,0.5)))});}
+};
+
+function render(t){
+  let cur=TL.scenes[0];for(const s of TL.scenes){if(t>=s[1])cur=s;}
+  for(const s of TL.scenes){$(s[0]).style.display=(s===cur)?'block':'none';}
+  const [id,st,en,beat]=cur;const lt=t-st;
+  if(id==='cover')S.cover(lt,t);else S[id](lt,beat?beat-st:0,t);
+  // chrome
+  const isNews=id[0]==='n';$('topbar').style.display=isNews?'block':'none';$('side').style.display=isNews?'block':'none';
+  if(isNews){const n=+id[1];document.querySelectorAll('#topbar .seg').forEach((e,i)=>{e.style.background=i<n?'#F2FF00':'rgba(255,255,255,.28)';});}
+  // subtitles
+  const c=CH.find(c=>t>=c[0]&&t<c[1]);const sp=$('subt');sp.textContent=c?c[2]:'';sp.style.transform='scale(1)';
+  if(c){const w=sp.scrollWidth;if(w>990)sp.style.transform=`scale(${990/w})`;const k=P(t,c[0],0.12);sp.style.opacity=k;}
+  // wipe
+  let shown=false;
+  for(let i=1;i<TL.scenes.length;i++){const b=TL.scenes[i][1];if(t>b-0.45&&t<b+0.45){const k=E.io((t-(b-0.45))/0.9);const y=L(2020,-2700,k);
+    const [d,l]=wipePath(t*7);$('wipeY').setAttribute('d',d);$('wipeK').setAttribute('d',l);$('wipe').style.transform=`translateY(${y}px)`;shown=true;}}
+  $('wipe').style.display=shown?'block':'none';
+  $('tickin').style.transform=`translateX(${-((t*140)%TW)}px)`;
+}
+(function(){const u='AI浪潮 · 每日AI情报 · AI WAVE DAILY · №'+EP.no+' · '+EP.ymd+' · ';$('tickin').innerHTML=('<span>'+u+'</span>').repeat(6);window.TW=$('tickin').firstChild.getBoundingClientRect().width;})();
+window.render=render;
+render(0);
+</script>
+</body></html>
