@@ -12,6 +12,8 @@ python3 -I render.py stills spec.json 2,4.5,13.5    # 检查图 still_<秒>.jpg
 python3 -I render.py video spec.json out.mp4        # 整条
 ```
 
+**配乐**：`python3 -I score.py score.wav 23` 合成一段原创配乐（120 BPM，开场铺底和心跳 → 绣花时缝纫机针声 + 上升音 → 9 秒揭晓鼓和琶音进来 → 换产品甩镜声 → 收尾打结「叮」），时间点写在 score.py 的 `CUE` 里，和 example.json 的默认节奏对齐；场景时长改了 CUE 跟着改。合进成片：`ffmpeg -i video.mp4 -i score.wav -map 0:v -map 1:a -c:v copy -c:a aac -b:a 192k -shortest out.mp4`。要换成曲库里的音乐，用剪辑工具 `mux` 的 bgm。
+
 本机 Chrome 不是 Playwright 自带的那个时，设 `CHROME_PATH=/usr/bin/google-chrome`。码率上限 10M（H.264 High@4.1）。配音、音乐交给剪辑工具（`mux` / `render`），按所属方向固定的配音和模板来；先跑 `plan` 拿到每页的秒数再排配音。
 
 ## spec.json
