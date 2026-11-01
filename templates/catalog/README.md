@@ -52,6 +52,7 @@ gallery.html 是所有模板的静态样式（?tpl=<代号>&s=hook|card，背景
 | 44 | 口碑墙 · 倾斜滚墙 | tw-a | templates/testimonial-wall/wall.html（独立动效片段，8 秒） |
 | 45 | 口碑墙 · 星环隧道 | tw-b | templates/testimonial-wall/vortex.html（独立动效片段，8.5 秒） |
 | 46 | 口碑墙 · 消息轰炸 | tw-c | templates/testimonial-wall/notify.html（独立动效片段，8.5 秒） |
+| 47 | 发布会（动画开场片） | kn2 | templates/keynote/keynote.html（按页排：产品亮相 / 大数字 / 原话 / One more thing / 结尾，约 15–20 秒） |
 
 高端系列另用字体：Cormorant Garamond、Playfair Display、Cinzel、Bodoni Moda、Jost（同样来自 google/fonts ofl/）。
 

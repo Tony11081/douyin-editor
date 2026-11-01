@@ -1,0 +1,179 @@
+<!doctype html>
+<!-- 47 号「发布会」：苹果发布会式的竖屏开场片。spec.scenes 一页一页排：
+     intro（品牌开场）· reveal（产品亮相）· stat（大数字滚动）· quote（客户原话）· onemore（One more thing…）· end（结尾）。
+     render(t) 画一帧；每页自己管进场和出场，时长见 DUR。 -->
+<html><head><meta charset="utf-8">
+<style>
+:root{--bg:#000;--text:#f5f5f7;--muted:#8e8e96;--faint:#55555c;--lime:#c8ff00;
+  --sans:"Noto Sans CJK SC","Noto Sans SC",sans-serif;--mono:"JetBrains Mono","DejaVu Sans Mono",monospace}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{width:1080px;height:1920px;overflow:hidden;background:var(--bg);font-family:var(--sans);color:var(--text)}
+#fx{position:absolute;inset:0}
+.sc{position:absolute;inset:0;display:none}
+.center{position:absolute;left:70px;right:70px;top:0;height:1920px;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding-bottom:260px}
+.metal,.metal>span{background:linear-gradient(180deg,#fff 30%,#a1a1aa 95%);-webkit-background-clip:text;background-clip:text;color:transparent}
+.metal>span{display:inline-block;padding-bottom:.06em}
+.eye{font:600 26px/1 var(--mono);letter-spacing:.34em;color:var(--lime);text-transform:uppercase}
+/* intro */
+.line{position:absolute;left:540px;top:830px;height:3px;width:0;background:linear-gradient(90deg,transparent,var(--lime),transparent);box-shadow:0 0 30px var(--lime);transform:translateX(-50%)}
+.word{font-size:150px;font-weight:900;letter-spacing:-.04em;line-height:1}
+.word span{display:inline-block}
+/* reveal */
+.dev{position:absolute;left:50%;top:380px;width:640px;height:480px;margin-left:-320px;perspective:1800px}
+.dev .stack{position:absolute;inset:0;transform-style:preserve-3d}
+.pane{position:absolute;inset:0;border-radius:34px;background:linear-gradient(160deg,rgba(40,40,46,.95),rgba(16,16,20,.95));border:1.5px solid rgba(255,255,255,.14);
+  box-shadow:0 40px 120px rgba(0,0,0,.8);overflow:hidden;-webkit-box-reflect:below 26px linear-gradient(transparent 62%,rgba(255,255,255,.16))}
+.pane img{width:100%;height:100%;object-fit:cover;display:block}
+.mock{position:absolute;inset:34px;display:grid;grid-template-columns:repeat(3,1fr);grid-template-rows:auto 1fr 1fr;gap:16px}
+.mock .bar{grid-column:1/-1;display:flex;gap:10px;align-items:center}
+.mock .bar i{width:14px;height:14px;border-radius:50%;background:rgba(255,255,255,.18)}
+.mock .bar b{flex:1;height:14px;border-radius:7px;background:rgba(255,255,255,.08)}
+.mock .tile{border-radius:18px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.07);position:relative;overflow:hidden}
+.mock .tile::after{content:"";position:absolute;left:14px;right:40%;bottom:14px;height:10px;border-radius:5px;background:rgba(255,255,255,.14)}
+.mock .tile.on{background:linear-gradient(150deg,rgba(200,255,0,.85),rgba(200,255,0,.35));border-color:transparent}
+.mock .tile.on::after{background:rgba(0,0,0,.35)}
+.ptitle{font-size:170px;font-weight:900;letter-spacing:-.045em;line-height:1.05;position:relative;text-wrap:balance}
+.ptitle .sw{position:absolute;inset:0;background:linear-gradient(100deg,transparent 40%,rgba(255,255,255,.95) 50%,transparent 60%);-webkit-background-clip:text;background-clip:text;color:transparent;background-size:300% 100%}
+.psub{margin-top:40px;font-size:44px;font-weight:500;color:var(--muted);letter-spacing:.02em}
+.reveal .center{padding-top:1010px;padding-bottom:0;justify-content:flex-start}
+/* stat */
+.num{font:700 330px/1 var(--mono);letter-spacing:-.07em;font-variant-numeric:tabular-nums;display:flex;align-items:baseline;gap:18px}
+.num .u{font:900 120px/1 var(--sans);letter-spacing:-.02em;color:var(--lime);text-shadow:0 0 50px rgba(200,255,0,.45)}
+.num .p{font:700 160px/1 var(--mono);color:var(--muted)}
+.slabel{margin-top:44px;font-size:56px;font-weight:700;letter-spacing:-.01em}
+.snote{margin-top:22px;font-size:32px;color:var(--muted)}
+.chip{margin-top:30px;font:600 22px/1 var(--mono);color:var(--lime);border:1.5px solid currentColor;border-radius:8px;padding:8px 12px;letter-spacing:.08em}
+/* quote */
+.qm{font:900 260px/.7 Georgia,serif;color:var(--lime);height:150px;text-shadow:0 0 60px rgba(200,255,0,.4)}
+.qt{margin-top:30px;font-size:74px;font-weight:900;line-height:1.38;letter-spacing:-.02em;text-wrap:balance}
+.qt span{display:inline}
+.qt b{color:var(--lime)}
+.qw{margin-top:54px;font:500 32px/1.4 var(--mono);color:var(--muted)}
+/* onemore */
+.om{font-size:76px;font-weight:500;letter-spacing:-.01em;color:#d4d4d8;font-style:italic}
+.ring{position:absolute;left:540px;top:760px;border-radius:50%;border:4px solid var(--lime);box-shadow:0 0 50px var(--lime),inset 0 0 50px rgba(200,255,0,.4);transform:translate(-50%,-50%)}
+/* end */
+.pill{margin-top:70px;font:700 58px/1 var(--mono);color:#0a0a0a;background:var(--lime);padding:30px 52px;border-radius:999px;box-shadow:0 0 70px rgba(200,255,0,.5)}
+.esub{margin-top:34px;font-size:34px;color:var(--muted)}
+.wm{position:absolute;right:36px;top:44px;font:500 22px/1 var(--mono);color:rgba(255,255,255,.45);border:1.5px dashed rgba(255,255,255,.25);padding:10px 14px;border-radius:10px}
+.prog{position:absolute;left:50%;top:1440px;transform:translateX(-50%);display:flex;gap:12px}
+.prog i{width:46px;height:5px;border-radius:3px;background:rgba(255,255,255,.14);overflow:hidden;position:relative}
+.prog i b{position:absolute;inset:0;background:var(--lime);transform-origin:left;transform:scaleX(0)}
+</style></head><body>
+<canvas id="fx" width="1080" height="1920"></canvas>
+<div id="root"></div>
+<div class="prog" id="prog"></div>
+<div class="wm" id="wm" hidden></div>
+<script>
+const S=window.SPEC,$=id=>document.getElementById(id);
+const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"})[c]);
+const rich=s=>esc(s).replace(/\[\[(.+?)\]\]/g,"<b>$1</b>");
+const cl=(x,a=0,b=1)=>Math.min(b,Math.max(a,x)),lerp=(a,b,p)=>a+(b-a)*p;
+const out=x=>1-Math.pow(1-cl(x),3),out5=x=>1-Math.pow(1-cl(x),5),in3=x=>Math.pow(cl(x),3),
+  io=x=>{x=cl(x);return x<.5?4*x*x*x:1-Math.pow(-2*x+2,3)/2},bell=x=>Math.sin(Math.PI*cl(x)),
+  back=(x,c=1.6)=>{x=cl(x);return 1+(c+1)*Math.pow(x-1,3)+c*Math.pow(x-1,2)};
+if(S.watermark){$("wm").textContent=S.watermark;$("wm").hidden=false}
+
+const DUR={intro:2.6,reveal:3.0,stat:1.9,quote:2.6,onemore:3.0,end:2.4};
+const scenes=[{type:"intro"}].concat(S.scenes||[]);
+if(!scenes.some(s=>s.type==="end"))scenes.push({type:"end"});
+let acc=0;scenes.forEach(s=>{s.t0=acc;s.d=s.duration||DUR[s.type]||2;acc+=s.d});
+window.TOTAL=acc;
+const root=$("root"),charsOf=t=>[...String(t)].map(c=>`<span>${c===" "?"&nbsp;":esc(c)}</span>`).join("");
+
+scenes.forEach((s,i)=>{
+  const el=document.createElement("div");el.className="sc "+s.type;s.el=el;root.appendChild(el);
+  if(s.type==="intro")el.innerHTML=`<div class="line"></div><div class="center"><div class="eye">${esc(S.eyebrow||"")}</div><div class="word metal" style="margin-top:46px">${charsOf(S.brand||"Shopwright")}</div></div>`;
+  if(s.type==="reveal"){
+    const img=s.image?`<img src="${esc(s.image)}">`:`<div class="mock"><div class="bar"><i></i><i></i><i></i><b></b></div>${Array.from({length:6},(_,k)=>`<div class="tile${k===1||k===5?" on":""}"></div>`).join("")}</div>`;
+    el.innerHTML=`<div class="dev"><div class="stack"><div class="pane">${img}</div></div></div><div class="center"><div class="ptitle"><span class="metal">${charsOf(s.title)}</span><span class="sw">${esc(s.title)}</span></div><div class="psub">${esc(s.sub||"")}</div></div>`;
+  }
+  if(s.type==="stat")el.innerHTML=`<div class="center"><div class="eye">${esc(s.eyebrow||"")}</div><div class="num" style="margin-top:40px">${s.prefix?`<span class="p">${esc(s.prefix)}</span>`:""}<span class="metal v">0</span><span class="u">${esc(s.unit||"")}</span></div><div class="slabel">${esc(s.label||"")}</div>${s.note?`<div class="snote">${esc(s.note)}</div>`:""}${s.sample?'<div class="chip">示例 · 待核对</div>':""}</div>`;
+  if(s.type==="quote")el.innerHTML=`<div class="center"><div class="qm">“</div><div class="qt">${rich(s.text)}</div><div class="qw">— ${esc([s.who,s.meta].filter(Boolean).join(" · "))}</div>${s.sample?'<div class="chip">示例</div>':""}</div>`;
+  if(s.type==="onemore")el.innerHTML=`<div class="ring"></div><div class="center"><div class="om">${esc(s.text||"One more thing…")}</div></div><div class="center two"><div class="eye">${esc(s.eyebrow||"")}</div><div class="ptitle" style="margin-top:40px"><span class="metal">${charsOf(s.title||"")}</span></div><div class="psub">${esc(s.sub||"")}</div></div>`;
+  if(s.type==="end")el.innerHTML=`<div class="center"><div class="word metal">${charsOf(S.brand||"Shopwright")}</div><div class="pill">${esc(s.cta||S.cta||"")}</div><div class="esub">${esc(s.sub||S.sub||"")}</div></div>`;
+});
+// 底部进度格：除开场和结尾外每页一格
+const mid=scenes.filter(s=>s.type!=="intro"&&s.type!=="end");
+$("prog").innerHTML=mid.map(()=>"<i><b></b></i>").join("");
+const progB=[...$("prog").querySelectorAll("b")];
+
+// 舞台：顶部聚光 + 光柱里的浮尘
+const fx=$("fx"),g=fx.getContext("2d");let seed=5;const rnd=()=>((seed=(seed*1664525+1013904223)>>>0)/4294967296);
+const dust=Array.from({length:140},()=>({x:rnd()*1080,y:rnd()*1920,s:.6+rnd()*2.2,v:8+rnd()*26,p:rnd()*6.28}));
+function stage(t,spot,glow){
+  g.fillStyle="#000";g.fillRect(0,0,1080,1920);
+  if(spot>0){
+    const cone=g.createRadialGradient(540,-200,0,540,-200,1900);
+    cone.addColorStop(0,`rgba(255,255,255,${.22*spot})`);cone.addColorStop(.5,`rgba(220,230,255,${.06*spot})`);cone.addColorStop(1,"rgba(0,0,0,0)");
+    g.fillStyle=cone;g.fillRect(0,0,1080,1920);
+    const fl=g.createRadialGradient(540,1300,0,540,1300,700);fl.addColorStop(0,`rgba(255,255,255,${.06*spot})`);fl.addColorStop(1,"rgba(0,0,0,0)");
+    g.fillStyle=fl;g.fillRect(0,0,1080,1920);
+    for(const d of dust){const y=(d.y-t*d.v+1920*4)%1920,x=d.x+Math.sin(t*.7+d.p)*14;
+      const inCone=Math.max(0,1-Math.abs(x-540)/(200+y*.42));g.fillStyle=`rgba(255,255,255,${.5*inCone*spot})`;g.beginPath();g.arc(x,y,d.s,0,6.28);g.fill()}
+  }
+  if(glow>0){const h=g.createRadialGradient(540,800,0,540,800,760);h.addColorStop(0,`rgba(200,255,0,${.16*glow})`);h.addColorStop(1,"rgba(200,255,0,0)");g.fillStyle=h;g.fillRect(0,0,1080,1920)}
+}
+// 每页通用：进 0.45s 从下方带模糊升起，出 0.35s 往上淡出
+function inout(s,lt){const a=out5(lt/.45),b=in3((lt-(s.d-.35))/.35);return {a,b,o:cl(lt/.2)*(1-b),y:(1-a)*70-b*60,bl:(1-a)*10+b*12}}
+
+window.render=function(t){
+  t=Math.min(t,acc-1e-3);
+  let spot=0,glow=0;
+  scenes.forEach((s,i)=>{
+    const lt=t-s.t0,on=lt>=0&&lt<s.d;s.el.style.display=on?"block":"none";if(!on)return;
+    const e=s.el,k=inout(s,lt);
+    if(s.type==="intro"){
+      spot=out((lt-1.0)/1.0);
+      const lw=io(lt/.7),lo=1-cl((lt-.9)/.3);const ln=e.querySelector(".line");ln.style.width=lw*900+"px";ln.style.opacity=lo;
+      e.querySelector(".eye").style.opacity=cl((lt-.9)/.4)*(1-k.b);
+      [...e.querySelectorAll(".word span")].forEach((c,j)=>{const p=out5((lt-.75-j*.045)/.7);c.style.opacity=p*(1-k.b);c.style.transform=`translateY(${(1-p)*60}px)`;c.style.filter=`blur(${(1-p)*12}px)`});
+      e.querySelector(".word").style.letterSpacing=`${lerp(-.08,-.03,out(lt/2.4))}em`;
+      e.querySelector(".center").style.transform=`scale(${1+.05*k.b})`;
+    }
+    if(s.type==="reveal"){
+      spot=1;glow=.6*out(lt/.8);
+      const dp=out5((lt-.05)/1.1),st=e.querySelector(".stack");
+      st.style.transform=`translateY(${(1-dp)*160-k.b*80}px) rotateX(${lerp(38,12,dp)+4*Math.sin(lt*.8)}deg) rotateY(${lerp(-38,-14,dp)+6*Math.sin(lt*.6)}deg) scale(${lerp(.7,1,dp)})`;
+      st.style.opacity=cl(lt/.3)*(1-k.b);
+      [...e.querySelectorAll(".ptitle .metal span")].forEach((c,j)=>{const p=out5((lt-.45-j*.06)/.6);c.style.opacity=p;c.style.transform=`translateY(${(1-p)*80}px) scale(${1.25-.25*p})`;c.style.filter=`blur(${(1-p)*14}px)`});
+      const sw=e.querySelector(".sw");sw.style.backgroundPosition=`${lerp(140,-40,io((lt-1.1)/.9))}% 0`;sw.style.opacity=bell((lt-1.1)/.9);
+      const ps=e.querySelector(".psub");ps.style.opacity=out((lt-1.25)/.5);ps.style.transform=`translateY(${(1-out((lt-1.25)/.5))*24}px)`;
+      e.querySelector(".center").style.opacity=1-k.b;e.querySelector(".center").style.transform=`translateY(${-k.b*60}px)`;
+    }
+    if(s.type==="stat"||s.type==="quote"){
+      spot=1;glow=s.type==="stat"?.5:.3;
+      const c=e.querySelector(".center");c.style.opacity=k.o;c.style.transform=`translateY(${k.y}px)`;c.style.filter=`blur(${k.bl}px)`;
+      if(s.type==="stat"){
+        const v=Number(s.value)||0,dec=String(s.value).includes(".")?String(s.value).split(".")[1].length:0,p=out5((lt-.1)/1.0);
+        e.querySelector(".v").textContent=(v*p).toFixed(dec);
+        e.querySelector(".u").style.transform=`scale(${back((lt-.45)/.4,2)})`;
+      }else{
+        e.querySelector(".qm").style.transform=`scale(${back(lt/.5,1.8)})`;
+      }
+    }
+    if(s.type==="onemore"){
+      spot=out(lt/.5)*.6+.4*cl((lt-1.4)/.3);
+      const a=e.querySelector(".center"),two=e.querySelector(".two"),ring=e.querySelector(".ring");
+      a.style.opacity=cl((lt-.2)/.4)*(1-cl((lt-1.15)/.25));a.style.filter=`blur(${(1-out((lt-.2)/.5))*8}px)`;
+      const rp=out((lt-1.3)/.8),d=60+1600*rp;ring.style.width=ring.style.height=d+"px";ring.style.opacity=(1-rp)*cl((lt-1.3)/.05);
+      glow=1.2*bell((lt-1.25)/.6)+.5*cl((lt-1.5)/.4);
+      two.style.opacity=cl((lt-1.4)/.15)*(1-k.b);
+      two.querySelector(".eye").style.opacity=out((lt-1.4)/.4);
+      [...two.querySelectorAll(".ptitle span")].forEach((c,j)=>{const p=back((lt-1.4-j*.06)/.55,1.4);c.style.opacity=cl(p);c.style.transform=`scale(${lerp(2.2,1,p)})`;c.style.filter=`blur(${(1-cl(p))*16}px)`});
+      two.querySelector(".psub").style.opacity=out((lt-2.0)/.4);
+    }
+    if(s.type==="end"){
+      spot=1;glow=.7*out(lt/.6);
+      [...e.querySelectorAll(".word span")].forEach((c,j)=>{const p=out5((lt-j*.035)/.6);c.style.opacity=p;c.style.transform=`translateY(${(1-p)*50}px)`});
+      const pp=back((lt-.45)/.6);const pl=e.querySelector(".pill");pl.style.opacity=cl((lt-.45)/.2);pl.style.transform=`scale(${.6+.4*pp})`;
+      e.querySelector(".esub").style.opacity=out((lt-.8)/.4);
+    }
+  });
+  stage(t,spot,glow);
+  // 进度格
+  mid.forEach((s,i)=>{progB[i].style.transform=`scaleX(${cl((t-s.t0)/s.d)})`});
+  const pv=t>scenes[1].t0&&t<scenes[scenes.length-1].t0;$("prog").style.opacity=pv?1:0;
+};
+render(0);
+</script></body></html>
