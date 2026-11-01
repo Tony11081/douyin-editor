@@ -1,0 +1,131 @@
+<!doctype html>
+<!-- 口碑墙 · 风格 C「消息轰炸」：
+     ① 0–3.4s 一部手机，好评消息一条接一条从顶部砸进来、越来越快，手机跟着震、边框闪绿；
+     ② 3.4–4.7s 镜头拉远：原来是一整片手机都在刷好评，阵列倾斜漂移，标题升起；
+     ③ 4.7–6.8s 原话里 [[高亮]] 的关键词一句句大字砸到屏幕上（带出处）；④ 结尾按钮。
+     时间点按 8.5 秒排，spec.duration 不同时整体按比例伸缩。render(t) 画一帧。 -->
+<html><head><meta charset="utf-8">
+<link rel="stylesheet" href="common.css">
+<style>
+#bg{position:absolute;inset:0;background:radial-gradient(ellipse 70% 40% at 50% 47%,rgba(200,255,0,.12),transparent 70%),radial-gradient(circle at 1px 1px,rgba(255,255,255,.06) 1.2px,transparent 0) 0 0/36px 36px,var(--bg)}
+#cam{position:absolute;inset:0;perspective:2200px;overflow:hidden}
+#world{position:absolute;left:540px;top:900px;width:0;height:0;transform-style:preserve-3d}
+.ph{position:absolute;width:600px;height:1220px;margin:-610px 0 0 -300px;border-radius:84px;background:#0c0c0f;border:3px solid #2c2c33;
+  box-shadow:inset 0 0 0 10px #050507,0 40px 120px rgba(0,0,0,.6);overflow:hidden}
+.ph .isl{position:absolute;left:50%;top:26px;width:170px;height:46px;margin-left:-85px;border-radius:30px;background:#000}
+.ph .clk{position:absolute;left:0;right:0;top:112px;text-align:center;font:600 150px/1 var(--sans);letter-spacing:-.04em;color:#ececf0}
+.ph .br{position:absolute;left:0;right:0;top:282px;text-align:center;font:600 22px/1 var(--mono);letter-spacing:.24em;color:var(--lime)}
+.ph .wp{position:absolute;inset:0;background:radial-gradient(ellipse 90% 50% at 50% 100%,rgba(200,255,0,.16),transparent 70%)}
+.nt{position:absolute;left:28px;right:28px;height:150px;border-radius:30px;background:rgba(38,38,44,.92);border:1px solid rgba(255,255,255,.08);
+  display:flex;gap:18px;padding:22px 22px;align-items:flex-start;box-shadow:0 10px 30px rgba(0,0,0,.4)}
+.nt .ic{flex:none;width:58px;height:58px;border-radius:15px;background:var(--lime);color:#0a0a0a;display:grid;place-items:center;font:900 26px/1 var(--sans)}
+.nt .bd{min-width:0;flex:1;display:flex;flex-direction:column;gap:6px}
+.nt .hd{display:flex;justify-content:space-between;gap:10px;font-size:22px;color:#d4d4d8}
+.nt .hd b{font-weight:700;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.nt .hd span{flex:none;color:#8b8b94;font-size:19px}
+.nt p{font-size:23px;line-height:1.42;color:#e4e4e7;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.nt p b{color:var(--lime);font-weight:900}
+#edge{position:absolute;inset:-3px;border-radius:86px;pointer-events:none}
+#title{position:absolute;left:0;right:0;top:560px;display:flex;flex-direction:column;gap:26px}
+#kin{position:absolute;left:0;right:0;top:0;height:1920px;pointer-events:none}
+.ph-k{position:absolute;left:60px;right:60px;top:760px;display:flex;flex-direction:column;align-items:center;gap:34px;text-align:center}
+.ph-k .big{font-size:128px;font-weight:900;line-height:1.12;letter-spacing:-.03em;color:var(--lime);text-wrap:balance;text-shadow:0 0 60px rgba(200,255,0,.35)}
+.ph-k .big i{font-style:normal;color:#fff}
+.ph-k .src{font:500 28px/1.4 var(--mono);color:var(--muted);display:flex;gap:14px;align-items:center}
+.ph-k .src .ex{color:var(--lime);border:1.5px solid currentColor;border-radius:6px;padding:4px 8px;font-size:22px}
+#dim{position:absolute;inset:0;background:var(--bg);pointer-events:none;opacity:0}
+</style></head><body>
+<div id="bg"></div>
+<div id="cam"><div id="world"></div></div>
+<div id="dim"></div>
+<div id="title"><div class="eyebrow" id="eb"></div><h1 class="headline" id="hl"></h1></div>
+<div id="kin"></div>
+<div class="cta" id="cta"><div class="url" id="url"></div><small id="sub"></small></div>
+<div class="wm" id="wm" hidden></div>
+<script src="common.js"></script>
+<script>
+const S=window.SPEC,{E,esc,rich,rng}=TW,$=id=>document.getElementById(id);
+const D=S.duration||8.5;
+$("eb").textContent=S.eyebrow||"";
+$("hl").innerHTML=(S.title||[]).map(w=>`<span>${esc(w)}</span>`).join("");
+$("url").textContent=S.cta||"";$("sub").textContent=S.sub||"";
+if(S.watermark){$("wm").textContent=S.watermark;$("wm").hidden=false}
+
+// 卡片 → 通知：标题行 = 分类·谁，正文 = 原话（聊天取对方第一句）
+const notes=S.cards.filter(c=>c.kind!=="number").map(c=>{
+  const who=c.who||c.bar||"";
+  let text=c.text||"";
+  if(c.kind==="chat"){const m=(c.msgs||[]).find(x=>!x[0])||(c.msgs||[])[0];text=m?m[1]:""}
+  if(c.kind==="review")text="★★★★★ "+text;
+  const ic=/^[A-Za-z]/.test(who)?who[0].toUpperCase():(who.replace(/[\s·]/g,"").slice(-1)||"★");
+  return {head:[c.group,who].filter(Boolean).join(" · "),text,ic,sample:!!c.sample};
+});
+const ntHTML=n=>`<div class="ic">${esc(n.ic)}</div><div class="bd"><div class="hd"><b>${esc(n.head)}</b><span>刚刚</span></div><p>${rich(n.text)}</p></div>`;
+const phoneHTML=()=>`<div class="wp"></div><div class="isl"></div><div class="clk">${esc(S.clock||"09:41")}</div><div class="br">${esc(S.brand||"SHOPWRIGHT")}</div>`;
+
+// ② 手机阵列：COLS×ROWS，正中那部是主角
+const COLS=7,ROWS=5,CW=760,CH=1380,world=$("world"),r=rng(11);
+let main=null;
+for(let gy=0;gy<ROWS;gy++)for(let gx=0;gx<COLS;gx++){
+  const el=document.createElement("div");el.className="ph";el.innerHTML=phoneHTML();
+  const x=(gx-(COLS-1)/2)*CW,y=(gy-(ROWS-1)/2)*CH;
+  el.style.transform=`translate(${x}px,${y}px)`;
+  if(x===0&&y===0){main=el;el.insertAdjacentHTML("beforeend",'<div id="edge"></div>')}
+  else{ // 其他手机：静态铺好几条消息
+    const k=Math.floor(r()*notes.length);
+    for(let i=0;i<5;i++){const n=document.createElement("div");n.className="nt";n.innerHTML=ntHTML(notes[(k+i)%notes.length]);n.style.top=(340+i*164)+"px";el.appendChild(n)}
+  }
+  world.appendChild(el);
+}
+// ① 主角手机里的消息：N 条，越来越密
+const N=18,T0=.75,T1=3.35,arr=[];
+for(let i=0;i<N;i++){
+  const el=document.createElement("div");el.className="nt";el.innerHTML=ntHTML(notes[i%notes.length]);main.appendChild(el);
+  arr.push({el,t:T0+(T1-T0)*Math.pow(i/(N-1),.62)});
+}
+const STEP=164,TOP=340;
+
+// ③ 大字：从原话里取 [[高亮]]
+const kin=$("kin"),quotes=[];
+S.cards.concat(S.hero?[S.hero]:[]).forEach(c=>{const m=String(c.text||"").match(/\[\[(.+?)\]\]/);if(m&&!quotes.some(q=>q.k===m[1]))quotes.push({k:m[1],who:[c.who,c.meta].filter(Boolean).join(" · "),sample:!!c.sample})});
+const KQ=quotes.slice(0,3).map(q=>{const el=document.createElement("div");el.className="ph-k";
+  el.innerHTML=`<div class="big"><i>「</i>${esc(q.k)}<i>」</i></div><div class="src">— ${esc(q.who)}${q.sample?'<span class="ex">示例</span>':""}</div>`;kin.appendChild(el);return el});
+
+window.render=function(T){
+  const t=T*8.5/D;
+  // 镜头：0–3.4 怼着主角手机，3.4–4.7 拉远并倾斜，之后慢慢漂
+  const z=E.inOut((t-3.35)/1.35),drift=Math.max(0,t-3.35);
+  const sc=E.lerp(1.28,.19,z),rx=38*z,rz=-16*z+2*Math.sin(drift*.8)*z,ty=E.lerp(0,60,z)-40*drift*z;
+  const intro=E.back(t/.7,1.2);
+  world.style.transform=`translateY(${(1-intro)*900+ty}px) rotateX(${rx}deg) rotateZ(${rz}deg) scale(${sc})`;
+  // 震动：每条消息到达时一下，迅速衰减
+  let shake=0,flash=0;
+  arr.forEach(a=>{const d=t-a.t;if(d>=0&&d<.5){shake+=Math.exp(-d*12)*Math.sin(d*70)*7;flash+=Math.exp(-d*8)}});
+  main.style.transform=`translate(${shake}px,0) rotate(${shake*.15}deg)`;
+  const f=Math.min(1,flash);
+  $("edge").style.boxShadow=`0 0 0 3px rgba(200,255,0,${.15+.75*f}),0 0 ${40+90*f}px rgba(200,255,0,${.1+.45*f})`;
+  // 消息：新的砸到最上面，旧的往下推
+  arr.forEach((a,i)=>{
+    const p=E.back((t-a.t)/.32,1.8);
+    let push=0;for(let j=i+1;j<N;j++)push+=STEP*E.out((t-arr[j].t)/.28);
+    const y=TOP+push-(1-p)*190;
+    a.el.style.top=y+"px";a.el.style.opacity=t<a.t?0:E.cl((t-a.t)/.12)*(y>1180?Math.max(0,1-(y-1180)/120):1);
+    a.el.style.transform=`scale(${.86+.14*p})`;
+  });
+  // 标题（拉远时出）
+  const tp=t>3.9&&t<5.1;$("title").style.display=tp?"":"none";
+  if(tp){$("eb").style.opacity=E.cl((t-3.95)/.3)*(1-E.cl((t-4.8)/.25));
+    [...$("hl").children].forEach((w,i)=>{const p=E.out((t-4.0-i*.12)/.45);w.style.transform=`translateY(${(1-p)*90}px)`;w.style.opacity=p*(1-E.cl((t-4.8)/.25))})}
+  // ③ 大字一句句砸下来
+  $("dim").style.opacity=Math.max(.5*E.cl((t-3.95)/.3),.72*E.cl((t-4.75)/.3))*(1-.35*E.cl((t-6.9)/.4));
+  const per=KQ.length?Math.min(.75,2.1/KQ.length):0;
+  KQ.forEach((el,k)=>{const s=4.85+k*per,p=E.out5((t-s)/.32),o=E.in3((t-s-per+.12)/.22);
+    const last=k===KQ.length-1,out=last?E.in3((t-6.75)/.25):o;
+    el.style.opacity=t<s?0:E.cl((t-s)/.08)*(1-out);
+    el.style.transform=`translateY(${-90*out}px) scale(${E.lerp(1.9,1,p)})`;
+    el.style.filter=`blur(${(1-p)*14+out*10}px)`});
+  // ④ 结尾
+  const ep=E.back((t-6.85)/.7);$("cta").style.opacity=E.cl((t-6.85)/.25);$("cta").style.transform=`translateY(${(1-ep)*80}px)`;
+};
+render(0);
+</script></body></html>

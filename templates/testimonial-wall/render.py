@@ -1,7 +1,7 @@
 """口碑墙模板：按 spec.json 渲染竖屏 1080×1920、30fps 的无声 mp4（或先出几张检查图）。
 
 用法：
-  python3 -I render.py video spec.json out.mp4        # 整条（风格看 spec.style：wall | vortex）
+  python3 -I render.py video spec.json out.mp4        # 整条（风格看 spec.style：wall | vortex | notify）
   python3 -I render.py stills spec.json 1.2,3.9,5.8   # 出检查图 still_<秒>.jpg 到当前目录
 spec 字段见 README.md；example.json 是示例（卡片内容是占位，正式发布前换成真实评价）。
 没配音没音乐，加声音交给剪辑工具（mux / render 的 voiceover、bgm）。
@@ -17,7 +17,7 @@ from pathlib import Path
 from playwright.sync_api import sync_playwright
 
 HERE = Path(__file__).resolve().parent
-STYLES = {"wall": ("wall.html", 8.0), "vortex": ("vortex.html", 8.5)}
+STYLES = {"wall": ("wall.html", 8.0), "vortex": ("vortex.html", 8.5), "notify": ("notify.html", 8.5)}
 
 
 def open_page(p, spec: dict):
