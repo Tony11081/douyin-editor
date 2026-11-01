@@ -1,13 +1,20 @@
 {
   "brand": "Shopwright",
-  "eyebrow": "2026 · 跨境卖家发布会",
+  "eyebrow": "2026 · 秋季发布",
   "watermark": "效果预览 · 原话为示例",
   "scenes": [
-    {"type": "reveal", "title": "设计素材包", "sub": "标题、描述、图片、SKU，上架即用"},
-    {"type": "stat", "eyebrow": "一件代发", "value": 3, "unit": "天", "label": "出单到发货", "note": "工作日，河北邯郸自有作坊"},
-    {"type": "stat", "eyebrow": "一份素材包", "value": 4, "unit": "个平台", "label": "Etsy · Shopify · Amazon · TikTok Shop"},
+    {"type": "product", "image": "assets/hoodie-front.webp", "stitch": "Emma", "stitchAt": [50, 40], "stitchSize": 130,
+     "eyebrow": "NEW · 定制刺绣", "title": "绣上名字", "sub": "衣服、帽子、毛毯，一件起做"},
+    {"type": "lineup", "items": [
+      {"image": "assets/hoodie-front.webp", "label": "HOODIE"},
+      {"image": "assets/cap-front.webp", "label": "CAP"},
+      {"image": "assets/tee-front.webp", "label": "TEE"},
+      {"image": "assets/blanket.webp", "label": "BLANKET"},
+      {"image": "assets/sweatshirt-front.webp", "label": "CREW"}
+    ], "title": "白坯任选", "sub": "传你的图案，我们来绣"},
+    {"type": "stat", "eyebrow": "一件代发", "value": 3, "unit": "天发货", "label": "出单到发货", "note": "工作日 · 河北邯郸自有作坊"},
     {"type": "quote", "text": "拿到素材包当天就[[上了 10 个 listing]]", "who": "客户 A", "meta": "素材包客户", "sample": true},
-    {"type": "onemore", "eyebrow": "现在上线", "title": "定制刺绣", "sub": "衣服、帽子、毛毯，一件起做"},
-    {"type": "end", "cta": "openaigrowth.com", "sub": "素材包 · 一件代发 · 定制刺绣与印花"}
+    {"type": "onemore", "eyebrow": "同时上线", "title": "数码印花", "sub": "窗帘、抱枕、桌布，按平方米下单"},
+    {"type": "end", "images": ["assets/cap-front.webp", "assets/hoodie-front.webp", "assets/tee-front.webp"], "cta": "openaigrowth.com", "sub": "素材包 · 一件代发 · 定制刺绣与印花"}
   ]
 }

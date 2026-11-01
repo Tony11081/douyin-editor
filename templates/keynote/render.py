@@ -22,9 +22,16 @@ HERE = Path(__file__).resolve().parent
 def load(spec_path: str) -> dict:
     p = Path(spec_path).resolve()
     spec = json.loads(p.read_text(encoding="utf-8"))
-    for s in spec.get("scenes", []):  # 图片路径按 spec 所在目录解析
-        if s.get("image") and not s["image"].startswith(("http", "file:", "data:")):
-            s["image"] = (p.parent / s["image"]).resolve().as_uri()
+    def fix(src: str) -> str:  # 图片路径按 spec 所在目录解析
+        return src if src.startswith(("http", "file:", "data:")) else (p.parent / src).resolve().as_uri()
+    for s in spec.get("scenes", []):
+        if s.get("image"):
+            s["image"] = fix(s["image"])
+        for it in s.get("items", []):
+            if it.get("image"):
+                it["image"] = fix(it["image"])
+        if s.get("images"):
+            s["images"] = [fix(x) for x in s["images"]]
     return spec
 
 
