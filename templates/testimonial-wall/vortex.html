@@ -1,0 +1,154 @@
+<!doctype html>
+<!-- 口碑墙 · 风格 B「星环隧道」：
+     ① 0–2.7s 镜头穿过一条贴满评价卡的旋转隧道，光速粒子，标题在消失点升起后冲向镜头；
+     ② 2.7–4.6s 一道闪光，几十块小卡从远处飞来拼成一颗大星星，冲击波扩散，下方出一句话；
+     ③ 4.6–5.3s 星星炸开，主角卡翻转飞入；④ 逐字打出原话、边框光绕一圈；⑤ 结尾按钮。
+     时间点按 8.5 秒排，spec.duration 不同时整体按比例伸缩。render(t) 画一帧。 -->
+<html><head><meta charset="utf-8">
+<link rel="stylesheet" href="common.css">
+<style>
+#fx{position:absolute;inset:0}
+#stage{position:absolute;inset:0;perspective:900px;perspective-origin:50% 50%;overflow:hidden}
+#tunnel{position:absolute;left:50%;top:50%;width:0;height:0;transform-style:preserve-3d}
+#tunnel .card{position:absolute;width:440px;left:-220px;top:-260px}
+#title{position:absolute;left:0;right:0;top:790px;display:flex;flex-direction:column;gap:26px;transform-origin:50% 60%}
+#starg{position:absolute;left:0;top:0;width:1080px;height:1920px}
+.tile{position:absolute;width:54px;height:54px;margin:-27px 0 0 -27px;border-radius:13px;background:var(--panel);border:1.5px solid rgba(255,255,255,.12);display:grid;place-items:center;font:900 22px/1 var(--sans);color:var(--text)}
+.tile svg{width:28px;height:28px;fill:var(--lime);filter:drop-shadow(0 0 6px rgba(200,255,0,.7))}
+.tile.l{background:var(--lime);border-color:var(--lime);color:#0a0a0a;box-shadow:0 0 28px rgba(200,255,0,.55)}
+.tile.l svg{fill:#0a0a0a;filter:none}
+#ring{position:absolute;left:540px;top:860px;width:200px;height:200px;transform:translate(-50%,-50%);border-radius:50%;border:6px solid var(--lime);box-shadow:0 0 40px var(--lime),inset 0 0 40px rgba(200,255,0,.5);opacity:0}
+#cap{position:absolute;left:0;right:0;top:1360px;text-align:center;font-size:52px;font-weight:900;letter-spacing:-.01em}
+#cap b{color:var(--lime)}
+#flash{position:absolute;inset:0;background:radial-gradient(circle at 50% 50%,#f6ffd6,rgba(200,255,0,.6) 40%,rgba(200,255,0,0) 75%);opacity:0;pointer-events:none}
+#hero{position:absolute;left:50%;top:900px;width:840px;perspective:1600px}
+#hero .card{position:relative;transform-style:preserve-3d}
+#sweep{position:absolute;inset:-3px;border-radius:42px;padding:4px;pointer-events:none;
+  -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude}
+.ch{opacity:0}
+</style></head><body>
+<canvas id="fx" width="1080" height="1920"></canvas>
+<div id="stage"><div id="tunnel"></div></div>
+<div id="title"><div class="eyebrow" id="eb"></div><h1 class="headline" id="hl"></h1></div>
+<div id="starg"></div>
+<div id="ring"></div>
+<div id="cap"></div>
+<div id="hero" class="hero"></div>
+<div class="cta" id="cta"><div class="url" id="url"></div><small id="sub"></small></div>
+<div id="flash"></div>
+<div class="wm" id="wm" hidden></div>
+<script src="common.js"></script>
+<script>
+const S=window.SPEC,{cardHTML,E,esc,rng,STAR}=TW,$=id=>document.getElementById(id);
+const D=S.duration||8.5,CX=540,CY=960,SY=860;
+$("eb").textContent=S.eyebrow||"";$("hl").innerHTML=(S.title||[]).map(w=>`<span>${esc(w)}</span>`).join("");
+$("url").textContent=S.cta||"";$("sub").textContent=S.sub||"";
+$("cap").innerHTML=esc(S.shapeCaption||"").replace(/[，,]/,"，<b>")+(/[，,]/.test(S.shapeCaption||"")?"</b>":"");
+if(S.watermark){$("wm").textContent=S.watermark;$("wm").hidden=false}
+
+// ① 隧道：RINGS 圈 × PER 张，贴在半径 R 的圆筒内壁上
+const RINGS=7,PER=8,R=820,GAP=950,tun=$("tunnel"),tcards=[];
+for(let k=0;k<RINGS;k++)for(let j=0;j<PER;j++){
+  const w=document.createElement("div");w.innerHTML=cardHTML(S.cards[(k*PER+j*3)%S.cards.length],{glow:(k+j)%5===2});
+  const el=w.firstElementChild;tun.appendChild(el);
+  tcards.push({el,ang:(j+(k%2)*.5)/PER*360,z:-500-k*GAP});
+}
+// 光速粒子
+const fx=$("fx"),g=fx.getContext("2d"),rnd=rng(7),parts=[];
+for(let i=0;i<520;i++)parts.push({a:rnd()*Math.PI*2,r:60+rnd()*1400,z:rnd()*4000,lime:rnd()<.22,w:.6+rnd()*2.2});
+const travel=t=>900*t+520*t*t+(t>2.2?2600*Math.pow(t-2.2,2):0);   // 加速前进
+function drawFx(t){
+  g.globalCompositeOperation="source-over";
+  g.fillStyle="#07070a";g.fillRect(0,0,1080,1920);
+  const glow=g.createRadialGradient(CX,CY,0,CX,CY,900);
+  glow.addColorStop(0,`rgba(200,255,0,${.10+.12*E.bell((t-1.8)/1.4)})`);glow.addColorStop(1,"rgba(200,255,0,0)");
+  g.fillStyle=glow;g.fillRect(0,0,1080,1920);
+  const fade=t<2.7?1:.25+.75*(1-E.out((t-2.7)/.6));
+  const d=t<2.9?travel(t):travel(2.9)+300*(t-2.9),streak=t<2.9?80+500*E.in3(t/2.7):40;
+  g.globalCompositeOperation="lighter";g.lineCap="round";
+  for(const p of parts){
+    const z=((p.z-d)%4000+4000)%4000+40,z2=z+streak;
+    const x=Math.cos(p.a)*p.r,y=Math.sin(p.a)*p.r,f=600;
+    const sx=CX+x*f/z,sy=CY+y*f/z,ex=CX+x*f/z2,ey=CY+y*f/z2;
+    const a=Math.min(1,(4000-z)/1200)*fade*(p.lime?.9:.55);
+    g.strokeStyle=p.lime?`rgba(200,255,0,${a})`:`rgba(230,230,240,${a})`;g.lineWidth=p.w*Math.min(3,600/z+.4);
+    g.beginPath();g.moveTo(ex,ey);g.lineTo(sx,sy);g.stroke();
+  }
+}
+
+// ② 星形拼图：在五角星里按网格取点
+const starg=$("starg"),tiles=[],RO=430,RI=RO*.42;
+const pts=[];for(let i=0;i<10;i++){const r=i%2?RI:RO,a=-Math.PI/2+i*Math.PI/5;pts.push([Math.cos(a)*r,Math.sin(a)*r])}
+const inside=(x,y)=>{let c=false;for(let i=0,j=9;i<10;j=i++){const[xi,yi]=pts[i],[xj,yj]=pts[j];if((yi>y)!==(yj>y)&&x<(xj-xi)*(y-yi)/(yj-yi)+xi)c=!c}return c};
+const r2=rng(42),letters=S.cards.map(c=>c.who).filter(Boolean).map(w=>/^[A-Za-z]/.test(w)?w[0].toUpperCase():w.slice(-1));
+const G0=Math.floor(RO/60)*60;
+for(let y=-G0;y<=G0;y+=60)for(let x=-G0;x<=G0;x+=60){
+  if(!inside(x,y))continue;
+  const el=document.createElement("div"),kind=r2();
+  el.className="tile"+(kind<.18?" l":"");
+  el.innerHTML=kind<.62?STAR:esc(letters[Math.floor(r2()*letters.length)]||"★");
+  starg.appendChild(el);
+  const dist=Math.hypot(x,y)/RO;
+  tiles.push({el,x:CX+x,y:SY+y,dist,
+    sx:(r2()-.5)*3200,sy:(r2()-.5)*4200,sz:-2600-r2()*3000,rx:(r2()-.5)*540,ry:(r2()-.5)*540,
+    vx:x/(Math.hypot(x,y)+1),vy:y/(Math.hypot(x,y)+1),spin:(r2()-.5)*900});
+}
+
+// ④ 主角卡：原话拆成单字逐个出现
+$("hero").innerHTML=cardHTML(S.hero||S.cards[0]);
+const hc=$("hero").firstElementChild;hc.insertAdjacentHTML("beforeend",'<div id="sweep"></div>');
+const q=hc.querySelector(".q"),chars=[];
+if(q){const walk=n=>{[...n.childNodes].forEach(c=>{if(c.nodeType===3){const f=document.createDocumentFragment();[...c.textContent].forEach(ch=>{const s=document.createElement("span");s.className="ch";s.textContent=ch;f.appendChild(s);chars.push(s)});c.replaceWith(f)}else walk(c)})};walk(q)}
+const hstars=[...hc.querySelectorAll(".stars svg")];
+
+const title=$("title"),words=[...$("hl").children];
+window.render=function(T){
+  const t=T*8.5/D;
+  drawFx(t);
+  // ① 隧道
+  const zc=travel(Math.min(t,2.75))*1.1,rot=18*t+40*E.in3(t/2.7);
+  tun.style.opacity=t<2.6?1:1-E.out((t-2.6)/.15);
+  tun.style.transform=`rotateZ(${rot}deg)`;
+  tcards.forEach(c=>{
+    const z=c.z+zc;
+    c.el.style.display=(z>700||t>2.8)?"none":"";
+    c.el.style.opacity=E.cl((z+6500)/2500);
+    c.el.style.transform=`translateZ(${z}px) rotateZ(${c.ang}deg) translateY(${-R}px) rotateX(-72deg)`;
+  });
+  $("eb").style.opacity=E.cl((t-.35)/.4);
+  words.forEach((w,i)=>{const p=E.out((t-.5-i*.15)/.55);w.style.transform=`translateY(${(1-p)*100}px) scale(${.8+.2*p})`;w.style.opacity=p});
+  const tz=E.in3((t-2.15)/.55);title.style.transform=`scale(${1+2.6*tz})`;title.style.opacity=1-E.cl((t-2.4)/.3);
+  // 闪光
+  $("flash").style.opacity=.95*E.bell((t-2.55)/.4)+.5*E.bell((t-4.55)/.3);
+  // ② 星形拼图 → ③ 炸开
+  const show=t>2.65&&t<5.6;starg.style.display=show?"":"none";
+  if(show){
+    const breathe=Math.sin((t-3.9)*3)*E.cl((t-3.9)/.3)*(1-E.cl((t-4.5)/.1));
+    tiles.forEach(p=>{
+      const a=E.out5((t-2.75-p.dist*.55)/.95);
+      const x=E.lerp(p.sx,0,a),y=E.lerp(p.sy,0,a),z=E.lerp(p.sz,0,a);
+      const b=E.in3((t-4.55-(1-p.dist)*.08)/.7);
+      const ex=p.vx*1400*b,ey=p.vy*1400*b,ez=1600*b;
+      const pulse=1+.12*Math.max(0,Math.sin((t-3.75-p.dist*.35)*Math.PI*2.2))*E.cl((t-3.6)/.2)*(1-E.cl((t-4.4)/.2));
+      p.el.style.transform=`translate(${p.x+x+ex}px,${p.y+y+ey+breathe*4}px) perspective(1200px) translateZ(${z+ez}px) rotateX(${p.rx*(1-a)+p.spin*b}deg) rotateY(${p.ry*(1-a)+p.spin*b}deg) scale(${pulse})`;
+      p.el.style.opacity=E.cl(a*3)*(1-E.cl(b*1.4));
+    });
+  }
+  const rp=E.out((t-3.85)/.9);$("ring").style.opacity=(1-rp)*E.cl((t-3.85)/.05);{const d=100+1400*rp;$("ring").style.width=$("ring").style.height=d+"px";$("ring").style.borderWidth=(8-5*rp)+"px"}
+  const cp=E.out((t-3.95)/.5);$("cap").style.opacity=cp*(1-E.cl((t-4.5)/.2));$("cap").style.transform=`translateY(${(1-cp)*40}px)`;
+  // ③ 主角卡翻转入场
+  const hp=E.back((t-4.7)/.85,1.3);
+  $("hero").style.opacity=E.cl((t-4.7)/.12);
+  $("hero").style.transform=`translate(-50%,-50%) translateY(${(1-hp)*120}px) scale(${.55+.45*hp})`;
+  hc.style.transform=`rotateY(${(1-hp)*-120}deg) rotateX(${(1-hp)*25}deg)`;
+  // ④ 逐字、星星、边框光
+  const n=Math.floor((t-5.25)/1.35*chars.length);chars.forEach((c,i)=>{c.style.opacity=i<n?1:0});
+  hstars.forEach((s,i)=>{s.style.transform=`scale(${E.back((t-5.0-i*.08)/.4,2)})`});
+  const sw=E.inOut((t-5.6)/1.3),on=E.bell((t-5.6)/1.3);
+  $("sweep").style.background=`conic-gradient(from ${sw*360-90}deg,rgba(200,255,0,0) 0deg,rgba(200,255,0,${on}) 50deg,rgba(255,255,255,${on}) 62deg,rgba(200,255,0,0) 110deg)`;
+  hc.style.boxShadow=`0 0 0 2px rgba(200,255,0,.35),0 0 ${70+50*on}px rgba(200,255,0,${.16+.18*on}),0 40px 120px rgba(0,0,0,.7)`;
+  // ⑤ 结尾
+  const ep=E.back((t-6.8)/.7);$("cta").style.opacity=E.cl((t-6.8)/.25);$("cta").style.transform=`translateY(${(1-ep)*80}px)`;
+};
+render(0);
+</script></body></html>

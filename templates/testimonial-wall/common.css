@@ -1,0 +1,53 @@
+/* 口碑墙模板共用样式：openaigrowth 首页同一套视觉（锌黑 + 荧光青柠 #C8FF00，等宽字做标签）。 */
+:root {
+  --bg: #07070a; --panel: #141417; --panel2: #1d1d21; --line: rgba(255, 255, 255, 0.09);
+  --text: #f4f4f5; --muted: #a1a1aa; --faint: #6b6b74; --lime: #c8ff00;
+  --sans: "Noto Sans CJK SC", "Noto Sans SC", sans-serif;
+  --mono: "JetBrains Mono", "DejaVu Sans Mono", monospace;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { width: 1080px; height: 1920px; overflow: hidden; background: var(--bg); font-family: var(--sans); color: var(--text); }
+
+.card { background: var(--panel); border: 1.5px solid var(--line); border-radius: 28px; padding: 34px; display: flex; flex-direction: column; gap: 22px; box-shadow: 0 20px 60px rgba(0, 0, 0, 0.45); }
+.card.glow { border-color: rgba(200, 255, 0, 0.55); box-shadow: 0 0 0 1px rgba(200, 255, 0, 0.25), 0 0 60px rgba(200, 255, 0, 0.18); }
+.tag { display: flex; justify-content: space-between; font: 600 19px/1 var(--mono); letter-spacing: 0.12em; color: var(--faint); }
+.tag .ex { color: var(--lime); border: 1.5px solid currentColor; border-radius: 6px; padding: 4px 7px; letter-spacing: 0.06em; }
+.q { font-size: 31px; line-height: 1.6; font-weight: 500; }
+.q b { color: var(--lime); font-weight: 900; }
+.who { display: flex; gap: 16px; align-items: center; }
+.av { flex: none; width: 56px; height: 56px; border-radius: 50%; background: var(--panel2); border: 1.5px solid rgba(255, 255, 255, 0.16); display: grid; place-items: center; font-weight: 900; font-size: 22px; }
+.who b { display: block; font-size: 24px; font-weight: 700; }
+.who small { display: block; font-size: 19px; color: var(--faint); font-family: var(--mono); }
+.stars { display: flex; gap: 6px; }
+.stars svg { width: 30px; height: 30px; fill: var(--lime); filter: drop-shadow(0 0 8px rgba(200, 255, 0, 0.6)); }
+.chat { background: var(--panel2); border-radius: 20px; padding: 22px 18px; display: flex; flex-direction: column; gap: 16px; }
+.bar { text-align: center; font: 500 18px/1 var(--mono); color: var(--faint); }
+.m { display: flex; gap: 12px; align-items: flex-end; max-width: 92%; }
+.m i { flex: none; width: 40px; height: 40px; border-radius: 10px; background: rgba(255, 255, 255, 0.14); filter: blur(4px); }
+.m p { background: #2a2a2f; padding: 14px 18px; border-radius: 20px 20px 20px 6px; font-size: 26px; line-height: 1.5; }
+.m.me { margin-left: auto; flex-direction: row-reverse; }
+.m.me i { filter: none; background: var(--lime); }
+.m.me p { background: var(--lime); color: #0a0a0a; border-radius: 20px 20px 6px 20px; font-weight: 500; }
+.k-number .big { font: 700 96px/1 var(--mono); letter-spacing: -0.05em; color: var(--lime); }
+.k-number p { font-size: 26px; color: var(--muted); line-height: 1.5; }
+.res { font: 500 20px/1.4 var(--mono); color: var(--muted); border-top: 1.5px solid var(--line); padding-top: 18px; display: flex; gap: 12px; align-items: center; }
+.res::before { content: ""; flex: none; width: 10px; height: 10px; border-radius: 50%; background: var(--lime); box-shadow: 0 0 10px var(--lime); }
+
+/* 主角卡：放大到画面中间的那一张 */
+.hero .card { padding: 56px; gap: 34px; border-radius: 40px; background: rgba(20, 20, 23, 0.97); }
+.hero .q { font-size: 48px; line-height: 1.55; font-weight: 700; }
+.hero .stars svg { width: 52px; height: 52px; }
+.hero .who b { font-size: 34px; }
+.hero .who small { font-size: 24px; }
+.hero .av { width: 80px; height: 80px; font-size: 32px; }
+.hero .res { font-size: 26px; }
+
+.eyebrow { font: 600 26px/1 var(--mono); letter-spacing: 0.3em; color: var(--lime); display: flex; gap: 16px; align-items: center; justify-content: center; }
+.eyebrow::before { content: ""; width: 14px; height: 14px; border-radius: 50%; background: var(--lime); box-shadow: 0 0 18px var(--lime); }
+.headline { display: flex; justify-content: center; flex-wrap: wrap; font-size: 136px; font-weight: 900; letter-spacing: -0.04em; line-height: 1.15; filter: drop-shadow(0 8px 40px rgba(0, 0, 0, 0.9)); }
+.headline span { display: inline-block; background: linear-gradient(180deg, #fff 40%, #9a9aa3); -webkit-background-clip: text; background-clip: text; color: transparent; padding-bottom: 8px; }
+/* 结尾按钮放在安全区里（1600 以下会被平台按钮挡住） */
+.cta { position: absolute; left: 0; right: 0; top: 1300px; display: flex; flex-direction: column; align-items: center; gap: 22px; }
+.cta .url { font: 700 54px/1 var(--mono); letter-spacing: -0.02em; color: #0a0a0a; background: var(--lime); padding: 26px 46px; border-radius: 999px; box-shadow: 0 0 60px rgba(200, 255, 0, 0.45); }
+.cta small { font-size: 30px; color: var(--muted); }
+.wm { position: absolute; right: 36px; top: 44px; font: 500 22px/1 var(--mono); color: rgba(255, 255, 255, 0.45); border: 1.5px dashed rgba(255, 255, 255, 0.25); padding: 10px 14px; border-radius: 10px; }

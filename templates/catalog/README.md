@@ -49,6 +49,8 @@ gallery.html 是所有模板的静态样式（?tpl=<代号>&s=hook|card，背景
 | 41 | 对称美学（高端） | wa | 仅静态样式 |
 | 42 | 演讲舞台（高端） | sp | 仅静态样式 |
 | 43 | 香槟邀请函（高端） | iv | 仅静态样式 |
+| 44 | 口碑墙 · 倾斜滚墙 | tw-a | templates/testimonial-wall/wall.html（独立动效片段，8 秒） |
+| 45 | 口碑墙 · 星环隧道 | tw-b | templates/testimonial-wall/vortex.html（独立动效片段，8.5 秒） |
 
 高端系列另用字体：Cormorant Garamond、Playfair Display、Cinzel、Bodoni Moda、Jost（同样来自 google/fonts ofl/）。
 

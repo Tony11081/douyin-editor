@@ -1,0 +1,25 @@
+{
+  "style": "vortex",
+  "duration": 8.5,
+  "eyebrow": "WALL OF LOVE",
+  "title": ["听听", "卖家", "怎么说"],
+  "shapeCaption": "每一颗星，都来自一位卖家",
+  "cta": "openaigrowth.com",
+  "sub": "素材包 · 一件代发 · 跨境开店答疑",
+  "watermark": "效果预览 · 卡片内容为示例",
+  "cards": [
+    {"kind": "quote", "group": "素材包客户", "sample": true, "text": "拿到素材包当天就[[上了 10 个 listing]]，图和文案直接能用", "who": "客户 A", "meta": "素材包客户", "result": "上架第 X 天出单"},
+    {"kind": "chat", "group": "素材包客户", "sample": true, "bar": "X总－Etsy合作伙伴", "msgs": [[0, "今天又出了两单圣诞袜"], [1, "收到，今晚出名字图"], [0, "发货真快，买家都夸做工"]]},
+    {"kind": "review", "group": "ETSY 买家", "sample": true, "stars": 5, "text": "Beautiful stocking, the name is perfect. Arrived before Christmas!", "who": "Etsy 买家", "meta": "自营店"},
+    {"kind": "number", "group": "学员", "sample": true, "value": "00 单", "text": "学员跟课第一个月出单"},
+    {"kind": "quote", "group": "学员", "sample": true, "text": "限流的问题群里[[一天就解决了]]", "who": "学员 D", "meta": "付费答疑群", "result": "限流恢复"},
+    {"kind": "chat", "group": "学员", "sample": true, "bar": "企业微信 · 私聊", "msgs": [[0, "按你说的改了标题和标签"], [0, "曝光这周涨了一倍多"], [1, "保持这个节奏"]]},
+    {"kind": "review", "group": "ETSY 买家", "sample": true, "stars": 5, "text": "All three names spelled right and the wood is lovely.", "who": "Etsy 买家", "meta": "自营店"},
+    {"kind": "quote", "group": "素材包客户", "sample": true, "text": "最看重[[供应链在国内]]，出单直接交给作坊", "who": "客户 F", "meta": "素材包客户", "result": "已复购"},
+    {"kind": "quote", "group": "学员", "sample": true, "text": "爆品库[[免费给我们用]]，选品终于有数据", "who": "学员 G", "meta": "直播课学员"},
+    {"kind": "number", "group": "素材包客户", "sample": false, "value": "3 天", "text": "出单到发货，工作日"},
+    {"kind": "chat", "group": "素材包客户", "sample": true, "bar": "X总_Etsy合作伙伴", "msgs": [[0, "素材包下好了，图很清楚"], [1, "有问题群里随时说"]]},
+    {"kind": "review", "group": "ETSY 买家", "sample": true, "stars": 5, "text": "Gorgeous embroidery, my daughter loves it. Will order again.", "who": "Etsy 买家", "meta": "自营店"}
+  ],
+  "hero": {"kind": "review", "group": "ETSY 买家", "sample": true, "stars": 5, "text": "Beautiful stocking, the embroidered name is [[perfect]]. Arrived before Christmas!", "who": "Etsy 买家", "meta": "自营店 · 五星好评"}
+}
