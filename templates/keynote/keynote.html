@@ -1,222 +1,231 @@
 <!doctype html>
-<!-- 47 号「发布会」：苹果发布会式的竖屏产品片。spec.scenes 一页一页排：
-     intro 品牌开场 · product 单品亮相（可现场绣名字）· lineup 产品转台 · stat 大数字 · quote 原话 · onemore · end 结尾。
-     render(t) 画一帧；每页自己管进场和出场，默认时长见 DUR。 -->
+<!-- 47 号「发布会」v3 —— 一根线的故事。
+     视觉规则：全片黑白灰，唯一的颜色是那根青柠绣线（开场走针、名字缎面绣、下划线、结尾收针）。
+     画面在 canvas 里画（产品、绣线、光、颗粒），字在 DOM 里（遮罩升起、靠左排版）。
+     场景：thread 开场 · statement 大字 · stitch 微距绣名字→拉远 · montage 卡点换产品 · stat 数字 · family 全家福 · end 结尾。
+     时长都是 0.5 秒（120 BPM 一拍）的倍数，方便卡音乐。render(t) 画一帧。 -->
 <html><head><meta charset="utf-8">
 <style>
-@font-face{font-family:"Pacifico";src:url("assets/Pacifico-Regular.ttf")}
-:root{--text:#f5f5f7;--muted:#9a9aa2;--lime:#c8ff00;
-  --sans:"Noto Sans CJK SC","Noto Sans SC",sans-serif;--mono:"JetBrains Mono","DejaVu Sans Mono",monospace}
+:root{--w:#f5f5f7;--g:#86868b;--g2:#4a4a4f;--lime:#c8ff00;--sans:"Noto Sans CJK SC",sans-serif;--mono:"JetBrains Mono","DejaVu Sans Mono",monospace}
 *{box-sizing:border-box;margin:0;padding:0}
-html,body{width:1080px;height:1920px;overflow:hidden;background:#000;font-family:var(--sans);color:var(--text)}
-#fx{position:absolute;inset:0}
-.sc{position:absolute;inset:0;display:none;overflow:hidden}
-.abs{position:absolute;left:0;right:0;text-align:center}
-.eye{font:600 28px/1 var(--mono);letter-spacing:.34em;color:var(--lime)}
-.ch{display:inline-block;will-change:transform}
-.metal .ch{background:linear-gradient(180deg,#fff 25%,#9b9ba3 100%);-webkit-background-clip:text;background-clip:text;color:transparent;padding-bottom:.08em}
-.limeg .ch{background:linear-gradient(180deg,#f3ffc2 0%,var(--lime) 45%,#7d9e00 100%);-webkit-background-clip:text;background-clip:text;color:transparent;padding-bottom:.08em}
-.clip{overflow:hidden;display:inline-block;padding:0 .04em}
-/* intro */
-.flare{position:absolute;left:0;right:0;top:880px;height:4px;transform-origin:50% 50%}
-.flare::before{content:"";position:absolute;inset:0;background:linear-gradient(90deg,transparent,#fff 48%,#fff 52%,transparent);filter:blur(1px)}
-.flare::after{content:"";position:absolute;left:0;right:0;top:-60px;height:124px;background:radial-gradient(ellipse 50% 50% at 50% 50%,rgba(200,255,0,.55),transparent 70%)}
-.brand{font-size:156px;font-weight:900;letter-spacing:-.05em;line-height:1;white-space:nowrap}
-/* product */
-.prod{position:absolute;left:50%;top:210px;width:880px;height:880px;margin-left:-440px;perspective:2000px}
-.prod .wrap{position:absolute;inset:0;transform-style:preserve-3d}
-.prod img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;filter:drop-shadow(0 50px 60px rgba(0,0,0,.75));-webkit-box-reflect:below -10px linear-gradient(transparent 70%,rgba(255,255,255,.14))}
-.prod svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
-.stitch{font-family:"Pacifico",cursive;fill:var(--lime);stroke:var(--lime);stroke-width:3;paint-order:stroke}
-.stitch2{font-family:"Pacifico",cursive;fill:none;stroke:#5b7300;stroke-width:1.6;stroke-dasharray:7 5}
-.ttl{font-size:200px;font-weight:900;letter-spacing:-.05em;line-height:1.02}
-.sub{font-size:46px;font-weight:500;color:var(--muted);letter-spacing:.01em}
-/* lineup */
-.ring{position:absolute;left:540px;top:640px;width:0;height:0;perspective:2400px}
-.ring .rot{position:absolute;transform-style:preserve-3d}
-.ring .it{position:absolute;left:0;top:0}
-.ring img{position:absolute;width:460px;height:460px;margin:-230px 0 0 -230px;object-fit:contain;filter:drop-shadow(0 40px 40px rgba(0,0,0,.7))}
-.ring .lbl{position:absolute;width:400px;margin-left:-200px;top:300px;text-align:center;font:600 30px/1 var(--mono);letter-spacing:.2em;color:var(--lime)}
-.floor{position:absolute;left:90px;right:90px;top:880px;height:180px;border-radius:50%;background:radial-gradient(ellipse at 50% 50%,rgba(200,255,0,.28),rgba(200,255,0,.05) 45%,transparent 70%)}
-/* stat */
-.num{font:700 560px/1 var(--mono);letter-spacing:-.08em;font-variant-numeric:tabular-nums;white-space:nowrap}
-.ghost{position:absolute;left:0;right:0;font:700 560px/1 var(--mono);letter-spacing:-.08em;color:transparent;-webkit-text-stroke:2px rgba(200,255,0,.5);white-space:nowrap}
-.unit{font-size:150px;font-weight:900;letter-spacing:-.03em;line-height:1}
-.lab{font-size:66px;font-weight:900;letter-spacing:-.02em}
-.note{font-size:36px;color:var(--muted)}
-.tagx{display:inline-block;font:600 24px/1 var(--mono);color:var(--lime);border:2px solid currentColor;border-radius:8px;padding:9px 14px;letter-spacing:.08em}
-/* quote */
-.bigq{position:absolute;left:0;right:0;top:120px;text-align:center;font:900 1100px/1 Georgia,serif;color:rgba(200,255,0,.07)}
-.qt{font-size:92px;font-weight:900;line-height:1.32;letter-spacing:-.03em;padding:0 70px;text-wrap:balance}
-.qt b{color:var(--lime);text-shadow:0 0 50px rgba(200,255,0,.35)}
-.qw{font:500 34px/1.4 var(--mono);color:var(--muted)}
-/* onemore */
-.om{font-size:84px;font-weight:500;font-style:italic;color:#e4e4e7;letter-spacing:-.01em}
-.burst{position:absolute;left:540px;top:820px;border-radius:50%;transform:translate(-50%,-50%);border:5px solid var(--lime);box-shadow:0 0 60px var(--lime),inset 0 0 60px rgba(200,255,0,.45)}
-/* end */
-.row{position:absolute;left:0;right:0;top:360px;height:420px}
-.row img{position:absolute;top:0;height:380px;width:380px;object-fit:contain;filter:drop-shadow(0 30px 30px rgba(0,0,0,.7));-webkit-box-reflect:below 0 linear-gradient(transparent 72%,rgba(255,255,255,.12))}
-.pill{display:inline-block;font:700 62px/1 var(--mono);color:#0a0a0a;background:var(--lime);padding:32px 56px;border-radius:999px;box-shadow:0 0 90px rgba(200,255,0,.55)}
-.wm{position:absolute;right:36px;top:44px;font:500 22px/1 var(--mono);color:rgba(255,255,255,.45);border:1.5px dashed rgba(255,255,255,.25);padding:10px 14px;border-radius:10px}
+html,body{width:1080px;height:1920px;overflow:hidden;background:#000;font-family:var(--sans);color:var(--w)}
+canvas{position:absolute;inset:0}
+.sc{position:absolute;inset:0;display:none}
+.L{position:absolute;left:96px;right:96px}
+.lab{font:500 26px/1 var(--mono);letter-spacing:.22em;color:var(--g)}
+.lab i{font-style:normal;color:var(--lime)}
+.st{font-weight:500;font-size:112px;line-height:1.16;letter-spacing:-.025em}
+.st .ln{display:block;overflow:hidden;padding-bottom:.06em}
+.st .ln>span{display:inline-block}
+.st .dim{color:var(--g)}
+.big{font-weight:500;letter-spacing:-.06em;line-height:.9}
+.who{font:500 30px/1.5 var(--mono);color:var(--g)}
+.chip{display:inline-block;margin-left:14px;font:600 22px/1 var(--mono);color:var(--lime);border:1.5px solid currentColor;border-radius:7px;padding:7px 10px;letter-spacing:.06em;vertical-align:middle}
+.wm{position:absolute;right:36px;top:44px;font:500 22px/1 var(--mono);color:rgba(255,255,255,.4);border:1.5px dashed rgba(255,255,255,.22);padding:10px 14px;border-radius:10px;z-index:5}
+.cap{font:500 24px/1 var(--mono);letter-spacing:.24em;color:var(--g);text-align:center}
 </style></head><body>
-<canvas id="fx" width="1080" height="1920"></canvas>
+<canvas id="cv" width="1080" height="1920"></canvas>
 <div id="root"></div>
 <div class="wm" id="wm" hidden></div>
 <script>
 const S=window.SPEC,$=id=>document.getElementById(id);
 const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"})[c]);
-const rich=s=>esc(s).replace(/\[\[(.+?)\]\]/g,"<b>$1</b>");
 const cl=(x,a=0,b=1)=>Math.min(b,Math.max(a,x)),lerp=(a,b,p)=>a+(b-a)*p;
 const out=x=>1-Math.pow(1-cl(x),3),out5=x=>1-Math.pow(1-cl(x),5),in3=x=>Math.pow(cl(x),3),
-  io=x=>{x=cl(x);return x<.5?4*x*x*x:1-Math.pow(-2*x+2,3)/2},bell=x=>Math.sin(Math.PI*cl(x)),
-  back=(x,c=1.6)=>{x=cl(x);return 1+(c+1)*Math.pow(x-1,3)+c*Math.pow(x-1,2)};
+  io=x=>{x=cl(x);return x<.5?4*x*x*x:1-Math.pow(-2*x+2,3)/2},io5=x=>{x=cl(x);return x<.5?16*x**5:1-Math.pow(-2*x+2,5)/2};
 if(S.watermark){$("wm").textContent=S.watermark;$("wm").hidden=false}
-const chars=(t,cls="")=>`<span class="${cls}">${[...String(t)].map(c=>`<span class="clip"><span class="ch">${c===" "?"&nbsp;":esc(c)}</span></span>`).join("")}</span>`;
-const lines=(t,cls)=>String(t).split("\n").map(l=>`<div>${chars(l,cls)}</div>`).join("");
+const LIME="#c8ff00",LIME_D="#7a9a00",LIME_L="#ecffa3";
 
-const DUR={intro:2.8,product:3.8,lineup:3.8,stat:2.4,quote:3.0,onemore:3.4,end:3.0};
-const scenes=[{type:"intro"}].concat(S.scenes||[]);
-if(!scenes.some(s=>s.type==="end"))scenes.push({type:"end"});
-let acc=0;scenes.forEach(s=>{s.t0=acc;s.d=s.duration||DUR[s.type]||2.5;acc+=s.d});
-window.TOTAL=acc;
-const root=$("root");
+/* ---------- 素材 ---------- */
+const imgs={};
+function img(src){if(!imgs[src]){const i=new Image();i.src=src;imgs[src]=i}return imgs[src]}
+window.__imgs=imgs;
+var scenesPre=(S.scenes||[]).forEach(sc=>{if(sc.image)img(sc.image);(sc.items||[]).forEach(it=>it.image&&img(it.image))});
+const glyphs=S.glyphs||{};            // render.py 预先算好的草书字形：{名字:{d,w,top,bottom}}（字号 100）
+const P2={};const path2=n=>P2[n]||(P2[n]=new Path2D(glyphs[n].d));
 
-scenes.forEach(s=>{
-  const el=document.createElement("div");el.className="sc "+s.type;s.el=el;root.appendChild(el);
-  let h="";
-  if(s.type==="intro")h=`<div class="flare"></div><div class="abs" style="top:780px"><div class="brand metal">${chars(S.brand||"Shopwright")}</div></div><div class="abs eye" style="top:1040px">${esc(S.eyebrow||"")}</div>`;
-  if(s.type==="product"){
-    const st=s.stitch?`<svg viewBox="0 0 880 880"><text class="stitch" x="${(s.stitchAt||[50,40])[0]*8.8}" y="${(s.stitchAt||[50,40])[1]*8.8}" text-anchor="middle" font-size="${s.stitchSize||120}" transform="rotate(-6 ${(s.stitchAt||[50,40])[0]*8.8} ${(s.stitchAt||[50,40])[1]*8.8})">${esc(s.stitch)}</text><text class="stitch2" x="${(s.stitchAt||[50,40])[0]*8.8}" y="${(s.stitchAt||[50,40])[1]*8.8}" text-anchor="middle" font-size="${s.stitchSize||120}" transform="rotate(-6 ${(s.stitchAt||[50,40])[0]*8.8} ${(s.stitchAt||[50,40])[1]*8.8})">${esc(s.stitch)}</text></svg>`:"";
-    h=`<div class="prod"><div class="wrap"><img src="${esc(s.image)}">${st}</div></div>
-      <div class="abs eye" style="top:1110px">${esc(s.eyebrow||"")}</div>
-      <div class="abs ttl ${s.lime?"limeg":"metal"}" style="top:1170px">${lines(s.title||"")}</div>
-      <div class="abs sub" style="top:1400px">${esc(s.sub||"")}</div>`;
-  }
-  if(s.type==="lineup"){
-    h=`<div class="floor"></div><div class="ring"><div class="rot">${(s.items||[]).map(it=>`<div class="it"><img src="${esc(it.image)}"><div class="lbl">${esc(it.label||"")}</div></div>`).join("")}</div></div>
-      <div class="abs ttl metal" style="top:1150px;font-size:170px">${lines(s.title||"")}</div>
-      <div class="abs sub" style="top:1360px">${esc(s.sub||"")}</div>`;
-  }
-  if(s.type==="stat")h=`<div class="abs eye" style="top:330px">${esc(s.eyebrow||"")}</div>
-      <div class="ghost" style="top:430px;text-align:center"><span class="gv">0</span></div>
-      <div class="abs" style="top:430px"><span class="num limeg"><span class="ch v">0</span></span></div>
-      <div class="abs unit metal" style="top:1010px">${chars(s.unit||"")}</div>
-      <div class="abs lab" style="top:1200px">${esc(s.label||"")}</div>
-      <div class="abs note" style="top:1300px">${esc(s.note||"")}${s.sample?' <span class="tagx">示例</span>':""}</div>`;
-  if(s.type==="quote")h=`<div class="bigq">“</div><div class="abs qt" style="top:560px">${rich(s.text)}</div>
-      <div class="abs qw" style="top:1200px">— ${esc([s.who,s.meta].filter(Boolean).join(" · "))}${s.sample?' <span class="tagx">示例</span>':""}</div>`;
-  if(s.type==="onemore")h=`<div class="burst"></div><div class="abs om" style="top:770px">${esc(s.text||"One more thing…")}</div>
-      <div class="two">${s.image?`<div class="prod" style="top:160px"><div class="wrap"><img src="${esc(s.image)}"></div></div>`:""}
-      <div class="abs eye" style="top:${s.image?1110:700}px">${esc(s.eyebrow||"")}</div>
-      <div class="abs ttl limeg" style="top:${s.image?1170:770}px">${lines(s.title||"")}</div>
-      <div class="abs sub" style="top:${s.image?1400:1010}px">${esc(s.sub||"")}</div></div>`;
-  if(s.type==="end"){
-    const imgs=s.images||[];
-    h=`<div class="row">${imgs.map((src,i)=>`<img src="${esc(src)}" style="left:${540-190+(i-(imgs.length-1)/2)*250}px">`).join("")}</div>
-      <div class="abs brand metal" style="top:${imgs.length?900:700}px;font-size:150px">${chars(S.brand||"Shopwright")}</div>
-      <div class="abs" style="top:${imgs.length?1110:930}px"><span class="pill">${esc(s.cta||S.cta||"")}</span></div>
-      <div class="abs sub" style="top:${imgs.length?1270:1090}px;font-size:38px">${esc(s.sub||S.sub||"")}</div>`;
-  }
-  el.innerHTML=h;
-});
+/* ---------- 画布 ---------- */
+const cv=$("cv"),g=cv.getContext("2d"),off=document.createElement("canvas");off.width=1080;off.height=1920;const o=off.getContext("2d");
+let seed=3;const rnd=()=>((seed=(seed*1664525+1013904223)>>>0)/4294967296);
+const grain=[0,1,2,3].map(()=>{const c=document.createElement("canvas");c.width=540;c.height=960;const x=c.getContext("2d"),d=x.createImageData(540,960);
+  for(let i=0;i<d.data.length;i+=4){const v=rnd()*255;d.data[i]=d.data[i+1]=d.data[i+2]=v;d.data[i+3]=255}x.putImageData(d,0,0);return c});
+const weave=(()=>{const c=document.createElement("canvas");c.width=c.height=64;const x=c.getContext("2d");
+  for(let yy=0;yy<64;yy+=2)for(let xx=0;xx<64;xx+=2){x.fillStyle=`rgba(0,0,0,${.03+.05*rnd()})`;x.beginPath();x.ellipse(xx+1,yy+1,.55,.85,((xx/2+yy/2)%2?.5:-.5),0,6.28);x.fill()}return c})();
+let weavePat=null;
 
-// 舞台光：黑底、顶部聚光、产品背后的青柠光晕、缓慢漂移的两团光
-const fx=$("fx"),g=fx.getContext("2d");let seed=9;const rnd=()=>((seed=(seed*1664525+1013904223)>>>0)/4294967296);
-const dust=Array.from({length:160},()=>({x:rnd()*1080,y:rnd()*1920,s:.5+rnd()*2,v:6+rnd()*22,p:rnd()*6.28}));
-function blob(x,y,r,c,a){if(a<=0)return;const gr=g.createRadialGradient(x,y,0,x,y,r);gr.addColorStop(0,`rgba(${c},${a})`);gr.addColorStop(1,`rgba(${c},0)`);g.fillStyle=gr;g.fillRect(0,0,1080,1920)}
-function stage(t,L){
-  g.fillStyle="#000";g.fillRect(0,0,1080,1920);
-  blob(540+180*Math.sin(t*.35),300+80*Math.cos(t*.27),1100,"255,255,255",.10*L.spot);
-  blob(540,L.cy,L.r,"200,255,0",L.glow*.34);
-  blob(540+260*Math.sin(t*.22+2),1500,900,"160,200,0",.10*L.spot);
-  // 顶部光束
-  if(L.spot>0){g.save();g.globalCompositeOperation="lighter";
-    const beam=g.createLinearGradient(0,0,0,1500);beam.addColorStop(0,`rgba(255,255,255,${.16*L.spot})`);beam.addColorStop(1,"rgba(255,255,255,0)");
-    g.fillStyle=beam;g.beginPath();g.moveTo(420,-20);g.lineTo(660,-20);g.lineTo(1000,1500);g.lineTo(80,1500);g.closePath();g.fill();
-    for(const d of dust){const y=(d.y-t*d.v+7680)%1920,x=d.x+Math.sin(t*.7+d.p)*14,w=Math.max(0,1-Math.abs(x-540)/(120+y*.3));
-      if(w>0){g.fillStyle=`rgba(255,255,255,${.55*w*L.spot})`;g.beginPath();g.arc(x,y,d.s,0,6.28);g.fill()}}
-    g.restore()}
-  if(L.flash>0){g.fillStyle=`rgba(240,255,200,${L.flash})`;g.fillRect(0,0,1080,1920)}
+// 镜头：世界坐标 → 屏幕。cam={x,y,s} 表示屏幕中心看着世界里的 (x,y)，放大 s 倍
+const camT=(c,ctx=g)=>ctx.setTransform(c.s,0,0,c.s,540-c.x*c.s,960-c.y*c.s);
+
+// 产品：放在世界坐标 (cx,cy)，高 h；带投影和地面倒影
+function product(src,cx,cy,h,{cam,alpha=1,blur=0,reflect=true,bright=1}={}){
+  const im=img(src);if(!im.complete||!im.naturalWidth)return null;
+  const w=h*im.naturalWidth/im.naturalHeight,x=cx-w/2,y=cy-h/2;
+  camT(cam);g.save();g.globalAlpha=alpha;
+  if(reflect){g.save();g.globalAlpha=alpha*.10;g.translate(0,(y+h)*2+16);g.scale(1,-1);g.filter=`blur(${2+blur}px) brightness(${bright*.8})`;g.drawImage(im,x,y,w,h);g.restore();
+    g.save();camT(cam);const fl=g.createLinearGradient(0,y+h+8,0,y+h+h*.5);fl.addColorStop(0,"rgba(0,0,0,0)");fl.addColorStop(1,"rgba(0,0,0,1)");g.globalAlpha=1;g.fillStyle=fl;g.fillRect(x-200,y+h+8,w+400,h*.5);g.restore()}
+  g.filter=`blur(${blur}px) brightness(${bright}) drop-shadow(0 ${h*.04}px ${h*.05}px rgba(0,0,0,.65))`;
+  g.drawImage(im,x,y,w,h);g.restore();
+  return {x,y,w,h};
 }
-const rise=(root,sel,lt,start,gap,dur=.6,dist=110)=>[...root.querySelectorAll(sel)].forEach((c,j)=>{const p=out5((lt-start-j*gap)/dur);c.style.transform=`translateY(${(1-p)*dist}%)`});
-function exitT(s,lt,d=.4){return in3((lt-(s.d-d))/d)}
+// 织物纹理（微距时看得见）
+function fabric(box,cam,alpha){if(!box||alpha<=0)return;weavePat=weavePat||g.createPattern(weave,"repeat");camT(cam);g.save();g.globalAlpha=alpha;g.globalCompositeOperation="multiply";
+  g.fillStyle=weavePat;g.beginPath();g.rect(box.x,box.y,box.w,box.h);g.clip();g.fillRect(box.x,box.y,box.w,box.h);g.restore()}
+
+/* 缎面绣：把名字的字形当作区域，里面密排斜向针脚，从左往右一针针走；带针、带高光、带凸起的投影
+   name：字；cx,cy：世界坐标里名字的中心；W：名字的世界宽度；p：0~1 进度 */
+function satin(name,cx,cy,W,p,cam,t,needle=true){
+  const gl=glyphs[name];if(!gl||p<=0)return;
+  const k=W/gl.w,H=(gl.bottom-gl.top);
+  o.setTransform(1,0,0,1,0,0);o.clearRect(0,0,1080,1920);
+  const M=(ctx)=>{camT(cam,ctx);ctx.translate(cx-W/2,cy-(gl.top+H/2)*k);ctx.scale(k,k)};
+  M(o);o.save();o.clip(path2(name));
+  const sp=1.9/k,sl=Math.tan(28*Math.PI/180)*H,front=-sl+p*(gl.w+sl*2);
+  o.lineCap="butt";
+  let i=0;for(let x=-sl;x<front;x+=sp,i++){const j=Math.sin(i*12.9898)*43758.5453%1,jit=(j-.5)*sp*.22,x2=x+sl+jit;
+    o.lineWidth=sp*1.04;o.strokeStyle=j>.85?"#a8dc00":"#bdf200";o.beginPath();o.moveTo(x,gl.top-2);o.lineTo(x2,gl.bottom+2);o.stroke();
+    o.lineWidth=sp*.42;o.strokeStyle="rgba(222,255,120,.7)";o.beginPath();o.moveTo(x-sp*.12,gl.top-2);o.lineTo(x2-sp*.12,gl.bottom+2);o.stroke();
+    o.lineWidth=sp*.12;o.strokeStyle="rgba(250,255,220,.7)";o.beginPath();o.moveTo(x-sp*.18,gl.top-2);o.lineTo(x2-sp*.18,gl.bottom+2);o.stroke();
+    o.lineWidth=sp*.2;o.strokeStyle="rgba(60,80,0,.6)";o.beginPath();o.moveTo(x+sp*.44,gl.top-2);o.lineTo(x2+sp*.44,gl.bottom+2);o.stroke()}
+  // 丝线光泽：斜向一道亮带
+  o.globalCompositeOperation="source-atop";
+  const sh=o.createLinearGradient(0,gl.top,gl.w*.6,gl.bottom);sh.addColorStop(0,"rgba(255,255,255,.35)");sh.addColorStop(.45,"rgba(255,255,255,0)");sh.addColorStop(.7,"rgba(0,0,0,.18)");sh.addColorStop(1,"rgba(255,255,255,.12)");
+  o.fillStyle=sh;o.fillRect(-20,gl.top-20,gl.w+40,H+40);
+  // 边缘压暗一圈，绣线显得鼓起来
+  o.filter=`blur(${1.2*cam.s}px)`;o.strokeStyle="rgba(40,60,0,.42)";o.lineWidth=5/k;o.stroke(path2(name));o.filter="none";o.restore();
+  // 边缘一圈走针
+  o.save();o.beginPath();o.rect(-sl,gl.top-10,front+sl,H+20);o.clip();o.globalCompositeOperation="source-over";o.strokeStyle="rgba(110,140,0,.75)";o.lineWidth=.9;o.stroke(path2(name));o.restore();
+  // 贴回主画布，投影让绣线凸起来
+  g.save();g.setTransform(1,0,0,1,0,0);g.shadowColor="rgba(0,0,0,.45)";g.shadowBlur=6*cam.s/2;g.shadowOffsetY=2*cam.s/2;g.drawImage(off,0,0);g.restore();
+  // 针
+  if(needle&&p<1){
+    camT(cam);g.save();g.translate(cx-W/2,cy-(gl.top+H/2)*k);g.scale(k,k);
+    const fx=Math.min(gl.w,front),fy=gl.top+H*(Math.floor(t*30)%2?.18:.82);
+    const gr=g.createRadialGradient(fx,fy,0,fx,fy,22);gr.addColorStop(0,"rgba(236,255,163,.9)");gr.addColorStop(1,"rgba(200,255,0,0)");g.fillStyle=gr;g.beginPath();g.arc(fx,fy,22,0,6.28);g.fill();
+    const nl=g.createLinearGradient(fx-3,0,fx+3,0);nl.addColorStop(0,"#6b6b70");nl.addColorStop(.5,"#fff");nl.addColorStop(1,"#8a8a90");
+    g.strokeStyle=nl;g.lineWidth=4.2;g.lineCap="round";g.beginPath();g.moveTo(fx+10,fy-140);g.lineTo(fx,fy);g.stroke();
+    g.strokeStyle=LIME;g.lineWidth=1.4;g.beginPath();g.moveTo(fx+9,fy-128);g.quadraticCurveTo(fx+60,fy-300,fx+20,fy-900);g.stroke();g.restore();
+  }
+}
+
+/* 走针线：沿一条曲线一段段出现的虚线针脚（开场、下划线、结尾都用它）。pts 为屏幕坐标折线 */
+function runStitch(pts,p,{w=6,dash=26,gap=14,needle=true,t=0,glow=1}={}){
+  if(p<=0)return;let L=0;const seg=[];for(let i=1;i<pts.length;i++){const d=Math.hypot(pts[i][0]-pts[i-1][0],pts[i][1]-pts[i-1][1]);seg.push(d);L+=d}
+  const end=L*p;g.save();g.setTransform(1,0,0,1,0,0);g.lineCap="round";
+  const at=s=>{let a=0;for(let i=0;i<seg.length;i++){if(a+seg[i]>=s){const q=(s-a)/seg[i];return[lerp(pts[i][0],pts[i+1][0],q),lerp(pts[i][1],pts[i+1][1],q)]}a+=seg[i]}return pts[pts.length-1]};
+  g.shadowColor=`rgba(200,255,0,${.45*glow})`;g.shadowBlur=14;
+  for(let s=0;s<end;s+=dash+gap){const a=at(s),b=at(Math.min(s+dash,end));g.strokeStyle=LIME;g.lineWidth=w;g.beginPath();g.moveTo(a[0],a[1]);g.lineTo(b[0],b[1]);g.stroke();
+    g.shadowBlur=0;g.strokeStyle=LIME_L;g.lineWidth=w*.32;g.beginPath();g.moveTo(a[0],a[1]-w*.18);g.lineTo(b[0],b[1]-w*.18);g.stroke();g.shadowBlur=14}
+  if(needle&&p<1){const f=at(end),f2=at(Math.max(0,end-30)),ang=Math.atan2(f[1]-f2[1],f[0]-f2[0]);g.shadowBlur=0;
+    const gr=g.createRadialGradient(f[0],f[1],0,f[0],f[1],40);gr.addColorStop(0,"rgba(236,255,163,.8)");gr.addColorStop(1,"rgba(200,255,0,0)");g.fillStyle=gr;g.beginPath();g.arc(f[0],f[1],40,0,6.28);g.fill();
+    g.translate(f[0],f[1]);g.rotate(ang);const nl=g.createLinearGradient(0,-4,0,4);nl.addColorStop(0,"#6b6b70");nl.addColorStop(.5,"#fff");nl.addColorStop(1,"#8a8a90");
+    g.strokeStyle=nl;g.lineWidth=5;g.beginPath();g.moveTo(6,0);g.lineTo(96,0);g.stroke();g.fillStyle="#000";g.beginPath();g.ellipse(84,0,6,1.6,0,0,6.28);g.fill()}
+  g.restore();
+}
+const curve=(f,n=80)=>Array.from({length:n+1},(_,i)=>f(i/n));
+
+/* 光：暗背景上一块柔和的主光 + 暗角 */
+function light(x,y,r,a,warm=0){g.save();g.setTransform(1,0,0,1,0,0);const gr=g.createRadialGradient(x,y,0,x,y,r);gr.addColorStop(0,`rgba(${255},${255-warm*12},${255-warm*30},${a})`);gr.addColorStop(1,"rgba(255,255,255,0)");g.fillStyle=gr;g.fillRect(0,0,1080,1920);g.restore()}
+function finish(fi,vig=.75){g.save();g.setTransform(1,0,0,1,0,0);const v=g.createRadialGradient(540,900,500,540,960,1300);v.addColorStop(0,"rgba(0,0,0,0)");v.addColorStop(1,`rgba(0,0,0,${vig})`);g.fillStyle=v;g.fillRect(0,0,1080,1920);
+  g.globalAlpha=.055;g.globalCompositeOperation="overlay";g.drawImage(grain[fi%4],0,0,1080,1920);g.restore()}
+
+/* ---------- 场景 ---------- */
+const DUR={thread:3.5,statement:2.5,stitch:5,montage:3,stat:2.5,family:3,end:3.5};
+const scenes=[{type:"thread"}].concat(S.scenes||[]);if(!scenes.some(s=>s.type==="end"))scenes.push({type:"end"});
+let acc=0;scenes.forEach(s=>{s.t0=acc;s.d=s.duration||(s.type==="montage"?Math.max(2,(s.items||[]).length*.75):DUR[s.type]||2.5);acc+=s.d});window.TOTAL=acc;
+const root=$("root");
+const lines=(arr,hl)=>arr.map((l,i)=>`<span class="ln"><span class="${i>0&&!hl?"":""}">${esc(l).replace(/\{(.+?)\}/g,'<em class="hl" style="font-style:normal">$1</em>')}</span></span>`).join("");
+scenes.forEach(s=>{const e=document.createElement("div");e.className="sc";s.el=e;root.appendChild(e);let h="";
+  if(s.type==="thread")h=`<div class="L lab" style="top:760px" id="t-lab">${esc(S.eyebrow||"")}</div><div class="L st" style="top:820px;font-size:150px;letter-spacing:-.045em"><span class="ln"><span>${esc(S.brand||"Shopwright")}</span></span></div>`;
+  if(s.type==="statement")h=`${s.label?`<div class="L lab" style="top:${s.top||640}px">${esc(s.label)}</div>`:""}<div class="L st" style="top:${(s.top||640)+60}px">${(s.lines||[]).map((l,i)=>`<span class="ln"><span class="${i>=(s.bright??99)?"dim":""}">${esc(l).replace(/\{(.+?)\}/g,'<em style="font-style:normal" class="hl">$1</em>')}</span></span>`).join("")}</div>${s.who?`<div class="L who" style="top:${(s.top||640)+80+(s.lines||[]).length*130}px">— ${esc(s.who)}${s.sample?'<span class="chip">示例</span>':""}</div>`:""}`;
+  if(s.type==="stitch")h=`<div class="L st" style="top:180px;font-size:96px"><span class="ln"><span>${esc(s.title||"")}</span></span></div><div class="L lab" style="top:310px">${esc(s.caption||"")}</div>`;
+  if(s.type==="montage")h=`<div class="L st" style="top:250px;font-size:96px">${(s.lines||[]).map((l,i)=>`<span class="ln"><span class="${i>0?"dim":""}">${esc(l)}</span></span>`).join("")}</div><div class="cap" style="position:absolute;left:0;right:0;top:1560px" id="m-cap"></div>`;
+  if(s.type==="stat")h=`<div class="L lab" style="top:560px">${esc(s.label||"")}</div><div class="L" style="top:600px;display:flex;align-items:flex-end;gap:30px"><span class="ln" style="overflow:hidden;display:block"><span class="big" style="display:inline-block;font-size:560px">${esc(s.value)}</span></span><span class="ln" style="overflow:hidden;display:block;padding-bottom:70px"><span class="st" style="display:inline-block;font-size:96px;line-height:1.1">${esc(s.unit||"")}</span></span></div><div class="L st" style="top:1150px;font-size:72px"><span class="ln"><span class="dim">${esc(s.note||"")}</span></span></div>${s.sample?'<div class="L" style="top:1260px"><span class="chip" style="margin:0">示例 · 待核对</span></div>':""}`;
+  if(s.type==="family")h=`<div class="L st" style="top:220px;font-size:96px">${(s.lines||[]).map((l,i)=>`<span class="ln"><span class="${i>0?"dim":""}">${esc(l)}</span></span>`).join("")}</div>`+(s.items||[]).map((it,i)=>`<div class="cap fcap" style="position:absolute;width:540px;left:${(i%2)*540}px;top:${i<2?1010:1480}px">${esc(it.label||"")}</div>`).join("");
+  if(s.type==="end")h=`<div class="L lab" style="top:780px">${esc(S.brand||"Shopwright")}</div><div class="L st" style="top:830px;font-size:100px;font-family:var(--sans);letter-spacing:-.03em"><span class="ln"><span>${esc(s.cta||S.cta||"")}</span></span></div><div class="L st" style="top:1060px;font-size:44px;letter-spacing:0"><span class="ln"><span class="dim">${esc(s.sub||S.sub||"")}</span></span></div>`;
+  e.innerHTML=h});
+document.querySelectorAll(".hl").forEach(x=>x.style.color="inherit");
+
+// 行遮罩升起
+const riseLines=(e,lt,start,gap=.12,dur=.7,sel=".ln>span")=>[...e.querySelectorAll(sel)].forEach((x,i)=>{const p=out5((lt-start-i*gap)/dur);x.style.transform=`translateY(${(1-p)*105}%)`});
+const exitP=(s,lt,d=.3)=>in3((lt-(s.d-d))/d);
+// 某个 DOM 元素在屏幕上的下边框（下划线跟着字走）
+const under=el=>{const r=el.getBoundingClientRect();return[r.left,r.right,r.bottom]};
 
 window.render=function(t){
-  t=Math.min(t,acc-1e-3);
-  const L={spot:0,glow:0,cy:700,r:700,flash:0};
-  scenes.forEach((s,idx)=>{
-    const lt=t-s.t0,on=lt>=0&&lt<s.d;s.el.style.display=on?"block":"none";if(!on)return;
-    const e=s.el,x=exitT(s,lt);
-    if(s.type==="intro"){
-      const fw=io(lt/.6);const fl=e.querySelector(".flare");fl.style.transform=`scaleX(${fw})`;fl.style.opacity=1-cl((lt-1.0)/.4);
-      rise(e,".brand .ch",lt,.45,.05,.7);
-      const b=e.querySelector(".brand");b.style.letterSpacing=`${lerp(.03,-.045,out(lt/1.6))}em`;
-      const z=in3((lt-2.2)/.6);b.style.transform=`scale(${1+5*z})`;b.style.opacity=1-cl((lt-2.45)/.3);b.style.filter=`blur(${z*10}px)`;
-      const ey=e.querySelector(".eye");ey.style.opacity=out((lt-1.1)/.5)*(1-cl((lt-2.1)/.2));ey.style.letterSpacing=`${lerp(.6,.34,out((lt-1.1)/.8))}em`;
-      L.spot=out((lt-.9)/1.2);L.glow=.5*bell(lt/2.2);L.cy=880;L.r=800;L.flash=.85*bell((lt-2.5)/.4);
+  t=Math.min(t,acc-1e-4);const fi=Math.floor(t*30);
+  g.setTransform(1,0,0,1,0,0);g.globalAlpha=1;g.filter="none";g.fillStyle="#000";g.fillRect(0,0,1080,1920);
+  let vig=.75;
+  scenes.forEach(s=>{
+    const lt=t-s.t0,on=lt>=0&&lt<s.d;s.el.style.display=on?"block":"none";if(!on)return;const e=s.el,x=exitP(s,lt);
+    e.style.opacity=1-x;
+    if(s.type==="thread"){
+      light(540,980,900,.06*out(lt/1.5));
+      // 一针一针从左边走进来，划出一道弧，停在字标下面
+      const pts=curve(q=>[lerp(-60,990,q),1080+Math.sin(q*Math.PI*1.15+.4)*-110+q*40]);
+      runStitch(pts,io((lt-.1)/2.0),{t,glow:1});
+      riseLines(e,lt,1.25,.1,.8);
+      const lab=e.querySelector(".lab");lab.style.opacity=out((lt-1.7)/.5);
+      g.save();g.setTransform(1,0,0,1,0,0);g.globalAlpha=in3((lt-3.0)/.5);g.fillStyle="#000";g.fillRect(0,0,1080,1920);g.restore();
     }
-    if(s.type==="product"||(s.type==="onemore"&&s.image&&lt>1.4)){
-      const local=s.type==="product"?lt:lt-1.4;
-      const w=e.querySelector(".prod .wrap"),p=out5(local/1.2);
-      w.style.transform=`translateY(${(1-p)*-180-x*120+10*Math.sin(local*1.6)}px) rotateY(${(1-p)*-35+7*Math.sin(local*.9)}deg) rotateX(${(1-p)*12}deg) scale(${lerp(1.3,1,p)*(1+.03*local)})`;
-      w.style.filter=`blur(${(1-p)*18+x*14}px)`;w.style.opacity=cl(local/.25)*(1-x);
-      const st=e.querySelector(".stitch"),st2=e.querySelector(".stitch2");
-      if(st){const d=out((local-.9)/1.3);st.style.strokeDasharray=2400;st.style.strokeDashoffset=2400*(1-d);st.style.fillOpacity=cl((local-1.9)/.4);st2.style.opacity=cl((local-1.9)/.4);
-        st.style.filter=`drop-shadow(0 0 ${6+14*bell((local-1.8)/.8)}px rgba(200,255,0,.8))`}
+    if(s.type==="statement"){
+      light(300,900,1000,.05);
+      riseLines(e,lt,.05,.14,.7);
+      const hl=e.querySelector(".hl");if(hl){const[a,b,y]=under(hl);runStitch(curve(q=>[lerp(a-6,b+6,q),y+6+Math.sin(q*9)*2],30),io((lt-.65)/.7),{w:6,dash:20,gap:10,t})}
+      const w=e.querySelector(".who");if(w)w.style.opacity=out((lt-.8)/.5);
+      const lb=e.querySelector(".lab");if(lb)lb.style.opacity=out(lt/.4);
     }
-    if(s.type==="product"){
-      rise(e,".ttl .ch",lt,.55,.06,.7);
-      e.querySelector(".ttl").style.opacity=1-x;e.querySelector(".ttl").style.transform=`translateY(${-x*60}px)`;
-      const ey=e.querySelector(".eye");ey.style.opacity=out((lt-.4)/.4)*(1-x);
-      const sb=e.querySelector(".sub");sb.style.opacity=out((lt-1.2)/.5)*(1-x);sb.style.transform=`translateY(${(1-out((lt-1.2)/.5))*30}px)`;
-      L.spot=1;L.glow=out(lt/1)*(1-.5*x);L.cy=620;L.r=820;L.flash=.5*bell((lt-s.d+.15)/.3);
+    if(s.type==="stitch"){
+      // 微距（镜头 3.2 倍对着胸口）→ 绣完 → 拉远看到整件
+      const H=s.height||1120,cx=540,cy=930,at=s.at||[.5,.4],nw=s.width||.42;
+      const im=img(s.image);const ar=im.naturalWidth?im.naturalWidth/im.naturalHeight:1,W0=H*ar;
+      const sx=cx-W0/2+at[0]*W0,sy=cy-H/2+at[1]*H;
+      const pull=io5((lt-2.7)/1.6),sp=out((lt-.35)/2.3),nW=nw*W0;
+      const fx=sx+lerp(-.32,.32,io(cl((lt-.2)/2.6)))*nW;
+      const cam={x:lerp(fx,cx,pull),y:lerp(sy,cy,pull),s:lerp(3.1,1,pull)*(1+.012*lt)};
+      light(lerp(380,540,pull),lerp(700,760,pull),lerp(1300,950,pull),.10+.04*pull);
+      const box=product(s.image,cx,cy,H,{cam,blur:lerp(2.5,0,pull)+in3(1-lt/.5)*20,bright:lerp(.92,1,pull)*cl(lt/.5)});
+      fabric(box,cam,(1-pull)*.9);
+      satin(s.name,sx,sy,nW,sp,cam,t,true);
+      riseLines(e,lt,3.7,.1,.7);e.querySelector(".lab").style.opacity=out((lt-3.95)/.5);
+      vig=lerp(.9,.7,pull);
     }
-    if(s.type==="lineup"){
-      const items=[...e.querySelectorAll(".it")],n=items.length||1,R=320,p=out5(lt/1.1);
-      const rot=lerp(-140,0,p)+(-42*lt);
-      items.forEach((it,i)=>{const a=(i/n*360+rot)*Math.PI/180,z=Math.cos(a),xx=Math.sin(a)*R*1.15;
-        const sc=lerp(.55,1.05,(z+1)/2)*lerp(.6,1,p);
-        it.style.transform=`translate(${xx}px,${(1-z)*-40}px) scale(${sc})`;it.style.zIndex=Math.round(z*100+100);
-        it.style.opacity=(lerp(.25,1,(z+1)/2))*cl(lt/.3)*(1-x);it.style.filter=`brightness(${lerp(.35,1,(z+1)/2)}) blur(${(1-(z+1)/2)*3}px)`;
-        it.querySelector(".lbl").style.opacity=cl((z-.85)/.15)});
-      rise(e,".ttl .ch",lt,.6,.05,.7);e.querySelector(".ttl").style.opacity=1-x;
-      const sb=e.querySelector(".sub");sb.style.opacity=out((lt-1.2)/.5)*(1-x);
-      e.querySelector(".floor").style.opacity=cl(lt/.6)*(1-x);
-      L.spot=1;L.glow=.8*out(lt/.8);L.cy=700;L.r=760;L.flash=.4*bell((lt-s.d+.15)/.3);
+    if(s.type==="montage"){
+      // 每件产品一拍半，甩镜切换（拖影）
+      const items=s.items||[],per=s.d/items.length,k=Math.min(items.length-1,Math.floor(lt/per)),lk=lt-k*per;
+      light(540,1000,900,.12);
+      const drawItem=(it,dx,a)=>{const H=it.height||900,cam={x:540-dx,y:980,s:1};const im=img(it.image),ar=im.naturalWidth?im.naturalWidth/im.naturalHeight:1,W0=H*ar;
+        product(it.image,540,980,H,{cam,alpha:a});const at=it.at||[.5,.4];satin(it.name,540-W0/2+at[0]*W0,980-H/2+at[1]*H,(it.width||.4)*W0,cl(lk/.35+(dx!==0?1:0)),cam,t,false)};
+      const sw=out5(lk/.28),dir=1;
+      if(k>0&&lk<.28){for(let j=0;j<4;j++){const off=(1-sw)*1200*dir+j*34*(1-sw);g.globalAlpha=1;drawItem(items[k],off,(1-j*.22)*(j?0.35:1))}
+        drawItem(items[k-1],-sw*1200,1-sw)}else drawItem(items[k],0,1);
+      g.globalAlpha=1;riseLines(e,lt,.0,.12,.7);
+      const cap=e.querySelector("#m-cap");cap.textContent=items[k]?.label||"";cap.style.opacity=out((lk-.15)/.3);
     }
     if(s.type==="stat"){
-      const v=Number(s.value)||0,dec=String(s.value).includes(".")?String(s.value).split(".")[1].length:0,p=out5((lt-.05)/1.1);
-      const txt=(v*p).toFixed(dec);e.querySelector(".v").textContent=txt;e.querySelector(".gv").textContent=v.toFixed(dec);
-      const n=e.querySelector(".num");n.style.display="inline-block";n.style.transform=`scale(${lerp(1.35,1,p)*(1+.02*lt)}) translateY(${-x*80}px)`;n.style.filter=`blur(${(1-p)*16+x*16}px)`;n.style.opacity=cl(lt/.15)*(1-x);
-      const gh=e.querySelector(".ghost"),gp=out((lt-.9)/.9);gh.style.transform=`scale(${1+.45*gp})`;gh.style.opacity=(1-gp)*cl((lt-.9)/.05);
-      rise(e,".unit .ch",lt,.55,.05,.55);
-      [".lab",".note",".unit"].forEach((q,i)=>{const o=e.querySelector(q);o.style.opacity=(q===".unit"?1:out((lt-.8-i*.12)/.45))*(1-x)});
-      e.querySelector(".eye").style.opacity=out(lt/.4)*(1-x);
-      L.spot=1;L.glow=.9*out(lt/.6);L.cy=700;L.r=700;L.flash=.35*bell((lt-s.d+.12)/.25);
+      light(330,860,900,.06);
+      riseLines(e,lt,.05,.08,.75);
+      e.querySelector(".lab").style.opacity=out(lt/.4);
+      const big=e.querySelector(".big");if(big){const[a,b,y]=under(big);runStitch(curve(q=>[lerp(a+8,980,q),y-50+Math.sin(q*6)*3],40),io((lt-.5)/.9),{t})}
     }
-    if(s.type==="quote"){
-      const bq=e.querySelector(".bigq");bq.style.transform=`scale(${lerp(1.3,1,out5(lt/1.2))}) translateY(${-lt*20}px)`;bq.style.opacity=cl(lt/.4)*(1-x);
-      const q=e.querySelector(".qt"),p=out5((lt-.2)/.9);q.style.opacity=p*(1-x);q.style.transform=`translateY(${(1-p)*80-x*60}px)`;q.style.filter=`blur(${(1-p)*12+x*10}px)`;
-      e.querySelector(".qw").style.opacity=out((lt-1.0)/.5)*(1-x);
-      L.spot=.8;L.glow=.4;L.cy=900;L.r=800;
-    }
-    if(s.type==="onemore"){
-      const om=e.querySelector(".om");om.style.opacity=cl((lt-.25)/.4)*(1-cl((lt-1.15)/.25));om.style.filter=`blur(${(1-out((lt-.25)/.6))*10}px)`;om.style.letterSpacing=`${lerp(.1,-.01,out(lt/1.3))}em`;
-      const two=e.querySelector(".two");two.style.opacity=lt>1.35?1-x:0;
-      const bu=e.querySelector(".burst"),rp=out((lt-1.3)/.9),d=40+1900*rp;bu.style.width=bu.style.height=d+"px";bu.style.opacity=(1-rp)*cl((lt-1.3)/.05);
-      [...two.querySelectorAll(".ttl .ch")].forEach((c,j)=>{const p=back((lt-1.45-j*.07)/.55,1.3);c.style.transform=`scale(${lerp(2.4,1,p)})`;c.style.opacity=cl(p*1.5)});
-      two.querySelector(".eye").style.opacity=out((lt-1.45)/.4);two.querySelector(".sub").style.opacity=out((lt-2.1)/.4);
-      L.spot=.25+.75*cl((lt-1.35)/.3);L.glow=1.2*bell((lt-1.25)/.7)+.6*cl((lt-1.6)/.4);L.cy=s.image?620:820;L.r=820;L.flash=.7*bell((lt-1.28)/.25);
+    if(s.type==="family"){
+      const items=s.items||[];light(540,1100,1000,.10);
+      const zoom=1+.03*lt;
+      items.forEach((it,i)=>{const col=i%2,row=Math.floor(i/2),cx=270+col*540,cy=row?1270:800,H=it.height||360;
+        const p=out5((lt-.15-i*.12)/.7),cam={x:540,y:960,s:zoom};
+        const im=img(it.image),ar=im.naturalWidth?im.naturalWidth/im.naturalHeight:1,W0=H*ar;
+        product(it.image,cx,cy+(1-p)*120,H,{cam,alpha:p,reflect:false});
+        const at=it.at||[.5,.4];satin(it.name,cx-W0/2+at[0]*W0,cy+(1-p)*120-H/2+at[1]*H,(it.width||.4)*W0,p,cam,t,false)});
+      riseLines(e,lt,.0,.12,.7);[...e.querySelectorAll(".fcap")].forEach((c,i)=>c.style.opacity=out((lt-.6-i*.12)/.4));
     }
     if(s.type==="end"){
-      [...e.querySelectorAll(".row img")].forEach((im,i)=>{const p=out5((lt-.05-i*.09)/.8);im.style.transform=`translateY(${(1-p)*140}px) scale(${lerp(.7,1,p)})`;im.style.opacity=cl(p*1.4)});
-      rise(e,".brand .ch",lt,.3,.04,.6);
-      const pl=e.querySelector(".pill"),pp=back((lt-.75)/.6);pl.style.transform=`scale(${.5+.5*pp})`;pl.style.opacity=cl((lt-.75)/.2);
-      e.querySelector(".sub").style.opacity=out((lt-1.1)/.4);
-      L.spot=1;L.glow=.8*out(lt/.6);L.cy=700;L.r=900;
+      light(400,920,900,.05);
+      riseLines(e,lt,.05,.15,.8);e.querySelector(".lab").style.opacity=out((lt-.1)/.5);
+      const u=e.querySelector(".st span span");const[a,b,y]=under(u);
+      runStitch(curve(q=>[lerp(a-4,b+4,q),y+14],40),io((lt-.7)/1.1),{t});
+      if(lt>1.85){const kp=out((lt-1.85)/.3);g.save();g.setTransform(1,0,0,1,0,0);g.fillStyle=LIME;g.shadowColor=LIME;g.shadowBlur=20*kp;g.beginPath();g.arc(b+18,y+14,7*kp,0,6.28);g.fill();g.restore()}
     }
   });
-  stage(t,L);
+  finish(fi,vig);
 };
 render(0);
 </script></body></html>

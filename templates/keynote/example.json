@@ -1,20 +1,24 @@
 {
   "brand": "Shopwright",
   "eyebrow": "2026 · 秋季发布",
-  "watermark": "效果预览 · 原话为示例",
+  "watermark": "效果预览",
   "scenes": [
-    {"type": "product", "image": "assets/hoodie-front.webp", "stitch": "Emma", "stitchAt": [50, 40], "stitchSize": 130,
-     "eyebrow": "NEW · 定制刺绣", "title": "绣上名字", "sub": "衣服、帽子、毛毯，一件起做"},
-    {"type": "lineup", "items": [
-      {"image": "assets/hoodie-front.webp", "label": "HOODIE"},
-      {"image": "assets/cap-front.webp", "label": "CAP"},
-      {"image": "assets/tee-front.webp", "label": "TEE"},
-      {"image": "assets/blanket.webp", "label": "BLANKET"},
-      {"image": "assets/sweatshirt-front.webp", "label": "CREW"}
-    ], "title": "白坯任选", "sub": "传你的图案，我们来绣"},
-    {"type": "stat", "eyebrow": "一件代发", "value": 3, "unit": "天发货", "label": "出单到发货", "note": "工作日 · 河北邯郸自有作坊"},
-    {"type": "quote", "text": "拿到素材包当天就[[上了 10 个 listing]]", "who": "客户 A", "meta": "素材包客户", "sample": true},
-    {"type": "onemore", "eyebrow": "同时上线", "title": "数码印花", "sub": "窗帘、抱枕、桌布，按平方米下单"},
-    {"type": "end", "images": ["assets/cap-front.webp", "assets/hoodie-front.webp", "assets/tee-front.webp"], "cta": "openaigrowth.com", "sub": "素材包 · 一件代发 · 定制刺绣与印花"}
+    {"type": "statement", "lines": ["一件空白的衣服，", "怎么变成", "{只属于一个人}的？"], "bright": 1},
+    {"type": "stitch", "image": "assets/hoodie-front.webp", "name": "Emma", "at": [0.5, 0.385], "width": 0.40,
+     "title": "绣上名字。", "caption": "定制刺绣 · 一件起做"},
+    {"type": "montage", "lines": ["你的图案。", "他们的名字。"], "items": [
+      {"image": "assets/cap-front.webp", "name": "Leo", "at": [0.5, 0.36], "width": 0.30, "height": 620, "label": "CAP"},
+      {"image": "assets/tee-front.webp", "name": "Mia", "at": [0.5, 0.33], "width": 0.30, "label": "TEE"},
+      {"image": "assets/sweatshirt-front.webp", "name": "Noah", "at": [0.5, 0.36], "width": 0.34, "label": "CREW"},
+      {"image": "assets/blanket.webp", "name": "Ava", "at": [0.5, 0.52], "width": 0.40, "label": "BLANKET"}
+    ]},
+    {"type": "stat", "label": "一件代发", "value": "3", "unit": "个工作日", "note": "出单到发货，河北邯郸自有作坊。"},
+    {"type": "family", "lines": ["一件起做。", "做完直接发给买家。"], "items": [
+      {"image": "assets/hoodie-front.webp", "name": "Emma", "at": [0.5, 0.385], "width": 0.4, "label": "HOODIE"},
+      {"image": "assets/cap-front.webp", "name": "Leo", "at": [0.5, 0.36], "width": 0.3, "height": 300, "label": "CAP"},
+      {"image": "assets/tee-front.webp", "name": "Mia", "at": [0.5, 0.33], "width": 0.3, "label": "TEE"},
+      {"image": "assets/blanket.webp", "name": "Ava", "at": [0.5, 0.52], "width": 0.4, "label": "BLANKET"}
+    ]},
+    {"type": "end", "cta": "openaigrowth.com", "sub": "定制刺绣 · 数码印花 · 一件代发"}
   ]
 }

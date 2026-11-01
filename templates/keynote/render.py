@@ -32,7 +32,43 @@ def load(spec_path: str) -> dict:
                 it["image"] = fix(it["image"])
         if s.get("images"):
             s["images"] = [fix(x) for x in s["images"]]
+    spec["glyphs"] = glyphs(spec)
     return spec
+
+
+def glyphs(spec: dict) -> dict:
+    """把要绣的名字转成草书字形轮廓（SVG path，字号 100，基线 y=0），网页里拿它做缎面绣。"""
+    from fontTools.pens.boundsPen import BoundsPen
+    from fontTools.pens.svgPathPen import SVGPathPen
+    from fontTools.pens.transformPen import TransformPen
+    from fontTools.ttLib import TTFont
+
+    names = set()
+    for s in spec.get("scenes", []):
+        if s.get("name"):
+            names.add(s["name"])
+        for it in s.get("items", []):
+            if it.get("name"):
+                names.add(it["name"])
+    if not names:
+        return {}
+    font = TTFont(str(HERE / "assets" / "Pacifico-Regular.ttf"))
+    gs, cmap = font.getGlyphSet(), font.getBestCmap()
+    k = 100 / font["head"].unitsPerEm
+    res = {}
+    for name in names:
+        pen, bp, x = SVGPathPen(gs), BoundsPen(gs), 0.0
+        for ch in name:
+            gn = cmap.get(ord(ch))
+            if not gn:
+                continue
+            m = (k, 0, 0, -k, x, 0)
+            gs[gn].draw(TransformPen(pen, m))
+            gs[gn].draw(TransformPen(bp, m))
+            x += gs[gn].width * k
+        x0, y0, x1, y1 = bp.bounds
+        res[name] = {"d": pen.getCommands(), "w": x1, "top": y0, "bottom": y1}
+    return res
 
 
 def open_page(p, spec: dict):
@@ -45,6 +81,7 @@ def open_page(p, spec: dict):
     pg.wait_for_function("typeof window.render === 'function'")
     pg.evaluate("document.fonts.ready")
     pg.wait_for_load_state("load")
+    pg.wait_for_function("Object.values(window.__imgs || {}).every(i => i.complete)")
     pg.wait_for_timeout(300)
     return b, pg
 
