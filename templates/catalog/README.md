@@ -7,7 +7,7 @@ gallery.html 是所有模板的静态样式（?tpl=<代号>&s=hook|card，背景
 |---|---|---|---|
 | 1 | 立体大字（背后抠像大字） | — | assets/promo23/overlay_tpl.html（behind + front 两层） |
 | 2 | 纪录片 | d | templates/docu/docu_tpl.html（05 车上道歉在用） |
-| 3 | 资讯快报 | n | 仅静态样式 |
+| 3 | 资讯快报 | n | templates/news/news_tpl.html（cfg.js 配内容，render.mjs 逐帧出图；06 AI 产品图在用） |
 | 4 | 极简杂志 | m | 仅静态样式 |
 | 5 | 知识黑框（三段式） | k | 仅静态样式 |
 | 6 | 逐字大字幕 | h | 仅静态样式 |
