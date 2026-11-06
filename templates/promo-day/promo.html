@@ -1,0 +1,86 @@
+<!doctype html>
+<html><head><meta charset="utf-8">
+<!-- 51 号「白昼极简」· 网站功能宣传版（每日 09:23 那条线用）
+     开头实拍素材铺满全屏（钩子大字压在素材上）→ 每条干货：上方标题换句，网站录屏放在中间的圆角视频框里（框不动、录屏在里面滚）→ 结尾卡：网址 + 评论区关键词。
+     每期只写配置文件（promo.cfg.js 那样），用 ?cfg=xxx.js 指定；?hole=1 渲染透明层，挖空的地方由剪辑服务器叠素材/录屏。 -->
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:1080px;height:1920px;overflow:hidden;background:#F5F5F7}
+body{font-family:'Inter Display','Inter','Noto Sans CJK SC',sans-serif;color:#1d1d1f;font-weight:700}
+.abs{position:absolute}.zh{font-family:'Noto Sans CJK SC'}.c{display:inline-block}
+.blue{color:#0071E3}.gray{color:#6e6e73;font-weight:500;font-family:'Noto Sans CJK SC'}
+#bg{position:absolute;inset:0;background:radial-gradient(ellipse 100% 60% at 50% 30%,#ffffff 0%,#F5F5F7 60%,#ececf0 100%);z-index:0}
+.bok{position:absolute;border-radius:50%;z-index:30;pointer-events:none}
+#shade{position:absolute;inset:0;z-index:3;background:linear-gradient(180deg,rgba(0,0,0,.35) 0%,rgba(0,0,0,0) 28%,rgba(0,0,0,0) 45%,rgba(0,0,0,.55) 100%)}
+#win-sh{position:absolute;z-index:1;border-radius:46px;box-shadow:0 50px 110px rgba(0,0,0,.20),0 8px 24px rgba(0,0,0,.08)}
+#win-bd{position:absolute;z-index:6;border-radius:46px;border:1.5px solid rgba(0,0,0,.08)}
+#brand{position:absolute;right:70px;top:150px;z-index:20;text-align:right;line-height:1.1;font-size:30px}
+#brand .u{display:block;font-family:'Inter';font-size:21px;font-weight:500;letter-spacing:1.5px;opacity:.65;margin-top:6px}
+#sub{position:absolute;left:0;top:1430px;width:1080px;height:100px;display:flex;align-items:center;justify-content:center;z-index:45}
+#sub span{font-family:'Noto Sans CJK SC';font-size:50px;font-weight:600;color:#1d1d1f;letter-spacing:1px;text-shadow:0 0 18px rgba(245,245,247,.95),0 0 4px rgba(245,245,247,.9);white-space:nowrap;display:inline-block}
+body.dark #sub span{color:#fff;text-shadow:0 2px 16px rgba(0,0,0,.9),0 0 4px rgba(0,0,0,.8)}
+body.dark #brand{color:#fff}
+#dip{position:absolute;inset:0;background:#F5F5F7;z-index:50;opacity:0}
+.kw{display:inline-block;background:#0071E3;color:#fff;border-radius:22px;padding:4px 26px 10px;margin:0 6px}
+</style></head>
+<body>
+<div id="bg" class="bgl"></div>
+<div id="win-sh"></div>
+<div id="shade"></div>
+<div id="hook" class="abs" style="inset:0;z-index:8">
+  <div class="abs zh" id="h-eye" style="left:84px;top:1000px;font-size:34px;font-weight:600;color:#fff;letter-spacing:2px;text-shadow:0 2px 12px rgba(0,0,0,.6)"></div>
+  <div class="abs zh" id="h-t" style="left:80px;top:1060px;font-size:104px;line-height:1.16;letter-spacing:-3px;color:#fff;text-shadow:0 6px 40px rgba(0,0,0,.45)"></div>
+</div>
+<div id="seg" class="abs" style="inset:0;z-index:8">
+  <div class="abs zh blue" id="s-eye" style="left:80px;top:290px;font-size:34px;font-weight:600"></div>
+  <div class="abs zh" id="s-t" style="left:76px;top:340px;font-size:84px;letter-spacing:-2px;line-height:1.12;white-space:nowrap"></div>
+</div>
+<div id="win-bd"></div>
+<div id="end" class="abs" style="inset:0;z-index:8">
+  <div class="abs zh gray" id="e-l" style="left:0;width:1080px;text-align:center;top:560px;font-size:44px"></div>
+  <div class="abs" id="e-w" style="left:0;width:1080px;text-align:center;top:640px;font-size:104px;letter-spacing:-3px"></div>
+  <div class="abs zh" id="e-k" style="left:0;width:1080px;text-align:center;top:860px;font-size:60px;font-weight:900"></div>
+  <div class="abs zh gray" id="e-s" style="left:0;width:1080px;text-align:center;top:990px;font-size:40px"></div>
+</div>
+<div id="brand"><span id="b-n"></span><span class="u" id="b-u"></span></div>
+<div class="bok" id="k0"></div><div class="bok" id="k1"></div><div class="bok" id="k2"></div><div class="bok" id="k3"></div>
+<div id="sub"><span id="subt"></span></div>
+<div id="dip"></div>
+<script src="../cinema/core.js"></script>
+<script>
+// 圆角视频框：录屏（record_web mobile 1080×1920）按 700 宽缩放（700×1244）叠在 x190 y520，框只露出上面 860 高
+const WIN={x:190,y:520,w:700,h:860,r:46,recW:700,recH:1244};
+const BOK=[[420,'rgba(0,113,227,.10)',800,260,50,1.0],[300,'rgba(29,29,31,.05)',-80,1240,40,1.4],[520,'rgba(255,255,255,.55)',640,1500,60,.7],[200,'rgba(0,113,227,.08)',60,420,30,1.8]];
+function rise(el,lt,at){el.querySelectorAll('.c').forEach((c,i)=>{const k=E.oq(P(lt,at+i*.035,.7));c.style.opacity=E.oc(k);c.style.transform=`translateY(${L(40,0,k)}px)`;c.style.filter=k<1?`blur(${L(14,0,k).toFixed(1)}px)`:'none';});}
+function setText(el,html){if(el.dataset.v===html)return;el.dataset.v=html;el.innerHTML=html;splitChars(el);}
+function render(t){
+  const C=PROMO;BOK.forEach((b,i)=>{T('k'+i,{x:b[2]+60*Math.sin(t*.35*b[5]+i),y:b[3]-t*14*b[5]+40*Math.cos(t*.3+i),op:1});});
+  const inHook=t<C.hook.t1, inEnd=t>=C.end.t0;document.body.classList.toggle('dark',inHook);
+  $('hook').style.display=inHook?'block':'none';$('shade').style.display=inHook?'block':'none';$('end').style.display=inEnd?'block':'none';
+  // 开场：实拍全屏（整屏挖空），钩子大字逐字浮起
+  if(inHook){setHole([0,0,1080,1920,0]);setText($('h-eye'),C.hook.eye||'');setText($('h-t'),C.hook.text);rise($('h-eye'),t,.1);rise($('h-t'),t,.3);
+    const ko=E.io(P(t,C.hook.t1-.45,.45));T('h-t',{s:L(1,1.08,ko),op:1-ko,bl:L(0,16,ko)});}
+  // 干货段：圆角框里放录屏，框不动，上方标题换句
+  const sg=C.segs.find(s=>t>=s.t0&&t<s.t1)||(t>=C.hook.t1&&!inEnd?C.segs[C.segs.length-1]:null);
+  $('seg').style.display=sg&&!inEnd?'block':'none';
+  const wOn=!inHook&&!inEnd;const kw=E.oq(P(t,C.hook.t1,.9));const s=L(.9,1,kw),w=WIN.w*s,h=WIN.h*s,x=WIN.x+(WIN.w-w)/2,y=WIN.y+(WIN.h-h)/2+L(80,0,kw),r=L(90,WIN.r,kw);
+  ['win-sh','win-bd'].forEach(id=>{const e=$(id);e.style.display=wOn?'block':'none';e.style.left=x+'px';e.style.top=y+'px';e.style.width=w+'px';e.style.height=h+'px';e.style.borderRadius=r+'px';});
+  if(wOn)setHole([x,y,w,h,r]);
+  if(sg&&!inEnd){setText($('s-eye'),sg.eye||'');setText($('s-t'),sg.title);const lt=t-sg.t0;rise($('s-eye'),lt,.05);rise($('s-t'),lt,.15);
+    const kk=P(lt,0,.5);$('s-t').style.transform=`translateX(${L(30,0,E.oq(kk))}px)`;}
+  if(inEnd){setHole(null);const lt=t-C.end.t0;setText($('e-l'),C.end.lead||'');setText($('e-w'),C.url);
+    $('e-k').innerHTML=`评论区打<span class="kw">${C.end.kw}</span>两个字`;$('e-s').textContent=C.end.sub||'我发给你';
+    rise($('e-l'),lt,.1);rise($('e-w'),lt,.3);fadeIn('e-k',lt,.9,.6,20,10);fadeIn('e-s',lt,1.3,.6,14,8);}
+  $('b-n').textContent=C.brand;$('b-u').textContent=C.url;
+  const c=CH.find(c=>t>=c[0]&&t<c[1]);const sp=$('subt');sp.textContent=c?c[2]:'';
+  if(c){const k=P(t,c[0],.2);sp.style.opacity=E.oc(k);const ww=sp.scrollWidth;sp.style.transform=`scale(${Math.min(1,960/ww)})`;}
+  // 开场→干货、干货→结尾：浅色闪一下
+  let d=0;[C.hook.t1,C.end.t0].forEach(b=>{d=Math.max(d,1-Math.abs(t-b)/.25);});$('dip').style.opacity=E.is(cl(d))*.9;
+}
+const q=new URLSearchParams(location.search);const sc=document.createElement('script');sc.src=q.get('cfg')||'promo.cfg.js';
+sc.onload=()=>{window.TL={subs:PROMO.subs};buildSubs();window.DUR=PROMO.dur;
+  BOK.forEach((b,i)=>{const e=$('k'+i);e.style.width=e.style.height=b[0]+'px';e.style.background=b[1];e.style.filter=`blur(${b[4]}px)`;});
+  window.render=render;render(0);};
+document.head.appendChild(sc);
+</script>
+</body></html>

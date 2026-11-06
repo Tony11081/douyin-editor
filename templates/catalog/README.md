@@ -61,6 +61,7 @@ gallery.html 是所有模板的静态样式（?tpl=<代号>&s=hook|card，背景
 | 53 | 知识讲解 · 收据拆账 | ex-fee | templates/explainer/fees.html（收据打印 + 推近费用行 + 批注 + 盖章 + 警示胶带） |
 | 54 | 知识讲解 · 镂空大字横移 | ex-star | templates/explainer/star.html（大数字镂空透出实拍 + 指标横移长镜头 + 圆环计数 + 徽章） |
 | 55 | 知识讲解 · 手机实录 | ex-app | templates/explainer/ads.html（3D 手机界面示意 + 逐行圈重点 + 手指点开关 + 规则对比） |
+| 51b | 白昼极简 · 网站功能宣传版 | cd-promo | templates/promo-day/promo.html（每日 09:23 网站宣传用：实拍钩子 + 圆角框录屏 + 结尾网址和评论关键词；每期只写配置文件） |
 
 高端系列另用字体：Cormorant Garamond、Playfair Display、Cinzel、Bodoni Moda、Jost（同样来自 google/fonts ofl/）。
 
