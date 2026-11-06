@@ -109,6 +109,13 @@ claude.ai →「设置 → 连接器 → 添加自定义连接器」，名称填
 - 样式：`caption_style` 的 `sub_size_ratio`、`sub_color`、`sub_outline_color`、`sub_position`（below/above）、`sub_gap`、`sub_font`。
 - `validate_spec` 的结果里 `subs` 列出每条译文的时间，先预演再渲染。
 
+## 本机看图转发（给 rea-video 视频拆解用）
+
+服务启动时会在 `127.0.0.1:8791` 起一个 OpenAI 兼容的转发口（`app/vlm_relay.py`），把同机 rea-video 的看图请求转给 OpenRouter。
+- 只监听本机，Caddy/nginx 不代理，外网访问不到；OpenRouter 密钥只在本服务里，rea-video 的 `/opt/rea-video/.env` 只写占位密钥（由安装脚本生成，带 `# managed-by: douyin-editor` 标记，手写的配置不会被覆盖）。
+- 只放行 `.env` 里 `VLM_RELAY_MODELS` 列出的模型（默认 `google/gemini-3.1-flash-lite`），单次输出上限 `VLM_RELAY_MAX_TOKENS`（默认 8192）。
+- 每次调用的 token 和美元花费记在 `data/vlm_usage.jsonl`；本机 `curl 127.0.0.1:8791/usage` 看累计。
+
 ## 常用命令
 
 ```bash

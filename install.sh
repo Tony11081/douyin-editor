@@ -101,6 +101,28 @@ if [ -n "${OPENROUTER_API_KEY:-}" ]; then
 fi
 chmod 600 "$APP_DIR/.env"
 
+# 本机看图转发（给同机的 rea-video 视频拆解用，只监听 127.0.0.1，密钥不出本服务）
+grep -q '^VLM_RELAY_PORT=' "$APP_DIR/.env" || echo "VLM_RELAY_PORT=8791" >> "$APP_DIR/.env"
+grep -q '^VLM_RELAY_MODELS=' "$APP_DIR/.env" || \
+  echo "VLM_RELAY_MODELS=google/gemini-3.1-flash-lite" >> "$APP_DIR/.env"
+REA_DIR=/opt/rea-video
+if [ -d "$REA_DIR/rea_video" ]; then
+  RP=$(grep -m1 '^VLM_RELAY_PORT=' "$APP_DIR/.env" | cut -d= -f2)
+  RM=$(grep -m1 '^VLM_RELAY_MODELS=' "$APP_DIR/.env" | cut -d= -f2 | cut -d, -f1)
+  # 只覆盖我们自己写的配置（带标记），别人手写的 .env 不动；这里只有占位密钥，真密钥在 douyin-editor
+  if [ ! -f "$REA_DIR/.env" ] || grep -q '^# managed-by: douyin-editor' "$REA_DIR/.env"; then
+    cat > "$REA_DIR/.env" <<EOF
+# managed-by: douyin-editor（看图走本机转发，真密钥只在 douyin-editor 里，这里是占位）
+REA_VLM_BASE_URL=http://127.0.0.1:${RP:-8791}/v1
+REA_VLM_API_KEY=local-relay
+REA_VLM_MODEL=${RM:-google/gemini-3.1-flash-lite}
+REA_VLM_MEDIA=both
+EOF
+    chmod 600 "$REA_DIR/.env"
+    say "rea-video 已配置为通过本机转发看图（$RM）"
+  fi
+fi
+
 say "注册系统服务（开机自启）"
 cat > /etc/systemd/system/douyin-editor.service <<EOF
 [Unit]

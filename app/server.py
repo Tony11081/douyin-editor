@@ -606,4 +606,6 @@ app = mcp.streamable_http_app(streamable_http_path=f"/mcp/{TOKEN}", stateless_ht
 
 if __name__ == "__main__":
     print(f"MCP 地址: {PUBLIC_URL}/mcp/{TOKEN}")
+    import vlm_relay  # 给同机 rea-video 用的本机看图转发（只听 127.0.0.1）
+    vlm_relay.start()
     uvicorn.run(app, host="0.0.0.0", port=PORT, proxy_headers=True, forwarded_allow_ips="*")
