@@ -54,6 +54,9 @@ gallery.html 是所有模板的静态样式（?tpl=<代号>&s=hook|card，背景
 | 46 | 口碑墙 · 消息轰炸 | tw-c | templates/testimonial-wall/notify.html（独立动效片段，8.5 秒） |
 | 47 | 发布会「一根线」 | kn2 | templates/keynote/keynote.html（全片黑白灰只有一根青柠绣线：走针开场 / 大字 / 微距缎面绣名字 / 卡点换产品 / 数字 / 全家福 / 结尾，约 20–25 秒） |
 | 48 | 多彩动感（Etsy-Tony 日更） | cp | templates/color-pop/episode.html（每屏换色 + 贴纸拍上镜头震动 + 关键词逐字弹 + 手绘圈 + 五色条带转场，样片 27 秒） |
+| 49 | 发布会 · 深空光晕 | cg | templates/cinema/glow.html（黑底流动光晕 + 毛玻璃 + 逐字模糊显现，带实拍素材窗；叠素材流程见 cinema/README.md） |
+| 50 | 发布会 · 钛金影院 | ct | templates/cinema/titan.html（电影黑边 + 金属流光字 + 镜头光晕 + 3D 手机 + 宽银幕素材条） |
+| 51 | 发布会 · 白昼极简 | cd | templates/cinema/day.html（浅灰白 + 品牌蓝 + 前景虚化光斑 + 圆角视频框） |
 
 高端系列另用字体：Cormorant Garamond、Playfair Display、Cinzel、Bodoni Moda、Jost（同样来自 google/fonts ofl/）。
 

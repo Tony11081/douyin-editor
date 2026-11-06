@@ -1,0 +1,99 @@
+<!doctype html>
+<html><head><meta charset="utf-8">
+<!-- C · 白昼极简：苹果官网式浅灰白 + 唯一品牌蓝 + 前景虚化光斑（景深）+ 悬浮白卡 + 圆角视频框 -->
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:1080px;height:1920px;overflow:hidden;background:#F5F5F7}
+body{font-family:'Inter Display','Inter','Noto Sans CJK SC',sans-serif;color:#1d1d1f;font-weight:700}
+.abs{position:absolute}
+.scene{position:absolute;inset:0;display:none;z-index:2}
+.c{display:inline-block}
+.mask{display:block;overflow:hidden;padding-bottom:8px}
+.ln{display:block;white-space:nowrap}
+.blue{color:#0071E3}
+.gray{color:#6e6e73;font-weight:500;font-family:'Noto Sans CJK SC'}
+.zh{font-family:'Noto Sans CJK SC'}
+#bg{position:absolute;inset:0;background:radial-gradient(ellipse 100% 60% at 50% 30%,#ffffff 0%,#F5F5F7 60%,#ececf0 100%);z-index:0}
+.bok{position:absolute;border-radius:50%;z-index:30;pointer-events:none}
+.wcard{position:absolute;background:#fff;border-radius:36px;box-shadow:0 30px 80px rgba(0,0,0,.10),0 4px 14px rgba(0,0,0,.05)}
+.tc{font-size:34px;font-weight:600;color:#1d1d1f;line-height:1.25}
+.tc b{display:block;font-size:24px;color:#0071E3;font-weight:600;margin-bottom:10px;font-family:'Noto Sans CJK SC'}
+#sub{position:absolute;left:0;top:1420px;width:1080px;height:100px;display:flex;align-items:center;justify-content:center;z-index:45}
+#sub span{font-family:'Noto Sans CJK SC';font-size:48px;font-weight:500;color:#1d1d1f;letter-spacing:1px;text-shadow:0 0 18px rgba(245,245,247,.95),0 0 4px rgba(245,245,247,.9);white-space:nowrap;display:inline-block}
+#dip{position:absolute;inset:0;background:#F5F5F7;z-index:50;opacity:0}
+</style></head>
+<body>
+<div id="bg" class="bgl"></div>
+
+<div class="scene" id="open">
+  <div class="abs zh blue" id="o-eye" style="left:90px;top:500px;font-size:34px;font-weight:600"><span data-ep="eye"></span></div>
+  <div class="abs zh" id="o-t" style="left:84px;top:570px;font-size:118px;line-height:1.16;letter-spacing:-3px">
+    <span class="mask"><span class="ln">3个AI神器，</span></span><span class="mask"><span class="ln">小卖家都该有。</span></span></div>
+  <div class="abs" id="o-rule" style="left:90px;top:885px;width:120px;height:6px;border-radius:6px;background:#0071E3;transform-origin:0 50%"></div>
+  <div class="abs gray" id="o-p" style="left:90px;top:930px;font-size:46px;line-height:1.5">写标题、做主图、回客户，<br>每天省下一半时间。</div>
+</div>
+
+<div class="scene" id="foot">
+  <div class="abs zh blue" id="f-eye" style="left:80px;top:330px;font-size:34px;font-weight:600">01 · AI 写标题</div>
+  <div class="abs zh" id="f-h" style="left:76px;top:385px;font-size:92px;letter-spacing:-2px;line-height:1.15"><span class="mask"><span class="ln">从关键词，到好标题。</span></span></div>
+  <div class="abs" id="f-sh" style="left:80px;top:560px;width:920px;height:518px;border-radius:48px;box-shadow:0 50px 110px rgba(0,0,0,.18),0 8px 24px rgba(0,0,0,.08)"></div>
+  <div class="abs" id="f-play" style="left:840px;top:1000px;width:120px;height:52px;border-radius:30px;background:rgba(255,255,255,.75);font-size:24px;font-weight:600;display:flex;align-items:center;justify-content:center;gap:8px;z-index:6;font-family:'Inter'">❚❚ <span id="f-tm">0:00</span></div>
+  <div class="abs gray" id="f-cap" style="left:80px;top:1130px;font-size:44px">把重复的活，交给 AI。</div>
+</div>
+
+<div class="scene" id="feat">
+  <div class="abs zh blue" id="u-eye" style="left:80px;top:330px;font-size:34px;font-weight:600">只要 3 秒</div>
+  <div class="abs zh" id="u-h" style="left:76px;top:385px;font-size:92px;letter-spacing:-2px"><span class="mask"><span class="ln">三个版本，任你挑。</span></span></div>
+  <div class="wcard" id="u-c2" style="left:170px;top:1010px;width:740px;height:170px;padding:34px 44px"><div class="tc"><b>版本 03</b>Baby Name Sign, Gift for Mom</div></div>
+  <div class="wcard" id="u-c1" style="left:140px;top:860px;width:800px;height:170px;padding:34px 44px"><div class="tc"><b>版本 02</b>Custom Nursery Name Plaque</div></div>
+  <div class="wcard" id="u-c0" style="left:110px;top:710px;width:860px;height:170px;padding:34px 44px"><div class="tc"><b>版本 01</b>Personalized Wooden Name Sign</div></div>
+  <div class="wcard" id="u-in" style="left:110px;top:560px;width:860px;height:120px;display:flex;align-items:center;padding-left:44px;font-size:44px;font-weight:600;border:3px solid #0071E3"><span class="gray" style="font-size:30px;margin-right:24px">关键词</span><span id="u-typ"></span><span id="u-car" style="display:inline-block;width:3px;height:46px;background:#0071E3;margin-left:4px"></span></div>
+</div>
+
+<div class="scene" id="stat">
+  <div class="abs gray" id="s-l" style="left:0;width:1080px;text-align:center;top:520px;font-size:46px">从关键词到成稿</div>
+  <div class="abs" id="s-n" style="left:0;width:1080px;text-align:center;top:560px;font-size:640px;line-height:1.02;letter-spacing:-26px;font-weight:700"><span id="s-num">60</span><span class="zh" style="font-size:150px;letter-spacing:0;font-weight:700">秒</span></div>
+  <div class="abs" style="left:240px;top:1230px;width:600px;height:8px;border-radius:8px;background:#e3e3e8;overflow:hidden"><div id="s-bar" style="height:100%;width:0;background:#0071E3"></div></div>
+  <div class="abs gray" id="s-u" style="left:0;width:1080px;text-align:center;top:1270px;font-size:40px">三个版本，一次给齐。</div>
+</div>
+
+<div class="scene" id="end">
+  <div class="abs" id="e-w" style="left:0;width:1080px;text-align:center;top:740px;font-size:150px;letter-spacing:-5px" data-split><span data-ep="brand"></span></div>
+  <div class="abs gray" id="e-s" style="left:0;width:1080px;text-align:center;top:960px;font-size:46px">每天一个 AI 省时技巧</div>
+  <div class="abs zh" id="e-b" style="left:420px;top:1080px;width:240px;height:96px;border-radius:60px;background:#0071E3;color:#fff;font-size:42px;font-weight:600;display:flex;align-items:center;justify-content:center">关注</div>
+</div>
+
+<div class="bok" id="k0"></div><div class="bok" id="k1"></div><div class="bok" id="k2"></div><div class="bok" id="k3"></div>
+<div id="sub"><span id="subt"></span></div>
+<div id="dip"></div>
+
+<script src="core.js"></script>
+<script>
+window.EP=window.EP||{brand:'Etsy-Tony',eye:'Etsy-Tony · 每日 AI 技巧'};
+window.TL=window.TL||{scenes:[['open',0,3.6],['foot',3.6,7.8],['feat',7.8,11.6],['stat',11.6,13.8],['end',13.8,16.4]],
+  subs:[[0.3,3.3,['3个AI神器','帮小卖家省下一半时间']],[3.9,7.5,['每天上新','最费时间的就是写标题']],[8.1,11.3,['输入关键词','3秒给你3个版本']],
+        [11.9,13.6,['从关键词到成稿 只要3秒']],[14.1,16.2,['关注Etsy-Tony','每天一个AI省时技巧']]]};
+window.WIN={x:80,y:560,w:920,h:518,r:48};
+// 前景虚化光斑：[大小, 颜色, x, y, 模糊, 视差速度]
+const BOK=[[420,'rgba(0,113,227,.10)',780,260,50,1.0],[300,'rgba(29,29,31,.05)',-80,1240,40,1.4],[520,'rgba(255,255,255,.55)',640,1500,60,.7],[200,'rgba(0,113,227,.08)',60,420,30,1.8]];
+function rise(sel,lt,at){document.querySelectorAll(sel+' .ln').forEach((e,i)=>{const k=E.oq(P(lt,at+i*.12,1.0));e.style.transform=`translateY(${L(110,0,k)}%)`;});}
+const V={dipW:.3,
+ init(){BOK.forEach((b,i)=>{const e=$('k'+i);e.style.width=e.style.height=b[0]+'px';e.style.background=b[1];e.style.filter=`blur(${b[4]}px)`;});},
+ global(t){BOK.forEach((b,i)=>{T('k'+i,{x:b[2]+60*Math.sin(t*.35*b[5]+i),y:b[3]-t*14*b[5]+40*Math.cos(t*.3+i),op:1});});},
+ open(lt,t){fadeIn('o-eye',lt,.2,.8,14,8);rise('#o-t',lt,.45);T('o-t',{s:L(1.04,1,E.oq(P(lt,.4,3.2))),op:1});
+  $('o-rule').style.transform=`scaleX(${E.oq(P(lt,1.3,.8))})`;fadeIn('o-p',lt,1.5,.9,18,10);},
+ foot(lt,t){fadeIn('f-eye',lt,.15,.7,14,8);rise('#f-h',lt,.3);
+  const k=E.oq(P(lt,.5,1.2));const s=L(.88,1,k),w=WIN.w*s,h=WIN.h*s,x=WIN.x+(WIN.w-w)/2,y=WIN.y+(WIN.h-h)/2+L(60,0,k),r=L(90,WIN.r,k);
+  const op=P(lt,.5,.25);setHole(op>0?[x,y,w,h,r]:null);const sh=$('f-sh');sh.style.left=x+'px';sh.style.top=y+'px';sh.style.width=w+'px';sh.style.height=h+'px';sh.style.borderRadius=r+'px';sh.style.opacity=op;
+  fadeIn('f-play',lt,1.5,.5,8,6);const s2=Math.max(0,lt-1.5);$('f-tm').textContent='0:'+String(Math.floor(s2)).padStart(2,'0');fadeIn('f-cap',lt,1.8,.8,16,10);},
+ feat(lt,t){fadeIn('u-eye',lt,.15,.7,14,8);rise('#u-h',lt,.3);
+  const ki=E.oq(P(lt,.4,1.0));T('u-in',{y:L(120,0,ki)+5*Math.sin(t*1.2),op:E.oc(P(lt,.4,.5)),s:L(.96,1,ki)});
+  typing('u-typ','u-car',lt,1.2,1.1,'wooden name sign');
+  [0,1,2].forEach(i=>{const k=E.oq(P(lt,2.5+i*.2,.9));T('u-c'+i,{y:L(-150-i*150,0,k)+(4+i*3)*Math.sin(t*1.1+i),op:E.oc(P(lt,2.5+i*.2,.4)),s:L(.9,1,k)});});},
+ stat(lt,t){fadeIn('s-l',lt,.15,.6,10,8);const k=P(lt,.25,1.0);$('s-num').textContent=Math.max(3,Math.round(L(60,3,E.oq(k))));
+  T('s-n',{s:L(1.08,1,E.oq(k)),op:E.oc(P(lt,.25,.4)),bl:L(18,0,E.oc(P(lt,.25,.6)))});$('s-bar').style.width=L(0,100,E.io(P(lt,.3,1.0)))+'%';fadeIn('s-u',lt,1.1,.7,10,8);},
+ end(lt,t){chars('e-w',lt,.2,.05,.8,40,16);fadeIn('e-s',lt,1.0,.8,14,8);const kb=P(lt,1.4,.7);T('e-b',{s:L(.85,1,E.oq(kb)),op:E.oc(kb),y:L(20,0,E.oq(kb))});}
+};
+boot();
+</script>
+</body></html>

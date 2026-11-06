@@ -1,0 +1,119 @@
+<!doctype html>
+<html><head><meta charset="utf-8">
+<!-- A · 深空光晕：纯黑 + 一团流动光晕（唯一的颜色）+ 毛玻璃 + 逐字从模糊变清晰 -->
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:1080px;height:1920px;overflow:hidden;background:#000}
+body{font-family:'Inter Display','Inter','Noto Sans CJK SC',sans-serif;color:#f5f5f7;font-weight:600}
+.abs{position:absolute}
+.scene{position:absolute;inset:0;display:none}
+.c{display:inline-block;will-change:transform}
+.ctr{left:0;width:1080px;text-align:center}
+.eye{font-size:30px;letter-spacing:12px;color:#8e8e93;font-weight:500}
+.g .c,.gtxt{background:linear-gradient(90deg,#5E9BFF,#A77BFF,#FF6FA8,#FFB35C,#5E9BFF);background-size:400% 100%;-webkit-background-clip:text;background-clip:text;color:transparent}
+.gray{color:#86868b;font-weight:500}
+.glass{background:linear-gradient(160deg,rgba(255,255,255,.12),rgba(255,255,255,.035));border:1.5px solid rgba(255,255,255,.16);border-radius:44px;box-shadow:0 50px 140px rgba(0,0,0,.7),inset 0 1px 0 rgba(255,255,255,.28)}
+.row{position:absolute;left:48px;width:764px;height:84px;display:flex;align-items:center;gap:26px;font-size:36px;font-weight:500;border-top:1px solid rgba(255,255,255,.1)}
+.row b{font-size:28px;color:#6e6e73;font-weight:500;width:40px}
+#orb{position:absolute;left:0;top:0;width:1000px;height:1000px;border-radius:50%;filter:blur(120px);z-index:0}
+#bg{position:absolute;inset:0;background:radial-gradient(ellipse at 50% 120%,#0d0d1a 0%,#000 60%);z-index:-1}
+.scene{z-index:2}
+#grain{position:absolute;inset:0;z-index:40;opacity:.07;pointer-events:none;background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='300' height='300'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/></filter><rect width='300' height='300' filter='url(%23n)'/></svg>")}
+#sub{position:absolute;left:0;top:1420px;width:1080px;height:100px;display:flex;align-items:center;justify-content:center;z-index:45}
+#sub span{font-family:'Noto Sans CJK SC';font-size:50px;font-weight:500;color:#fff;letter-spacing:2px;text-shadow:0 0 20px rgba(0,0,0,.95),0 2px 6px rgba(0,0,0,.9);white-space:nowrap;display:inline-block}
+#dip{position:absolute;inset:0;background:#000;z-index:50;opacity:0}
+body.hole #bg{background:#000}
+</style></head>
+<body>
+<div id="bg" class="bgl"></div>
+<div id="orbw" class="bgl" style="position:absolute;inset:0;overflow:hidden;z-index:0"><div id="orb"></div></div>
+
+<!-- 开场 -->
+<div class="scene" id="open">
+  <div class="abs ctr eye" id="o-eye" style="top:610px" data-split><span data-ep="eye"></span></div>
+  <div class="abs ctr" id="o-t" style="top:690px;font-size:176px;line-height:1.1;letter-spacing:-4px;font-family:'Noto Sans CJK SC';font-weight:700" data-split>3个<span class="g">AI</span>神器</div>
+  <div class="abs ctr gray" id="o-sub" style="top:930px;font-size:52px;font-family:'Noto Sans CJK SC'" data-split>帮小卖家，省下一半时间。</div>
+</div>
+
+<!-- 素材窗 -->
+<div class="scene" id="foot">
+  <div class="abs ctr" style="top:330px;font-size:40px;font-family:'Noto Sans CJK SC'"><span class="gtxt" id="f-eye">AI 写标题</span></div>
+  <div class="abs ctr" id="f-h" style="top:400px;font-size:84px;font-family:'Noto Sans CJK SC';letter-spacing:-1px" data-split>关键词进去，标题出来。</div>
+  <div class="abs" id="f-frame" style="left:60px;top:560px;width:960px;height:540px;border-radius:40px;border:1.5px solid rgba(255,255,255,.22);z-index:5"></div>
+  <div class="abs" id="f-shade" style="left:60px;top:560px;width:960px;height:540px;border-radius:40px;background:linear-gradient(180deg,rgba(0,0,0,.25) 0%,rgba(0,0,0,0) 30%,rgba(0,0,0,0) 55%,rgba(0,0,0,.7) 100%);z-index:4"></div>
+  <div class="abs" id="f-pill" style="left:100px;top:1010px;font-family:'Noto Sans CJK SC';font-size:30px;font-weight:500;padding:12px 26px 14px;border-radius:40px;background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.25);z-index:6">● 卖家日常</div>
+  <div class="abs ctr gray" id="f-cap" style="top:1160px;font-size:44px;font-family:'Noto Sans CJK SC'">每天上新，最磨人的是写标题。</div>
+</div>
+
+<!-- 功能卡 -->
+<div class="scene" id="feat">
+  <div class="abs ctr" style="top:330px;font-size:40px;font-family:'Noto Sans CJK SC'"><span class="gtxt" id="u-eye">只要 3 秒</span></div>
+  <div class="abs ctr" id="u-h" style="top:400px;font-size:84px;font-family:'Noto Sans CJK SC';letter-spacing:-1px" data-split>三个版本，任你挑。</div>
+  <div class="abs glass" id="u-card" style="left:110px;top:580px;width:860px;height:620px">
+    <div class="abs gray" style="left:48px;top:44px;font-size:28px;font-family:'Noto Sans CJK SC'">关键词</div>
+    <div class="abs" style="left:48px;top:92px;width:764px;height:96px;border-radius:24px;background:rgba(0,0,0,.35);border:1px solid rgba(255,255,255,.14);display:flex;align-items:center;padding-left:30px;font-size:44px;font-weight:500"><span id="u-typ"></span><span id="u-car" style="display:inline-block;width:3px;height:48px;background:#A77BFF;margin-left:4px"></span></div>
+    <div class="abs" style="left:48px;top:222px;width:764px;height:6px;border-radius:6px;background:rgba(255,255,255,.08);overflow:hidden"><div id="u-bar" style="height:100%;width:0;background:linear-gradient(90deg,#5E9BFF,#A77BFF,#FF6FA8,#FFB35C)"></div></div>
+    <div class="row" id="u-r0" style="top:270px"><b>01</b>Personalized Wooden Name Sign</div>
+    <div class="row" id="u-r1" style="top:370px"><b>02</b>Custom Nursery Name Plaque</div>
+    <div class="row" id="u-r2" style="top:470px"><b>03</b>Baby Name Sign, Gift for Mom</div>
+  </div>
+</div>
+
+<!-- 数字 -->
+<div class="scene" id="stat">
+  <div class="abs ctr gray" id="s-l" style="top:500px;font-size:46px;font-family:'Noto Sans CJK SC'">从关键词到成稿</div>
+  <svg class="abs" id="s-rings" style="left:40px;top:430px" width="1000" height="1000" viewBox="-500 -500 1000 1000"></svg>
+  <div class="abs ctr" id="s-n" style="top:560px;font-size:600px;line-height:1;font-weight:200;letter-spacing:-20px;font-family:'Inter Display'"><span id="s-num">60</span><span style="font-family:'Noto Sans CJK SC';font-size:140px;font-weight:500;letter-spacing:0">秒</span></div>
+  <div class="abs ctr gray" id="s-u" style="top:1230px;font-size:44px;font-family:'Noto Sans CJK SC'">三个版本，一次给齐。</div>
+</div>
+
+<!-- 结尾 -->
+<div class="scene" id="end">
+  <div class="abs ctr" id="e-w" style="top:740px;font-size:150px;letter-spacing:-5px;font-weight:600" data-split><span data-ep="brand"></span></div>
+  <div class="abs ctr gray" id="e-s" style="top:960px;font-size:48px;font-family:'Noto Sans CJK SC'">每天一个 AI 省时技巧</div>
+  <div class="abs" id="e-b" style="left:420px;top:1080px;width:240px;height:96px;border-radius:60px;background:#f5f5f7;color:#000;font-family:'Noto Sans CJK SC';font-size:44px;font-weight:600;display:flex;align-items:center;justify-content:center">关注</div>
+</div>
+
+<div id="grain"></div>
+<div id="sub"><span id="subt"></span></div>
+<div id="dip"></div>
+
+<script src="core.js"></script>
+<script>
+window.EP=window.EP||{brand:'Etsy-Tony',eye:'ETSY-TONY · 11.06'};
+window.TL=window.TL||{scenes:[['open',0,3.6],['foot',3.6,7.8],['feat',7.8,11.6],['stat',11.6,13.8],['end',13.8,16.4]],
+  subs:[[0.3,3.3,['3个AI神器','帮小卖家省下一半时间']],[3.9,7.5,['每天上新','最费时间的就是写标题']],[8.1,11.3,['输入关键词','3秒给你3个版本']],
+        [11.9,13.6,['从关键词到成稿 只要3秒']],[14.1,16.2,['关注Etsy-Tony','每天一个AI省时技巧']]]};
+// 素材窗位置（叠素材时 x,y,w,h 用这个）
+window.WIN={x:60,y:560,w:960,h:540,r:40};
+// 光晕在每个场景里的位置 [场景开始后多久到位, x中心, y中心, 缩放, 亮度]
+const ORB={open:[540,1250,.9,.55],foot:[540,830,1.15,.6],feat:[540,900,1.0,.62],stat:[540,900,.85,.7],end:[540,860,.95,.75]};
+function shimmer(sel,t){document.querySelectorAll(sel).forEach((c,i)=>{c.style.backgroundPosition=`${(t*18+i*14)%100}% 0`;});}
+const V={
+ init(){let h='';for(let i=0;i<6;i++)h+=`<circle class="rg" r="200" fill="none" stroke="rgba(255,255,255,.14)" stroke-width="1.5"/>`;$('s-rings').innerHTML=h;},
+ global(t,id,lt){// 光晕：随场景平移，自己慢慢旋转变色
+  const ids=TL.scenes.map(s=>s[0]);let a=ORB[ids[0]];for(const s of TL.scenes){const k=E.io(P(t,s[1]-0.4,1.4));const b=ORB[s[0]];a=a.map((v,i)=>L(v,b[i],k));}
+  const o=$('orb');o.style.background=`conic-gradient(from ${t*40}deg,#3D7BFF,#9B5CFF,#FF4F9A,#FF9F43,#3D7BFF)`;
+  const breathe=1+0.05*Math.sin(t*1.3);T(o,{x:a[0]-500+40*Math.sin(t*.6),y:a[1]-500+30*Math.cos(t*.5),s:a[2]*breathe,op:a[3]*E.oc(P(t,0,1.2))});
+  shimmer('.g .c',t);shimmer('.gtxt',t);
+ },
+ open(lt,t){fadeIn('o-eye',lt,.2,1.0,0,10);chars('o-eye',lt,.2,.02,.8,0,10);chars('o-t',lt,.55,.08,.9,40,30);chars('o-sub',lt,1.5,.03,.8,20,14);
+  T('o-t',{s:L(1.06,1,E.oq(P(lt,.5,3)))});},
+ foot(lt,t,dur){fadeIn('f-eye',lt,.15,.7);chars('f-h',lt,.3,.04,.7,24,18);
+  const k=E.oq(P(lt,.5,1.1));const w=WIN.w*L(.82,1,k),h=WIN.h*L(.82,1,k),x=WIN.x+(WIN.w-w)/2,y=WIN.y+(WIN.h-h)/2,r=L(120,WIN.r,k);
+  const op=P(lt,.5,.3);setHole(op>0?[x,y,w,h,r]:null);
+  ['f-frame','f-shade'].forEach(e=>{const el=$(e);el.style.left=x+'px';el.style.top=y+'px';el.style.width=w+'px';el.style.height=h+'px';el.style.borderRadius=r+'px';el.style.opacity=op;});
+  fadeIn('f-pill',lt,1.4,.6,10,8);fadeIn('f-cap',lt,1.8,.8);},
+ feat(lt,t){fadeIn('u-eye',lt,.15,.7);chars('u-h',lt,.3,.05,.7,24,18);
+  const k=E.oq(P(lt,.4,1.3));T('u-card',{y:L(240,0,k)+6*Math.sin(t*1.2),rx:L(38,4,k),op:E.oc(P(lt,.4,.6)),bl:L(20,0,E.oc(P(lt,.4,.8)))});
+  typing('u-typ','u-car',lt,1.2,1.1,'wooden name sign');$('u-bar').style.width=L(0,100,E.io(P(lt,2.35,.6)))+'%';
+  [0,1,2].forEach(i=>fadeIn('u-r'+i,lt,2.8+i*.18,.6,20,10));},
+ stat(lt,t){fadeIn('s-l',lt,.15,.6);const k=P(lt,.25,1.0);$('s-num').textContent=Math.max(3,Math.round(L(60,3,E.oq(k))));
+  T('s-n',{s:L(1.15,1,E.oq(k)),op:E.oc(P(lt,.25,.4)),bl:L(26,0,E.oc(P(lt,.25,.7)))});
+  document.querySelectorAll('.rg').forEach((c,i)=>{const p=((lt*0.45+i/6)%1);c.setAttribute('r',(180+p*320).toFixed(1));c.style.opacity=(1-p)*E.oc(P(lt,.3,.6));});
+  fadeIn('s-u',lt,1.1,.7);},
+ end(lt,t){chars('e-w',lt,.2,.06,.9,30,26);fadeIn('e-s',lt,1.0,.8);const kb=P(lt,1.5,.7);T('e-b',{s:L(.8,1,E.oq(kb))*(1+.03*Math.sin(Math.max(0,lt-2.2)*4)),op:E.oc(kb),bl:L(10,0,kb)});}
+};
+boot();
+</script>
+</body></html>

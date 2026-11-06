@@ -1,0 +1,128 @@
+<!doctype html>
+<html><head><meta charset="utf-8">
+<!-- B · 钛金影院：石墨底 + 电影黑边 + 金属流光字 + 镜头光晕 + 3D 手机 + 宽银幕素材条 -->
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:1080px;height:1920px;overflow:hidden;background:#000}
+body{font-family:'Inter Display','Inter','Noto Sans CJK SC',sans-serif;color:#e8e8ea;font-weight:600}
+.abs{position:absolute}
+.scene{position:absolute;inset:0;display:none;z-index:2}
+.c{display:inline-block}
+.ctr{left:0;width:1080px;text-align:center}
+.eye{font-size:26px;letter-spacing:16px;color:#8d8d93;font-weight:500}
+.chrome,.chrome .c{background-image:linear-gradient(105deg,rgba(255,255,255,0) 42%,rgba(255,255,255,.95) 50%,rgba(255,255,255,0) 58%),linear-gradient(180deg,#ffffff 0%,#dcdce1 34%,#8b8b93 52%,#ececf0 74%,#9d9da4 100%);
+  background-size:300% 100%,100% 100%;background-repeat:no-repeat;-webkit-background-clip:text;background-clip:text;color:transparent}
+.gray{color:#8a8a90;font-weight:400;font-family:'Noto Sans CJK SC'}
+#bg{position:absolute;inset:0;background:radial-gradient(ellipse 90% 60% at 50% 42%,#2b2b2f 0%,#111113 55%,#000 100%);z-index:0}
+#vig{position:absolute;inset:0;z-index:38;background:radial-gradient(ellipse 80% 70% at 50% 48%,rgba(0,0,0,0) 55%,rgba(0,0,0,.55) 100%);pointer-events:none}
+#grain{position:absolute;inset:0;z-index:39;opacity:.09;background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='300' height='300'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='2' stitchTiles='stitch'/></filter><rect width='300' height='300' filter='url(%23n)'/></svg>")}
+.bar{position:absolute;left:0;width:1080px;background:#000;z-index:42}
+#flare{position:absolute;left:0;top:0;width:1080px;height:1920px;z-index:41;pointer-events:none;overflow:hidden}
+#flare .st{position:absolute;left:-400px;width:1880px;height:3px;background:linear-gradient(90deg,rgba(120,170,255,0),rgba(150,190,255,.65) 35%,rgba(235,245,255,1) 50%,rgba(150,190,255,.65) 65%,rgba(120,170,255,0));box-shadow:0 0 18px 3px rgba(110,160,255,.55)}
+#flare .core{position:absolute;width:260px;height:90px;border-radius:50%;background:radial-gradient(ellipse,rgba(255,255,255,.95) 0%,rgba(170,205,255,.55) 30%,rgba(90,140,255,0) 70%)}
+#flare .gh{position:absolute;width:70px;height:70px;border-radius:50%;border:2px solid rgba(140,180,255,.35);background:radial-gradient(circle,rgba(140,180,255,.12),rgba(140,180,255,0) 70%)}
+#sub{position:absolute;left:0;top:1420px;width:1080px;height:100px;display:flex;align-items:center;justify-content:center;z-index:45}
+#sub span{font-family:'Noto Sans CJK SC';font-size:46px;font-weight:400;color:#ececee;letter-spacing:4px;text-shadow:0 2px 14px rgba(0,0,0,.95);white-space:nowrap;display:inline-block}
+#dip{position:absolute;inset:0;background:#000;z-index:50;opacity:0}
+.phone{position:absolute;border-radius:76px;padding:13px;background:linear-gradient(135deg,#9a9aa1 0%,#3a3a3e 22%,#d8d8de 46%,#2a2a2d 68%,#a4a4aa 100%);box-shadow:0 60px 120px rgba(0,0,0,.8)}
+.scr{position:relative;width:100%;height:100%;border-radius:64px;background:#050506;overflow:hidden}
+.prow{position:absolute;left:34px;width:310px;font-size:25px;font-weight:500;color:#e5e5e7;padding:18px 0;border-top:1px solid rgba(255,255,255,.1);line-height:1.25}
+.prow b{display:block;font-size:20px;color:#7d7d84;font-weight:500;letter-spacing:3px;margin-bottom:6px}
+</style></head>
+<body>
+<div id="bg" class="bgl"></div>
+
+<div class="scene" id="open">
+  <div class="abs ctr eye" id="o-eye" style="top:640px"><span data-ep="eye"></span></div>
+  <div class="abs ctr chrome" id="o-t" style="top:700px;font-size:190px;line-height:1.1;letter-spacing:-4px;font-family:'Noto Sans CJK SC';font-weight:900">3个AI神器</div>
+  <div class="abs" id="o-rule" style="left:240px;top:955px;width:600px;height:1.5px;background:linear-gradient(90deg,rgba(220,220,230,0),rgba(220,220,230,.8),rgba(220,220,230,0))"></div>
+  <div class="abs ctr gray" id="o-sub" style="top:990px;font-size:44px;letter-spacing:10px">小卖家的效率革命</div>
+</div>
+
+<div class="scene" id="foot">
+  <div class="abs ctr eye" id="f-eye" style="top:470px">CHAPTER 01</div>
+  <div class="abs ctr chrome" id="f-h" style="top:520px;font-size:100px;font-family:'Noto Sans CJK SC';font-weight:900;letter-spacing:-1px">AI 写标题</div>
+  <div class="abs" id="f-tint" style="left:0;top:718px;width:1080px;height:452px;background:radial-gradient(ellipse 75% 85% at 50% 50%,rgba(0,0,0,0) 45%,rgba(0,0,0,.55) 100%),linear-gradient(180deg,rgba(20,45,70,.28),rgba(0,0,0,0) 45%,rgba(60,30,10,.18));z-index:4"></div>
+  <div class="abs" id="f-l1" style="left:0;top:716px;width:1080px;height:1.5px;background:rgba(220,220,230,.35);z-index:5"></div>
+  <div class="abs" id="f-l2" style="left:0;top:1170px;width:1080px;height:1.5px;background:rgba(220,220,230,.35);z-index:5"></div>
+  <div class="abs" id="f-tc" style="left:44px;top:1130px;font-family:'Inter';font-size:22px;letter-spacing:4px;color:rgba(255,255,255,.7);font-weight:500;z-index:6">REC ● <span id="f-tcn">00:00:00</span></div>
+  <div class="abs ctr gray" id="f-cap" style="top:1230px;font-size:46px;letter-spacing:4px">凌晨两点，还在想标题？</div>
+</div>
+
+<div class="scene" id="feat">
+  <div class="abs ctr eye" id="u-eye" style="top:330px">CHAPTER 02</div>
+  <div class="abs ctr chrome" id="u-h" style="top:380px;font-size:96px;font-family:'Noto Sans CJK SC';font-weight:900;letter-spacing:-1px">三秒，三个版本。</div>
+  <div class="abs" id="u-sh" style="left:290px;top:1330px;width:500px;height:60px;border-radius:50%;background:radial-gradient(ellipse,rgba(0,0,0,.9),rgba(0,0,0,0) 70%)"></div>
+  <div class="phone" id="u-ph" style="left:340px;top:560px;width:400px;height:800px">
+    <div class="scr">
+      <div class="abs" style="left:135px;top:22px;width:104px;height:30px;border-radius:20px;background:#000;border:1px solid #1d1d20"></div>
+      <div class="abs" style="left:34px;top:96px;font-size:22px;color:#7d7d84;letter-spacing:3px;font-weight:500">KEYWORD</div>
+      <div class="abs" style="left:34px;top:136px;width:306px;height:70px;border-radius:18px;background:#141416;border:1px solid #2a2a2e;display:flex;align-items:center;padding-left:20px;font-size:28px;font-weight:500"><span id="u-typ"></span><span id="u-car" style="display:inline-block;width:2px;height:32px;background:#cfd9ff;margin-left:3px"></span></div>
+      <div class="abs" style="left:34px;top:226px;width:306px;height:3px;background:#1c1c1f;border-radius:3px;overflow:hidden"><div id="u-bar" style="height:100%;width:0;background:linear-gradient(90deg,#8d8d95,#ffffff)"></div></div>
+      <div class="prow" id="u-r0" style="top:262px"><b>VERSION 01</b>Personalized Wooden Name Sign</div>
+      <div class="prow" id="u-r1" style="top:398px"><b>VERSION 02</b>Custom Nursery Name Plaque</div>
+      <div class="prow" id="u-r2" style="top:534px"><b>VERSION 03</b>Baby Name Sign, Gift for Mom</div>
+      <div class="abs" id="u-spec" style="left:-200px;top:-100px;width:160px;height:1000px;background:linear-gradient(90deg,rgba(255,255,255,0),rgba(255,255,255,.10),rgba(255,255,255,0));transform:rotate(18deg)"></div>
+    </div>
+  </div>
+</div>
+
+<div class="scene" id="stat">
+  <div class="abs ctr eye" id="s-l" style="top:540px">生 成 一 组 标 题</div>
+  <div class="abs ctr chrome" id="s-n" style="top:580px;font-size:560px;line-height:1.05;font-weight:700;letter-spacing:-24px">3s</div>
+  <div class="abs" id="s-rule" style="left:240px;top:1190px;width:600px;height:1.5px;background:linear-gradient(90deg,rgba(220,220,230,0),rgba(220,220,230,.8),rgba(220,220,230,0))"></div>
+  <div class="abs ctr gray" id="s-u" style="top:1225px;font-size:44px;letter-spacing:8px">三个版本 · 随心挑选</div>
+</div>
+
+<div class="scene" id="end">
+  <div class="abs ctr chrome" id="e-w" style="top:760px;font-size:150px;letter-spacing:-4px;font-weight:700"><span data-ep="brand"></span></div>
+  <div class="abs ctr gray" id="e-s" style="top:975px;font-size:44px;letter-spacing:6px">每天一个 AI 省时技巧</div>
+  <div class="abs" id="e-b" style="left:410px;top:1085px;width:260px;height:92px;border-radius:60px;border:1.5px solid rgba(225,225,232,.75);font-family:'Noto Sans CJK SC';font-size:40px;font-weight:500;letter-spacing:8px;display:flex;align-items:center;justify-content:center;color:#ececee">关注</div>
+</div>
+
+<div id="vig"></div><div id="grain"></div>
+<div id="flare"><div class="st"></div><div class="core"></div><div class="gh"></div><div class="gh" style="width:40px;height:40px"></div></div>
+<div class="bar" id="bt" style="top:0;height:0"></div><div class="bar" id="bb" style="bottom:0;height:0"></div>
+<div id="sub"><span id="subt"></span></div>
+<div id="dip"></div>
+
+<script src="core.js"></script>
+<script>
+window.EP=window.EP||{brand:'Etsy-Tony',eye:'ETSY-TONY PRESENTS'};
+window.TL=window.TL||{scenes:[['open',0,3.6],['foot',3.6,7.8],['feat',7.8,11.6],['stat',11.6,13.8],['end',13.8,16.4]],
+  subs:[[0.3,3.3,['3个AI神器','帮小卖家省下一半时间']],[3.9,7.5,['每天上新','最费时间的就是写标题']],[8.1,11.3,['输入关键词','3秒给你3个版本']],
+        [11.9,13.6,['从关键词到成稿 只要3秒']],[14.1,16.2,['关注Etsy-Tony','每天一个AI省时技巧']]]};
+// 素材（横屏 16:9）铺在这里：x0 y640 w1080 h608；画面只露出中间 2.39:1 的宽银幕条
+window.WIN={x:0,y:640,w:1080,h:608};const BAND={y:718,h:452};
+// 镜头光晕 [时间, 高度y, 方向]
+const FLARES=[[0.8,800,1],[4.3,944,-1],[11.9,880,1],[14.2,850,-1]];
+function sweep(sel,t,a,d){document.querySelectorAll(sel).forEach(e=>{e.style.backgroundPosition=`${L(130,-30,E.io(P(t,a,d)))}% 0,0 0`;});}
+const V={dipW:.38,
+ global(t,id,lt){const kb=E.oq(P(t,0,1.4));$('bt').style.height=L(0,210,kb)+'px';$('bb').style.height=L(0,210,kb)+'px';
+  let f=null;for(const fl of FLARES)if(t>=fl[0]&&t<fl[0]+1.3)f=fl;const fe=$('flare');fe.style.opacity=f?1:0;
+  if(f){const k=E.is(P(t,f[0],1.3));const x=f[2]>0?L(-300,1380,k):L(1380,-300,k);const a=Math.sin(Math.PI*k);
+    const st=fe.querySelector('.st'),co=fe.querySelector('.core'),g=fe.querySelectorAll('.gh');st.style.top=f[1]+'px';st.style.opacity=a*.9;st.style.transform=`translateX(${(x-540)*.25}px) scaleX(${.6+.4*a})`;
+    co.style.left=(x-130)+'px';co.style.top=(f[1]-44)+'px';co.style.opacity=a;g[0].style.left=(1080-x-35)+'px';g[0].style.top=(f[1]+60)+'px';g[0].style.opacity=a*.8;
+    g[1].style.left=(540+(540-x)*.5-20)+'px';g[1].style.top=(f[1]+30)+'px';g[1].style.opacity=a*.7;}},
+ open(lt,t){fadeIn('o-eye',lt,.3,1.2,0,10);const k=P(lt,.6,1.6);T('o-t',{s:L(1.12,1,E.oq(P(lt,.6,3))),op:E.oc(k),bl:L(28,0,E.oc(k))});
+  $('o-t').style.letterSpacing=L(30,-4,E.oq(k))+'px';sweep('#o-t',lt,1.0,1.6);
+  T('o-rule',{s:1,op:E.oc(P(lt,1.6,.8))});$('o-rule').style.transform=`scaleX(${E.oq(P(lt,1.6,1.2))})`;fadeIn('o-sub',lt,2.0,1.0,12,12);},
+ foot(lt,t){fadeIn('f-eye',lt,.15,.8,0,8);const kh=P(lt,.3,1.0);T('f-h',{op:E.oc(kh),bl:L(20,0,E.oc(kh)),s:L(1.06,1,E.oq(kh))});sweep('#f-h',lt,.6,1.4);
+  const k=E.io(P(lt,.55,1.0));const h=BAND.h*k,y=BAND.y+(BAND.h-h)/2;setHole(k>0?[0,y,1080,h,0]:null);
+  $('f-tint').style.top=y+'px';$('f-tint').style.height=h+'px';$('f-l1').style.top=(y-2)+'px';$('f-l2').style.top=(y+h)+'px';
+  ['f-l1','f-l2'].forEach(e=>$(e).style.opacity=k>0?1:0);
+  fadeIn('f-tc',lt,1.5,.5,0,0);const s=Math.max(0,lt-1.5);$('f-tcn').textContent='00:00:'+String(Math.floor(s)).padStart(2,'0')+':'+String(Math.floor(s*30)%30).padStart(2,'0');
+  fadeIn('f-cap',lt,1.7,1.0,12,12);},
+ feat(lt,t){fadeIn('u-eye',lt,.15,.8,0,8);const kh=P(lt,.3,1.0);T('u-h',{op:E.oc(kh),bl:L(20,0,E.oc(kh))});sweep('#u-h',lt,.5,1.4);
+  const k=E.oq(P(lt,.35,1.6));T('u-ph',{y:L(220,0,k)+8*Math.sin(t*1.1),ry:L(-38,-14,k)+3*Math.sin(t*.7),rx:L(16,5,k),r:L(4,0,k),op:E.oc(P(lt,.35,.7)),bl:L(18,0,E.oc(P(lt,.35,.9)))});
+  T('u-sh',{op:E.oc(P(lt,.6,.8))*.9,s:L(.6,1,k)});
+  typing('u-typ','u-car',lt,1.3,1.1,'wooden name sign');$('u-bar').style.width=L(0,100,E.io(P(lt,2.45,.5)))+'%';
+  [0,1,2].forEach(i=>fadeIn('u-r'+i,lt,2.85+i*.18,.6,16,8));$('u-spec').style.transform=`translateX(${L(-100,700,E.io(P(lt,1.0,2.2)))}px) rotate(18deg)`;},
+ stat(lt,t){fadeIn('s-l',lt,.15,.7,0,8);const k=P(lt,.25,1.1);T('s-n',{op:E.oc(k),bl:L(30,0,E.oc(k)),s:L(1.1,1,E.oq(P(lt,.25,2)))});sweep('#s-n',lt,.5,1.2);
+  $('s-rule').style.transform=`scaleX(${E.oq(P(lt,.8,1))})`;fadeIn('s-u',lt,1.0,.8,10,10);},
+ end(lt,t){const k=P(lt,.3,1.2);T('e-w',{op:E.oc(k),bl:L(26,0,E.oc(k)),s:L(1.08,1,E.oq(P(lt,.3,2.4)))});$('e-w').style.letterSpacing=L(20,-4,E.oq(k))+'px';sweep('#e-w',lt,.5,1.4);
+  fadeIn('e-s',lt,1.1,.9,10,10);fadeIn('e-b',lt,1.6,.9,0,8);}
+};
+boot();
+</script>
+</body></html>
