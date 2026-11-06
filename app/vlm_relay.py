@@ -80,11 +80,15 @@ def _key() -> str:
     return k
 
 
-def _record(model: str, usage: dict | None, seconds: float, status: int) -> None:
+def _record(model: str, usage: dict | None, seconds: float, status: int, error: str = "",
+            parts: str = "") -> None:
     usage = usage or {}
     row = {"t": time.strftime("%Y-%m-%d %H:%M:%S"), "model": model, "status": status,
            "seconds": round(seconds, 1), "prompt_tokens": usage.get("prompt_tokens"),
            "completion_tokens": usage.get("completion_tokens"), "cost_usd": usage.get("cost")}
+    if error:
+        row["error"] = error[:300]
+        row["parts"] = parts
     try:
         with _log_lock, USAGE_LOG.open("a", encoding="utf-8") as f:
             f.write(json.dumps(row, ensure_ascii=False) + "\n")
@@ -121,13 +125,33 @@ def forward(body: dict, opener=urllib.request.urlopen) -> tuple[int, bytes]:
             status, data = resp.status, resp.read()
     except urllib.error.HTTPError as e:
         status, data = e.code, e.read()
-    usage = None
+    usage, error = None, ""
     try:
-        usage = json.loads(data).get("usage")
+        resp_json = json.loads(data)
+        usage = resp_json.get("usage")
+        if status != 200:
+            err = resp_json.get("error") or {}
+            raw = (err.get("metadata") or {}).get("raw") if isinstance(err, dict) else None
+            error = f"{err.get('message', '') if isinstance(err, dict) else err} {raw or ''}".strip()
     except (ValueError, AttributeError):
-        pass
-    _record(out["model"], usage, time.time() - t0, status)
+        error = "" if status == 200 else data[:200].decode("utf-8", "replace")
+    _record(out["model"], usage, time.time() - t0, status, error, _parts_summary(out["messages"]) if error else "")
     return status, data
+
+
+def _parts_summary(messages: list) -> str:
+    """失败时记下请求里有哪些内容（类型和大小，不记内容本身），方便查 400 的原因。"""
+    bits = []
+    for m in messages:
+        content = m.get("content") if isinstance(m, dict) else None
+        for p in content if isinstance(content, list) else []:
+            if not isinstance(p, dict):
+                continue
+            t = p.get("type", "?")
+            url = (p.get(t) or {}).get("url", "") if isinstance(p.get(t), dict) else ""
+            mime = url[5:url.find(";")] if url.startswith("data:") and ";" in url else ""
+            bits.append(f"{t}:{mime}:{len(url) // 1024}KB" if url else t)
+    return " ".join(bits)[:300]
 
 
 class _Handler(BaseHTTPRequestHandler):
