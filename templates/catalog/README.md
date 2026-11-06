@@ -53,6 +53,7 @@ gallery.html 是所有模板的静态样式（?tpl=<代号>&s=hook|card，背景
 | 45 | 口碑墙 · 星环隧道 | tw-b | templates/testimonial-wall/vortex.html（独立动效片段，8.5 秒） |
 | 46 | 口碑墙 · 消息轰炸 | tw-c | templates/testimonial-wall/notify.html（独立动效片段，8.5 秒） |
 | 47 | 发布会「一根线」 | kn2 | templates/keynote/keynote.html（全片黑白灰只有一根青柠绣线：走针开场 / 大字 / 微距缎面绣名字 / 卡点换产品 / 数字 / 全家福 / 结尾，约 20–25 秒） |
+| 48 | 多彩动感（Etsy-Tony 日更） | cp | templates/color-pop/episode.html（每屏换色 + 贴纸拍上镜头震动 + 关键词逐字弹 + 手绘圈 + 五色条带转场，样片 27 秒） |
 
 高端系列另用字体：Cormorant Garamond、Playfair Display、Cinzel、Bodoni Moda、Jost（同样来自 google/fonts ofl/）。
 

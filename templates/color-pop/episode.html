@@ -1,0 +1,285 @@
+<!doctype html>
+<html><head><meta charset="utf-8">
+<style>
+:root{--ink:#16122B;--cream:#FFF6E9;--tom:#FF4B2B;--vio:#5B2EFF;--sun:#FFC233;--mint:#10C99A;--pink:#FF4F9A;--sky:#2EB8FF}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:1080px;height:1920px;overflow:hidden;background:var(--vio)}
+body{font-family:'Noto Sans CJK SC',sans-serif;font-weight:900;color:var(--cream)}
+.abs{position:absolute}
+.scene{position:absolute;inset:0;overflow:hidden;display:none}
+.blob{position:absolute;width:1100px;height:1100px;border-radius:50%}
+.grain{position:absolute;inset:0;opacity:.10;mix-blend-mode:overlay;background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='240' height='240'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/></filter><rect width='240' height='240' filter='url(%23n)'/></svg>")}
+.conf{position:absolute;inset:0}
+.mask{overflow:hidden;display:block;padding:0 0 10px}
+.ln{display:block;white-space:nowrap}
+.k{padding:0 10px;margin:0 -4px;background-repeat:no-repeat;background-position:0 88%;background-size:0% 42%}
+.idx{font-size:230px;line-height:1;color:transparent;letter-spacing:-8px}
+.tag{font-size:42px;padding:12px 28px 16px;line-height:1;border-radius:40px;border:5px solid var(--ink)}
+.head{font-size:104px;line-height:1.14;letter-spacing:-3px}
+.card{background:var(--cream);border:8px solid var(--ink);border-radius:28px;color:var(--ink);transform-origin:50% 50%}
+.burst{width:280px;height:280px}
+.burst svg{position:absolute;inset:0}
+.burst div{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;text-align:center;font-size:54px;line-height:1.05;color:var(--ink)}
+.pill{display:inline-block;border-radius:30px;padding:6px 18px 9px;font-size:26px;line-height:1;border:4px solid var(--ink)}
+.row{position:absolute;left:40px;width:810px;height:62px;display:flex;align-items:center;gap:16px;font-size:31px;font-weight:700;border-bottom:3px dashed #d9d0c3}
+.tile{position:absolute;width:186px;height:186px;border:6px solid var(--ink);border-radius:22px;overflow:hidden}
+.bub{position:absolute;font-size:38px;padding:18px 28px 22px;line-height:1.15;border:5px solid var(--ink);border-radius:30px}
+#topbar{position:absolute;left:70px;top:176px;width:940px;height:70px;display:none;z-index:20}
+#topbar .brand{position:absolute;left:0;top:0;background:var(--ink);color:var(--cream);font-size:38px;line-height:1;padding:14px 24px 18px;border-radius:40px}
+#topbar .dot{position:absolute;top:20px;width:30px;height:30px;border-radius:50%;border:5px solid var(--ink)}
+#sub{position:absolute;left:0;top:1402px;width:1080px;height:120px;display:flex;align-items:center;justify-content:center;z-index:30}
+#sub span{font-size:60px;line-height:1;color:#fff;-webkit-text-stroke:12px var(--ink);paint-order:stroke fill;white-space:nowrap;display:inline-block}
+.rib{position:absolute;left:-200px;width:1480px;height:84px;overflow:hidden;z-index:24;border-top:5px solid var(--ink);border-bottom:5px solid var(--ink)}
+.rib div{position:absolute;left:0;top:14px;white-space:nowrap;font-size:42px;line-height:1;letter-spacing:2px}
+#wipe{position:absolute;left:-300px;top:0;width:1680px;height:3200px;z-index:60;display:none}
+#wipe div{position:absolute;left:0;width:1680px;height:640px}
+.ch{display:inline-block;transform-origin:50% 90%}
+.dc{position:absolute;font-size:46px;line-height:1;padding:14px 26px 18px;border:8px solid #fff;border-radius:20px;box-shadow:0 0 0 5px #16122B,14px 18px 0 5px rgba(22,18,43,.35);white-space:nowrap;z-index:15;transform-origin:50% 50%}
+.fxsvg{position:absolute;pointer-events:none;overflow:visible}
+</style></head>
+<body>
+
+<!-- ============ COVER ============ -->
+<div class="scene" id="cover" style="background:var(--vio)">
+  <div class="blob" id="cv-b1"></div><div class="blob" id="cv-b2"></div><div class="blob" id="cv-b3"></div>
+  <div class="conf" id="cv-conf"></div>
+  <div class="abs" id="cv-date" style="left:80px;top:250px;background:var(--cream);color:var(--ink);font-size:34px;padding:12px 26px 16px;border-radius:40px;border:5px solid var(--ink)"><span data-ep="brand"></span> · <span data-ep="md"></span></div>
+  <div class="abs" id="cv-l1" style="left:70px;top:380px;font-size:360px;line-height:1;color:var(--sun);letter-spacing:-14px;text-shadow:14px 14px 0 var(--ink)">3个</div>
+  <div class="abs" id="cv-l2" style="left:70px;top:740px;font-size:250px;line-height:1;color:var(--cream);letter-spacing:-8px;text-shadow:12px 12px 0 var(--ink)">AI神器</div>
+  <div class="abs" id="cv-chip" style="left:80px;top:1060px;background:var(--mint);color:var(--ink);font-size:62px;padding:18px 34px 24px;border:6px solid var(--ink);border-radius:24px;box-shadow:12px 12px 0 var(--ink);line-height:1">帮小卖家省一半时间</div>
+  <div class="abs burst" id="cv-burst" style="left:740px;top:330px"><svg viewBox="0 0 280 280"><polygon class="bp" fill="#FF4F9A" stroke="#16122B" stroke-width="7"/></svg><div>小卖家<br>必看</div></div>
+</div>
+
+<!-- ============ N1 写标题 ============ -->
+<div class="scene" id="n1" style="background:var(--tom)">
+  <div class="blob" id="n1-b1"></div><div class="blob" id="n1-b2"></div><div class="blob" id="n1-b3"></div>
+  <div class="conf" id="n1-conf"></div>
+  <div class="abs idx" id="n1-idx" style="left:64px;top:290px;-webkit-text-stroke:7px var(--cream)">01</div>
+  <div class="abs tag" id="n1-tag" style="left:390px;top:362px;background:var(--sun);color:var(--ink)">AI 写标题</div>
+  <div class="abs card" id="n1-card" style="left:90px;top:570px;width:900px;height:470px;box-shadow:20px 20px 0 var(--ink)">
+    <div class="abs" style="left:40px;top:30px;font-size:30px;color:#8a7f73;font-weight:700">输入关键词</div>
+    <div class="abs" style="left:40px;top:76px;width:810px;height:84px;border:6px solid var(--ink);border-radius:18px;background:#fff;font-size:40px;display:flex;align-items:center;padding-left:24px;font-weight:700"><span id="n1-typ"></span><span id="n1-car" style="display:inline-block;width:5px;height:46px;background:var(--tom);margin-left:4px"></span></div>
+    <div class="abs" id="n1-gen" style="left:40px;top:182px;font-size:32px;color:var(--tom)">↓ AI 生成 3 个标题</div>
+    <div class="row" id="n1-r0" style="top:236px"><span class="pill" style="background:var(--sun)">A</span>Personalized Wooden Name Sign</div>
+    <div class="row" id="n1-r1" style="top:306px"><span class="pill" style="background:var(--mint)">B</span>Custom Nursery Name Plaque</div>
+    <div class="row" id="n1-r2" style="top:376px;border:none"><span class="pill" style="background:var(--pink)">C</span>Baby Name Sign · Gift for Mom</div>
+  </div>
+  <div class="abs burst" id="n1-burst" style="left:770px;top:420px"><svg viewBox="0 0 280 280"><polygon class="bp" fill="#FFC233" stroke="#16122B" stroke-width="7"/></svg><div>3秒<br>出稿</div></div>
+  <div class="abs head" id="n1-head" style="left:90px;top:1110px">
+    <span class="mask"><span class="ln">标题不会写？</span></span>
+    <span class="mask"><span class="ln">交给AI <span class="k" style="background-image:linear-gradient(var(--ink),var(--ink));color:var(--sun)">3秒出稿</span></span></span>
+  </div>
+</div>
+
+<!-- ============ N2 做图 ============ -->
+<div class="scene" id="n2" style="background:var(--sun);color:var(--ink)">
+  <div class="blob" id="n2-b1"></div><div class="blob" id="n2-b2"></div><div class="blob" id="n2-b3"></div>
+  <div class="conf" id="n2-conf"></div>
+  <div class="abs idx" id="n2-idx" style="left:64px;top:290px;-webkit-text-stroke:7px var(--ink)">02</div>
+  <div class="abs tag" id="n2-tag" style="left:390px;top:362px;background:var(--vio);color:var(--cream)">AI 做主图</div>
+  <div class="abs card" id="n2-card" style="left:90px;top:570px;width:900px;height:470px;box-shadow:20px 20px 0 var(--vio)">
+    <div class="abs" id="n2-main" style="left:40px;top:40px;width:380px;height:380px;border:7px solid var(--ink);border-radius:26px;overflow:hidden">
+      <div class="abs" id="n2-prod" style="left:70px;top:110px;width:240px;height:150px;background:#E8C79A;border:7px solid var(--ink);border-radius:20px;display:flex;align-items:center;justify-content:center;font-size:52px;color:var(--ink)">Mia</div>
+      <div class="abs" style="left:110px;top:272px;width:160px;height:22px;border-radius:50%;background:rgba(0,0,0,.18)"></div>
+    </div>
+    <div class="abs" id="n2-lab" style="left:40px;top:2px;font-size:26px;color:#8a7f73;font-weight:700"></div>
+    <div class="tile" id="n2-t0" style="left:460px;top:40px;background:var(--pink)"><div class="abs" style="left:38px;top:58px;width:100px;height:62px;background:#E8C79A;border:5px solid var(--ink);border-radius:10px"></div></div>
+    <div class="tile" id="n2-t1" style="left:666px;top:40px;background:var(--sky)"><div class="abs" style="left:44px;top:44px;width:90px;height:90px;border-radius:50%;background:var(--cream);border:5px solid var(--ink)"></div></div>
+    <div class="tile" id="n2-t2" style="left:460px;top:246px;background:var(--mint)"><div class="abs" style="left:30px;top:30px;width:116px;height:116px;background:var(--sun);border:5px solid var(--ink);transform:rotate(12deg);border-radius:14px"></div></div>
+    <div class="tile" id="n2-t3" style="left:666px;top:246px;background:var(--vio)"><div class="abs" style="left:24px;top:110px;font-size:40px;color:var(--cream)">+12张</div></div>
+  </div>
+  <div class="abs burst" id="n2-burst" style="left:770px;top:420px"><svg viewBox="0 0 280 280"><polygon class="bp" fill="#2EB8FF" stroke="#16122B" stroke-width="7"/></svg><div>一键<br>换背景</div></div>
+  <div class="abs head" id="n2-head" style="left:90px;top:1110px">
+    <span class="mask"><span class="ln">一张产品照</span></span>
+    <span class="mask"><span class="ln">变出<span class="k" style="background-image:linear-gradient(var(--pink),var(--pink))">一整套主图</span></span></span>
+  </div>
+</div>
+
+<!-- ============ N3 回客户 ============ -->
+<div class="scene" id="n3" style="background:var(--mint);color:var(--ink)">
+  <div class="blob" id="n3-b1"></div><div class="blob" id="n3-b2"></div><div class="blob" id="n3-b3"></div>
+  <div class="conf" id="n3-conf"></div>
+  <div class="abs idx" id="n3-idx" style="left:64px;top:290px;-webkit-text-stroke:7px var(--ink)">03</div>
+  <div class="abs tag" id="n3-tag" style="left:390px;top:362px;background:var(--pink);color:var(--ink)">AI 回客户</div>
+  <div class="abs card" id="n3-card" style="left:90px;top:570px;width:900px;height:470px;box-shadow:20px 20px 0 var(--ink)">
+    <div class="bub" id="n3-q" style="left:36px;top:34px;background:#fff;border-bottom-left-radius:6px">Can you engrave a Chinese name?</div>
+    <div class="bub" id="n3-dots" style="right:36px;top:138px;background:var(--vio);color:var(--cream);font-size:44px;padding:10px 28px 18px;border-bottom-right-radius:6px">• • •</div>
+    <div class="bub" id="n3-a" style="right:36px;top:138px;background:var(--vio);color:var(--cream);border-bottom-right-radius:6px">Yes! Both Chinese &amp; English.</div>
+    <svg class="abs" id="n3-ring" style="left:40px;top:250px" width="190" height="190" viewBox="0 0 190 190">
+      <circle cx="95" cy="95" r="76" fill="none" stroke="#efe6d8" stroke-width="22"/>
+      <circle id="n3-arc" cx="95" cy="95" r="76" fill="none" stroke="#FF4F9A" stroke-width="22" stroke-linecap="round" transform="rotate(-90 95 95)" stroke-dasharray="477.5" stroke-dashoffset="477.5"/>
+      <text id="n3-num" x="95" y="112" text-anchor="middle" font-size="54" font-weight="900" fill="#16122B" font-family="Noto Sans CJK SC">0h</text>
+    </svg>
+    <div class="abs" id="n3-t1" style="left:262px;top:278px;font-size:64px;line-height:1">全天在线</div>
+    <div class="abs" id="n3-t2" style="left:262px;top:362px;font-size:34px;color:#8a7f73;font-weight:700">半夜的询盘也能秒回</div>
+  </div>
+  <div class="abs burst" id="n3-burst" style="left:770px;top:420px"><svg viewBox="0 0 280 280"><polygon class="bp" fill="#FF4B2B" stroke="#16122B" stroke-width="7"/></svg><div style="color:var(--cream)">不漏<br>一单</div></div>
+  <div class="abs head" id="n3-head" style="left:90px;top:1110px">
+    <span class="mask"><span class="ln">半夜来询盘</span></span>
+    <span class="mask"><span class="ln">AI帮你<span class="k" style="background-image:linear-gradient(var(--sun),var(--sun))">秒回</span></span></span>
+  </div>
+</div>
+
+<!-- ============ OUTRO ============ -->
+<div class="scene" id="outro" style="background:var(--pink)">
+  <div class="blob" id="o-b1"></div><div class="blob" id="o-b2"></div><div class="blob" id="o-b3"></div>
+  <div class="conf" id="o-conf"></div>
+  <div class="abs head" id="o-head" style="left:80px;top:300px;font-size:128px;text-shadow:10px 10px 0 var(--ink)">
+    <span class="mask" style="padding-bottom:16px"><span class="ln">你最想先试</span></span>
+    <span class="mask" style="padding-bottom:16px"><span class="ln"><span style="color:var(--sun)">哪一个？</span></span></span>
+  </div>
+  <div class="abs" id="o-poll" style="left:80px;top:690px;width:920px">
+    <div class="abs op" style="top:0;width:920px;height:110px;background:var(--cream);border:6px solid var(--ink);border-radius:24px;overflow:hidden;color:var(--ink)"><div class="abs of" style="left:0;top:0;height:100%;background:var(--sun)"></div><div class="abs" style="left:30px;top:22px;font-size:54px">01 · AI写标题</div></div>
+    <div class="abs op" style="top:136px;width:920px;height:110px;background:var(--cream);border:6px solid var(--ink);border-radius:24px;overflow:hidden;color:var(--ink)"><div class="abs of" style="left:0;top:0;height:100%;background:var(--sky)"></div><div class="abs" style="left:30px;top:22px;font-size:54px">02 · AI做主图</div></div>
+    <div class="abs op" style="top:272px;width:920px;height:110px;background:var(--cream);border:6px solid var(--ink);border-radius:24px;overflow:hidden;color:var(--ink)"><div class="abs of" style="left:0;top:0;height:100%;background:var(--mint)"></div><div class="abs" style="left:30px;top:22px;font-size:54px">03 · AI回客户</div></div>
+  </div>
+  <div class="abs" id="o-bub" style="left:80px;top:1110px;background:var(--ink);color:var(--cream);font-size:52px;padding:20px 34px 26px;line-height:1;border-radius:20px">评论区告诉我 ↓</div>
+  <div class="abs" id="o-fol" style="left:560px;top:1100px;background:var(--sun);color:var(--ink);font-size:58px;padding:20px 34px 26px;line-height:1;border:6px solid var(--ink);border-radius:20px;box-shadow:10px 10px 0 var(--ink);transform-origin:50% 50%">+ 关注</div>
+</div>
+
+<div id="topbar"><div class="brand"><span data-ep="brand"></span></div>
+  <div class="dot" style="left:860px"></div><div class="dot" style="left:900px"></div><div class="dot" style="left:820px"></div></div>
+<div class="rib" id="rib1" style="top:1590px;background:var(--ink);transform:rotate(-5deg)"><div id="rib1t" style="color:var(--sun)"></div></div>
+<div class="rib" id="rib2" style="top:1600px;background:var(--sun);transform:rotate(4deg)"><div id="rib2t" style="color:var(--ink)"></div></div>
+<div id="sub"><span id="subt"></span></div>
+<div id="wipe"><div style="top:0;background:#FFC233"></div><div style="top:640px;background:#FF4F9A"></div><div style="top:1280px;background:#5B2EFF"></div><div style="top:1920px;background:#10C99A"></div><div style="top:2560px;background:#FF4B2B"></div></div>
+
+<script>
+// ===== 每期改这里 =====
+window.EP = window.EP || {brand:'Etsy-Tony', md:'11.06'};
+document.querySelectorAll('[data-ep]').forEach(e=>{e.textContent=EP[e.dataset.ep];});
+const C={ink:'#16122B',cream:'#FFF6E9',tom:'#FF4B2B',vio:'#5B2EFF',sun:'#FFC233',mint:'#10C99A',pink:'#FF4F9A',sky:'#2EB8FF'};
+const E={oc:x=>1-Math.pow(1-x,3),ob:x=>{const c1=1.9,c3=c1+1;return 1+c3*Math.pow(x-1,3)+c1*Math.pow(x-1,2)},io:x=>x<.5?4*x*x*x:1-Math.pow(-2*x+2,3)/2,ox:x=>x>=1?1:1-Math.pow(2,-10*x),el:x=>x===0?0:x===1?1:Math.pow(2,-10*x)*Math.sin((x*10-.75)*2*Math.PI/3)+1};
+const cl=x=>Math.max(0,Math.min(1,x)), P=(t,a,d)=>cl((t-a)/d), L=(a,b,k)=>a+(b-a)*k, $=id=>document.getElementById(id);
+function T(el,o){if(typeof el==='string')el=$(el);const{x=0,y=0,s=1,r=0,op=1}=o;el.style.transform=`translate(${x}px,${y}px) rotate(${r}deg) scale(${s})`;el.style.opacity=op}
+
+// ---- 时间轴（秒）：[场景, 开始, 结束] ----
+window.TL = window.TL || {
+  scenes:[['cover',0,4.4],['n1',4.4,10.2],['n2',10.2,16.0],['n3',16.0,21.8],['outro',21.8,27.0]],
+  subs:[[0.4,3.8,['3个AI神器','帮小卖家省一半时间']],[4.7,9.8,['第一个 AI写标题','输入关键词','3秒给你3个版本']],
+        [10.5,15.6,['第二个 AI做主图','一张产品照','一键换出一整套']],[16.3,21.4,['第三个 AI回客户','半夜的询盘','它也能秒回']],
+        [22.1,26.6,['你最想先试哪一个？','评论区告诉我']]]
+};
+window.DUR = TL.scenes[TL.scenes.length-1][2];
+let CH=[];TL.subs.forEach(([a,b,ch])=>{const tot=ch.join('').length;let c=a;ch.forEach(tx=>{const d=(b-a)*tx.length/tot;CH.push([c,c+d,tx]);c+=d;});});
+
+// ---- 每个场景的配色：背景光斑 + 漂浮小图形 ----
+const TH={cover:[C.pink,C.sky,C.sun],n1:[C.sun,C.pink,C.vio],n2:[C.pink,C.cream,C.tom],n3:[C.sky,C.sun,C.cream],outro:[C.vio,C.sun,C.tom]};
+const BLOB={cover:'cv',n1:'n1',n2:'n2',n3:'n3',outro:'o'};
+Object.keys(TH).forEach(k=>{[1,2,3].forEach(i=>{$(BLOB[k]+'-b'+i).style.background=`radial-gradient(circle, ${TH[k][i-1]}cc 0%, ${TH[k][i-1]}00 62%)`;});});
+let CONF={};
+function confetti(id,seed,cols){let s=seed;const r=()=>{s=(s*9301+49297)%233280;return s/233280};const box=$(id);const arr=[];
+  for(let i=0;i<16;i++){const ty=Math.floor(r()*4),c=cols[i%cols.length],sz=26+r()*38;const d=document.createElement('div');d.className='abs';
+    if(ty===0)d.style.cssText=`width:${sz}px;height:${sz}px;border-radius:50%;background:${c};border:5px solid ${C.ink}`;
+    else if(ty===1)d.style.cssText=`width:${sz*1.6}px;height:${sz*.55}px;border-radius:${sz}px;background:${c};border:5px solid ${C.ink}`;
+    else if(ty===2)d.innerHTML=`<svg width="${sz*1.4}" height="${sz*1.4}" viewBox="0 0 40 40"><path d="M20 4v32M4 20h32" stroke="${c}" stroke-width="9" stroke-linecap="round"/></svg>`;
+    else d.innerHTML=`<svg width="${sz*2}" height="${sz}" viewBox="0 0 80 40"><path d="M4 30 Q14 6 24 20 T44 20 T64 20 T78 12" fill="none" stroke="${c}" stroke-width="8" stroke-linecap="round"/></svg>`;
+    let x=r()*1000,y=200+r()*1500; if(y>520){if(r()<.45)y=200+r()*320;else x=r()<.5?8+r()*50:1000+r()*40;} // 避开内容区和字幕区
+    box.appendChild(d);arr.push({d,x,y,ph:r()*6.28,sp:.6+r()*.9,rot:r()*360,dl:r()*.6});}
+  CONF[id]=arr;}
+confetti('cv-conf',3,[C.sun,C.mint,C.pink,C.cream]);confetti('n1-conf',5,[C.sun,C.cream,C.vio]);confetti('n2-conf',8,[C.vio,C.pink,C.tom]);
+confetti('n3-conf',11,[C.vio,C.pink,C.cream]);confetti('o-conf',13,[C.sun,C.mint,C.sky,C.cream]);
+function confT(id,lt,t){CONF[id].forEach(c=>{const k=E.ob(P(lt,0.2+c.dl,.5));T(c.d,{x:c.x+18*Math.sin(t*c.sp+c.ph),y:c.y+26*Math.cos(t*c.sp*.8+c.ph),r:c.rot+t*40*c.sp,s:k,op:k>0?1:0});});}
+function blobs(p,t){[[0,-250,-200],[1,500,500],[2,-150,1150]].forEach(([i,x,y])=>{T(p+'-b'+(i+1),{x:x+140*Math.sin(t*.5+i*2),y:y+160*Math.cos(t*.42+i*1.3),s:1+.12*Math.sin(t*.7+i)});});}
+document.querySelectorAll('.bp').forEach(pg=>{let pts=[];for(let i=0;i<32;i++){const a=i/32*Math.PI*2,rr=i%2?112:136;pts.push((140+rr*Math.cos(a)).toFixed(1)+','+(140+rr*Math.sin(a)).toFixed(1));}pg.setAttribute('points',pts.join(' '));});
+
+function heads(id,lt,start){document.querySelectorAll('#'+id+' .ln').forEach((el,i)=>{const k=E.ox(P(lt,start+i*0.14,0.7));el.style.transform=`translateY(${L(115,0,k)}%) rotate(${L(6,0,k)}deg)`;});
+  document.querySelectorAll('#'+id+' .k').forEach(el=>{el.style.backgroundSize=`${L(0,100,E.io(P(lt,start+0.7,0.5)))}% 42%`;});}
+function burst(id,lt,at,t){const k=P(lt,at,.55);T(id,{s:L(0,1,E.el(k)),r:L(-90,0,E.oc(k))+t*25,op:k>0?1:0});$(id).querySelector('div').style.transform=`rotate(${-t*25}deg)`;}
+
+const S={
+ cover(lt,t){blobs('cv',t);confT('cv-conf',lt,t);
+  const k1=P(lt,.15,.7);T('cv-l1',{y:L(-700,0,E.ob(k1)),r:L(-14,-3,E.ob(k1)),s:1+.02*Math.sin(t*3)});
+  const k2=P(lt,.4,.7);T('cv-l2',{x:L(1100,0,E.ox(k2)),r:L(8,2,E.oc(k2))});
+  const kc=P(lt,.9,.6);T('cv-chip',{s:L(.3,1,E.el(kc)),r:L(-12,-2,E.oc(kc)),op:kc>0?1:0});
+  T('cv-date',{y:L(-40,0,E.oc(P(lt,.6,.4))),op:P(lt,.6,.3)});burst('cv-burst',lt,1.2,t);},
+ news(id,lt,t){blobs(id,t);confT(id+'-conf',lt,t);
+  const ki=E.ob(P(lt,.25,.5));T(id+'-idx',{s:L(.3,1,ki),r:L(-30,0,ki),op:P(lt,.25,.12)});
+  const kt=E.ox(P(lt,.4,.6));T(id+'-tag',{x:L(600,0,kt),r:L(10,-3,kt),op:kt>0?1:0});
+  const kc=E.ob(P(lt,.5,.75));T(id+'-card',{y:L(1300,0,kc)+7*Math.sin(t*1.7),r:L(14,-1.5,kc),op:1});
+  heads(id,lt,.8);burst(id+'-burst',lt,1.4,t);},
+ n1(lt,t){S.news('n1',lt,t);const w='wooden name sign';const n=Math.floor(L(0,w.length,P(lt,1.3,1.4)));$('n1-typ').textContent=w.slice(0,n);
+  $('n1-car').style.opacity=(n<w.length||Math.floor(lt*3)%2)?1:0;T('n1-gen',{op:P(lt,2.9,.3),x:L(-30,0,E.oc(P(lt,2.9,.4)))});
+  [0,1,2].forEach(i=>{const k=P(lt,3.3+i*.3,.5);T('n1-r'+i,{x:L(900,0,E.ox(k)),op:k>0?1:0});});},
+ n2(lt,t){S.news('n2',lt,t);const cols=[C.sky,C.pink,C.mint,C.vio,C.sun];
+  const ci=lt<3.2?0:Math.floor((lt-3.2)/.45)%cols.length;$('n2-main').style.background=cols[ci];
+  const kp=P(lt,1.2,.5);T('n2-prod',{s:L(.2,1,E.el(kp))*(1+.03*Math.sin(t*4)),y:-6*Math.abs(Math.sin(t*3)),op:kp>0?1:0});
+  [0,1,2,3].forEach(i=>{const k=P(lt,2.0+i*.22,.5);T('n2-t'+i,{s:L(0,1,E.el(k)),r:L(-25,[3,-3,-2,4][i],E.oc(k)),op:k>0?1:0});});},
+ n3(lt,t){S.news('n3',lt,t);const kq=P(lt,1.3,.45);T('n3-q',{s:L(.3,1,E.ob(kq)),op:kq>0?1:0});
+  const kd=P(lt,2.0,.3),ka=P(lt,3.0,.45);$('n3-dots').style.opacity=kd>0&&ka===0?1:0;$('n3-dots').textContent=['•  ','• •','• • •'][Math.floor(lt*5)%3];
+  T('n3-a',{s:L(.3,1,E.ob(ka)),op:ka>0?1:0});
+  const kr=E.io(P(lt,3.4,1.6));$('n3-arc').setAttribute('stroke-dashoffset',(477.5*(1-kr)).toFixed(1));$('n3-num').textContent=Math.round(L(0,24,kr))+'h';
+  T('n3-ring',{s:L(.5,1,E.ob(P(lt,3.3,.4))),op:P(lt,3.3,.2)});T('n3-t1',{x:L(60,0,E.oc(P(lt,3.6,.4))),op:P(lt,3.6,.3)});T('n3-t2',{op:P(lt,4.0,.4)});},
+ outro(lt,t){blobs('o',t);confT('o-conf',lt,t);heads('outro',lt,.2);
+  const fills=[78,92,64];document.querySelectorAll('#o-poll .op').forEach((el,i)=>{const k=P(lt,1.0+i*.25,.5);T(el,{x:L(-1100,0,E.ox(k)),op:1});
+    el.querySelector('.of').style.width=L(0,fills[i],E.io(P(lt,1.7+i*.2,1.0)))+'%';});
+  const kb=P(lt,2.6,.45);T('o-bub',{s:L(.3,1,E.el(kb)),op:kb>0?1:0});
+  const kf=P(lt,3.0,.45);T('o-fol',{s:L(.3,1,E.el(kf))*(1+.06*Math.max(0,Math.sin((lt-3.5)*7))*(lt>3.5?1:0)),r:-3,op:kf>0?1:0});}
+};
+
+// ================= 动效层：贴纸拍上 / 镜头震动 / 逐字弹跳 / 手绘圈 / 闪光 / 速度线 =================
+// 每个场景：stickers=[文字, x, y, 角度, 底色, 字色, 拍上时间]；sparks=[[x,y,出现时间]]；ring=手绘圈颜色；lines=速度线颜色
+window.FX = window.FX || {
+  cover:{stickers:[['干货',800,690,12,C.sun,C.ink,1.7],['Etsy卖家',600,1215,-7,C.sky,C.ink,2.0],['收藏备用',80,1235,5,C.cream,C.ink,2.3]],
+         sparks:[[960,300,1.3],[70,1000,1.6],[1000,1040,1.9]]},
+  n1:{stickers:[['SEO友好',720,1015,6,C.vio,C.cream,2.6]],sparks:[[1010,1120,2.2],[60,1060,2.4]],ring:C.cream,lines:C.cream},
+  n2:{stickers:[['省钱省时',40,515,-9,C.tom,C.cream,2.9]],sparks:[[1010,1100,2.2],[700,1290,2.5]],ring:C.vio,lines:C.ink},
+  n3:{stickers:[['24 / 7',660,985,7,C.sun,C.ink,4.2]],sparks:[[1010,1110,2.2],[60,1060,2.4]],ring:C.vio,lines:C.ink},
+  outro:{stickers:[['关注不迷路',610,1250,-6,C.mint,C.ink,3.6]],sparks:[[960,320,1.0],[880,560,1.3],[90,1260,3.0]]}
+};
+const STAR='M0 -40 C4 -10 10 -4 40 0 C10 4 4 10 0 40 C-4 10 -10 4 -40 0 C-10 -4 -4 -10 0 -40Z';
+const ns='http://www.w3.org/2000/svg';
+function svgEl(tag,attrs){const e=document.createElementNS(ns,tag);for(const k in attrs)e.setAttribute(k,attrs[k]);return e;}
+Object.keys(FX).forEach(id=>{const f=FX[id],sc=$(id);f.st=[];f.sp=[];
+  (f.stickers||[]).forEach(([tx,x,y,r,bg,fg,at])=>{const d=document.createElement('div');d.className='dc';d.textContent=tx;d.style.cssText+=`left:${x}px;top:${y}px;background:${bg};color:${fg}`;sc.appendChild(d);f.st.push({d,r,at});});
+  (f.sparks||[]).forEach(([x,y,at],i)=>{const s=svgEl('svg',{class:'fxsvg',width:80,height:80,viewBox:'-40 -40 80 80',style:`left:${x-40}px;top:${y-40}px;z-index:16`});
+    s.appendChild(svgEl('path',{d:STAR,fill:i%2?C.cream:C.sun,stroke:C.ink,'stroke-width':5}));sc.appendChild(s);f.sp.push({s,at,ph:i*1.7});});
+  if(f.lines){const s=svgEl('svg',{class:'fxsvg',width:1200,height:1200,viewBox:'-600 -600 1200 1200',style:'left:-400px;top:-200px;z-index:0'});
+    for(let i=0;i<28;i++){const a=i/28*Math.PI*2,r1=150+(i%3)*30,r2=560;s.appendChild(svgEl('line',{x1:r1*Math.cos(a),y1:r1*Math.sin(a),x2:r2*Math.cos(a),y2:r2*Math.sin(a),stroke:f.lines,'stroke-width':i%2?10:5,'stroke-linecap':'round'}));}
+    sc.insertBefore(s,sc.querySelector('.conf'));f.ln=s;}
+  // 关键词拆成单字，逐字弹跳
+  sc.querySelectorAll('.k').forEach(k=>{k.innerHTML=[...k.textContent].map(c=>`<span class="ch">${c}</span>`).join('');});
+});
+function fx(id,lt,t){const f=FX[id];if(!f)return;const sc=$(id);
+  // 镜头：进场推一下 + 贴纸拍上时震一下
+  let sh=0;f.st.forEach(o=>{const d=lt-o.at-0.18;if(d>0&&d<0.35)sh=Math.max(sh,1-d/0.35);});
+  const pin=1-E.oc(P(lt,0,0.45));const sx=Math.sin(t*95)*16*sh,sy=Math.cos(t*80)*12*sh;
+  sc.style.transform=`translate(${sx}px,${sy}px) scale(${1+0.07*pin+0.04*sh}) rotate(${L(-1.5,0,E.oc(P(lt,0,.45)))}deg)`;
+  // 贴纸：从镜头前砸下来，轻微呼吸摆动
+  f.st.forEach(o=>{const k=P(lt,o.at,0.22);const land=E.oc(k);const wob=k>=1?Math.sin((lt-o.at)*3)*2:0;
+    T(o.d,{s:L(2.6,1,land)*(k>=1?1+0.06*Math.exp(-(lt-o.at-0.22)*8)*Math.sin((lt-o.at)*30):1),r:L(o.r-25,o.r,land)+wob,op:k>0?1:0});
+    o.d.style.boxShadow=`0 0 0 5px #16122B,${L(40,14,land)}px ${L(50,18,land)}px 0 5px rgba(22,18,43,${L(.1,.35,land)})`;});
+  // 闪光星：出现后一闪一闪
+  f.sp.forEach(o=>{const k=P(lt,o.at,0.35);const tw=0.75+0.25*Math.sin(t*5+o.ph);T(o.s,{s:L(0,1,E.el(k))*tw,r:t*60+o.ph*30,op:k>0?1:0});});
+  // 速度线：编号出场时向外炸开
+  if(f.ln){const k=P(lt,0.2,0.6);T(f.ln,{s:L(0.3,1.5,E.oc(k)),r:lt*10,op:k>0&&k<1?L(0.9,0,k):0});}
+  // 关键词逐字弹
+  sc.querySelectorAll('.k').forEach(kk=>{kk.querySelectorAll('.ch').forEach((c,i)=>{const k=P(lt,(id==='outro'?0.6:1.15)+i*0.07,0.4);
+    c.style.transform=`translateY(${L(-60,0,E.el(k))}px) scale(${L(1.6,1,E.el(k))}) rotate(${L(-20,0,E.oc(k))}deg)`;});});
+  // 手绘圈：把关键词圈起来
+  if(f.ring){if(!f.rg&&lt>=1.75){const kk=sc.querySelector('.k');const old=sc.style.transform;sc.style.transform='none';
+      const a=kk.getBoundingClientRect();sc.style.transform=old;const w=a.width+70,h=a.height+40,cx=a.left+a.width/2,cy=a.top+a.height/2+6;
+      const s=svgEl('svg',{class:'fxsvg',width:w+40,height:h+40,viewBox:`${-w/2-20} ${-h/2-20} ${w+40} ${h+40}`,style:`left:${cx-w/2-20}px;top:${cy-h/2-20}px;z-index:14`});
+      let d='';for(let i=0;i<=72;i++){const a2=-2.6+i/72*Math.PI*2*1.12,wob=1+0.04*Math.sin(i*.9);d+=(i?'L':'M')+(Math.cos(a2)*w/2*wob).toFixed(1)+' '+(Math.sin(a2)*h/2*wob*(1+i/400)).toFixed(1)+' ';}
+      const p=svgEl('path',{d,fill:'none',stroke:f.ring,'stroke-width':9,'stroke-linecap':'round'});s.appendChild(p);sc.appendChild(s);f.rg=p;f.rl=p.getTotalLength();p.style.strokeDasharray=f.rl;}
+    if(f.rg){f.rg.style.strokeDashoffset=f.rl*(1-E.io(P(lt,1.9,0.55)));}}
+}
+
+function render(t){
+  let cur=TL.scenes[0];for(const s of TL.scenes){if(t>=s[1])cur=s;}
+  for(const s of TL.scenes)$(s[0]).style.display=(s===cur)?'block':'none';
+  const [id,st]=cur;const lt=t-st;S[id](lt,t);fx(id,lt,t);
+  const isN=id[0]==='n';$('topbar').style.display=isN?'block':'none';
+  if(isN){const n=+id[1];const cs=[C.sun,C.vio,C.pink];document.querySelectorAll('#topbar .dot').forEach((e,i)=>{const j=[2,0,1][i];e.style.background=j<n?cs[j]:'rgba(255,255,255,.35)';e.style.transform=j===n-1?`scale(${1+.15*Math.sin(t*6)})`:'scale(1)';});}
+  const c=CH.find(c=>t>=c[0]&&t<c[1]);const sp=$('subt');sp.textContent=c?c[2]:'';sp.style.transform='scale(1)';
+  if(c){const w=sp.scrollWidth;const k=E.ob(P(t,c[0],.18));sp.style.transform=`scale(${Math.min(1,990/w)*L(.85,1,k)})`;sp.style.opacity=P(t,c[0],.08);}
+  $('rib1t').style.transform=`translateX(${-((t*130)%RW)}px)`;$('rib2t').style.transform=`translateX(${-RW+((t*110)%RW)}px)`;
+  let on=false;for(let i=1;i<TL.scenes.length;i++){const b=TL.scenes[i][1];if(t>b-.5&&t<b+.5){const k=E.io((t-(b-.5))/1.0);
+    $('wipe').style.transform=`translateY(${L(1980,-3300,k)}px) skewY(-9deg)`;
+    document.querySelectorAll('#wipe div').forEach((d,j)=>{d.style.transform=`translateX(${Math.sin(k*Math.PI)*(j%2?60:-60)}px)`;});on=true;}}
+  $('wipe').style.display=on?'block':'none';
+}
+(function(){const u='✦ '+EP.brand+' · 小卖家AI工具箱 · 每天一个省时技巧 ';$('rib1t').innerHTML=('<span>'+u+'</span>').repeat(6);$('rib2t').innerHTML=('<span>'+u+'</span>').repeat(6);window.RW=$('rib1t').firstChild.getBoundingClientRect().width;})();
+window.render=render;render(0);
+</script>
+</body></html>
