@@ -19,7 +19,8 @@ body.hole #ph{display:none}
 .sh{text-shadow:0 4px 30px rgba(0,0,0,.6),0 2px 6px rgba(0,0,0,.5)}
 #tag{position:absolute;left:70px;top:190px;z-index:20;font-family:'Noto Sans CJK SC';font-size:28px;font-weight:500;letter-spacing:3px;display:flex;align-items:center;gap:14px;padding:12px 22px 14px;border-radius:40px;background:rgba(0,0,0,.35);border:1px solid rgba(255,255,255,.22)}
 #tag i{width:14px;height:14px;border-radius:50%;background:#FF4D3D;display:inline-block}
-#brand{position:absolute;right:70px;top:200px;z-index:20;font-size:30px;letter-spacing:1px;font-weight:600;opacity:.9}
+#brand{position:absolute;right:70px;top:192px;z-index:20;font-size:30px;letter-spacing:1px;font-weight:600;opacity:.92;text-align:right;line-height:1.1}
+#brand .url{display:block;font-family:'Inter';font-size:21px;font-weight:500;letter-spacing:1.5px;opacity:.75;margin-top:6px}
 #doc{position:absolute;left:100px;top:520px;width:880px;height:640px;background:#F4F1EA;border-radius:18px;color:#1b1b1b;box-shadow:0 60px 120px rgba(0,0,0,.6),0 10px 30px rgba(0,0,0,.35);transform-origin:50% 50%;padding:56px 60px;overflow:hidden}
 #doc .src{font-size:24px;color:#8a8478;letter-spacing:2px;font-weight:500}
 #doc h3{font-family:'Inter Display';font-size:58px;font-weight:700;letter-spacing:-1px;margin:18px 0 26px}
@@ -38,7 +39,7 @@ body.hole #ph{display:none}
 <div id="ph"><div>（实拍素材层）</div></div>
 <div id="grade"></div>
 <div id="tag"><i id="dot"></i>ETSY 政策 · 知识点</div>
-<div id="brand"><span data-ep="brand"></span></div>
+<div id="brand"><span data-ep="brand"></span><span class="url" data-ep="url"></span></div>
 
 <div id="world">
   <!-- 钩子：问题砸进画面 -->
@@ -71,8 +72,8 @@ body.hole #ph{display:none}
   <!-- 见解 + 落版 -->
   <div class="abs zh sh" id="t1" style="left:0;width:1080px;text-align:center;top:700px;font-size:96px;font-weight:900;letter-spacing:-2px" data-split>机器不是问题，</div>
   <div class="abs zh sh" id="t2" style="left:0;width:1080px;text-align:center;top:830px;font-size:96px;font-weight:900;letter-spacing:-2px" data-split>谁在做<span class="amb">才是。</span></div>
-  <div class="abs zh" id="end" style="left:0;width:1080px;text-align:center;top:1010px;font-size:36px;font-weight:500;letter-spacing:3px;opacity:.9"><span data-ep="brand"></span> · 每天一个 Etsy 政策知识点</div>
-  <div class="abs zh" id="fol" style="left:420px;top:1090px;width:240px;height:90px;border-radius:50px;background:#FFB547;color:#1b1206;font-size:40px;font-weight:700;display:flex;align-items:center;justify-content:center">关注</div>
+  <div class="abs zh" id="end" style="left:0;width:1080px;text-align:center;top:1010px;font-size:36px;font-weight:500;letter-spacing:3px;opacity:.9"><span class="amb" style="font-family:Inter;font-weight:700;letter-spacing:1px;font-size:44px" data-ep="url"></span><br><span style="font-size:32px;opacity:.85">每天一个 Etsy 知识点</span></div>
+  <div class="abs zh" id="fol" style="left:420px;top:1160px;width:240px;height:90px;border-radius:50px;background:#FFB547;color:#1b1206;font-size:40px;font-weight:700;display:flex;align-items:center;justify-content:center">关注</div>
 </div>
 
 <div id="grain"></div>
@@ -81,7 +82,7 @@ body.hole #ph{display:none}
 
 <script src="../cinema/core.js"></script>
 <script>
-window.EP=window.EP||{brand:'Etsy-Tony'};
+window.EP=window.EP||{brand:'Etsy-Tony',url:'openaigrowth.com'};
 // 每段 [开始, 结束]；素材在 10 秒处换镜头（白闪盖住）
 window.TL=window.TL||{dur:21,cut:10,
   hook:[0,3.6],doc:[3.5,10],verdict:[10,14.6],warn:[14.6,18.2],take:[18.2,21],

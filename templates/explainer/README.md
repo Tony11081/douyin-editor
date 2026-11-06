@@ -27,3 +27,13 @@
 
 样片用到的已核对可商用素材：42137 封箱胶带特写（竖屏）、31218 男人在客厅打包。受限不能用：24279 送货、17450、39500。
 样片政策依据：Etsy 收费（上架费 $0.20、交易费 6.5% 含运费、美国支付手续费 3%+$0.25）；Star Seller（首条消息 24 小时内回复 95%、按时发货且有效物流 95%、平均评分 4.8、按三个月考核）；Offsite Ads（默认开启、15%，近 365 天销售 ≥ $10,000 为 12% 且必须参加、每单上限 $100）。每期发之前重新核对 Etsy 官方页面。
+
+## 网址
+右上角品牌名下常驻一行小字网址，结尾卡醒目显示网址（`EP.url`，默认 openaigrowth.com），结尾配音念「……在 open ai growth 点 com」。
+
+## 配音出片（Bo 男声，跟政策速递同一个声音）
+1. tts：model `microsoft/mai-voice-2.1`，voice `zh-CN-Bo:MAI-Voice-2.1`，instructions「专业、干脆的商业资讯播报，像财经快讯主播，语速偏快，重点词加重」，**speed 1.3**（服务器 atempo，只加速配音），gap 0.3。数字写汉字读法，最后一句 CTA 落到网站真实的服务（利润计算器、店铺诊断等）+ 网址。
+2. 写 `vo/<名字>.json`：`dur` 总时长；`at` 每句开始秒数（第一句 0.3，之后按 tts 的 start+0.3）；`subs` 按配音时间写字幕；`anchors` 把配音时间映射到模板时间（每段的开始/结束对上模板里那段画面），画面按段伸缩；`cuts` 写 `[]` 关掉白闪时，素材硬切在画面不变的地方。
+3. `VO=vo/<名字>.json python3 -I render.py hole <模板>.html out.webm 0 <dur>` 出透明层 → 推 video-drop。
+4. 剪辑服务器 render：素材 clips 总长 = dur（换素材点放在段落交界或镜头横移处）+ 透明层 overlay。
+5. import 上一步的成片 → mux：voiceover `{tts_id, at}`、bgm `mixkit_driving_ambition.mp3` 音量 0.1、fade_in 0.5、fade_out 2、original_volume 0、loudnorm true、speed 1（配音已经是 1.3 倍）。

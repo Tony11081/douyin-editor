@@ -3,7 +3,10 @@ python3 -I render.py stills glow.html 1.5,5,9.5          → still_<秒>.png 检
 python3 -I render.py video  glow.html out.mp4            → 整条画面（素材窗是黑的，等剪辑服务器叠素材）
 python3 -I render.py hole   glow.html out.webm 3.6 7.8   → 素材场景那段的透明 webm（挖空素材窗，叠在素材上面）
 """
-import sys, subprocess, pathlib
+import sys, subprocess, pathlib, os, json
+APPLY_VO = """(VO)=>{const A=VO.anchors;const m=tv=>{if(tv<=A[0][0])return A[0][1];for(let i=1;i<A.length;i++){if(tv<=A[i][0]){const [v0,t0]=A[i-1],[v1,t1]=A[i];return t0+(t1-t0)*(tv-v0)/(v1-v0);}}return A[A.length-1][1];};
+ if(VO.cuts!==undefined)TL.cuts=VO.cuts;TL.subs=VO.subs.map(([a,b,ch])=>[m(a),m(b),ch]);buildSubs();
+ const orig=window.render;window.render=tv=>orig(m(tv));window.DUR=VO.dur;}"""
 from playwright.sync_api import sync_playwright
 
 here = pathlib.Path(__file__).parent
@@ -16,6 +19,9 @@ with sync_playwright() as p:
     url = (here / page).as_uri() + ("?hole=1" if mode == "hole" else "")
     pg.goto(url)
     pg.wait_for_timeout(1000)
+    vo = os.environ.get("VO")  # 配音时间轴：VO=vo/xxx.json，画面按配音逐句伸缩，字幕对齐配音
+    if vo:
+        pg.evaluate(APPLY_VO, json.load(open(here / vo)))
     if mode == "stills":
         for t in [float(x) for x in sys.argv[3].split(",")]:
             pg.evaluate(f"render({t})")
