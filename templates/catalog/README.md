@@ -57,6 +57,7 @@ gallery.html 是所有模板的静态样式（?tpl=<代号>&s=hook|card，背景
 | 49 | 发布会 · 深空光晕 | cg | templates/cinema/glow.html（黑底流动光晕 + 毛玻璃 + 逐字模糊显现，带实拍素材窗；叠素材流程见 cinema/README.md） |
 | 50 | 发布会 · 钛金影院 | ct | templates/cinema/titan.html（电影黑边 + 金属流光字 + 镜头光晕 + 3D 手机 + 宽银幕素材条） |
 | 51 | 发布会 · 白昼极简 | cd | templates/cinema/day.html（浅灰白 + 品牌蓝 + 前景虚化光斑 + 圆角视频框） |
+| 52 | 知识讲解 · 纪录片式 | ex | templates/explainer/explainer.html（实拍铺满全屏 + 政策原文纸片/荧光笔/手绘批注/贴纸标签，连续镜头不翻页，整条透明层叠在素材上） |
 
 高端系列另用字体：Cormorant Garamond、Playfair Display、Cinzel、Bodoni Moda、Jost（同样来自 google/fonts ofl/）。
 
