@@ -1,0 +1,92 @@
+<!doctype html>
+<html><head><meta charset="utf-8">
+<!-- 53 · 知识讲解·收据拆账：一张收据在画面里「打印」出来，镜头推近费用行，手绘批注 + 印章，适合讲钱、费用、利润 -->
+<link rel="stylesheet" href="kit.css">
+<style>
+#rc{position:absolute;left:250px;top:330px;width:580px;background:#FBFAF6;color:#1a1a1a;border-radius:6px 6px 0 0;box-shadow:0 50px 100px rgba(0,0,0,.55),0 8px 24px rgba(0,0,0,.35);font-family:'DejaVu Sans Mono','Noto Sans CJK SC',monospace;transform-origin:50% 0;overflow:hidden}
+#rc .in{padding:44px 40px 30px}
+#rc .hd{text-align:center;font-family:'Inter Display';font-weight:800;font-size:40px;letter-spacing:6px}
+#rc .sm{text-align:center;font-size:20px;color:#8a857b;margin-top:8px;letter-spacing:2px}
+.ln{display:flex;justify-content:space-between;font-size:27px;line-height:1;padding:15px 0;font-weight:500}
+.ln .k{font-family:'Noto Sans CJK SC';font-weight:500}
+.ln.m{color:#C2410C}
+.ln.big{font-size:40px;font-weight:700;padding-top:22px}
+.dash{border-top:2px dashed #cfc9bd;margin:10px 0}
+#rc .zz{height:22px;background:linear-gradient(-45deg,transparent 11px,#FBFAF6 0) 0 0/22px 22px repeat-x,linear-gradient(45deg,transparent 11px,#FBFAF6 0) 0 0/22px 22px repeat-x;transform:translateY(21px)}
+#stamp{position:absolute;left:560px;top:1010px;width:330px;height:330px;border-radius:50%;border:10px solid #E8562A;color:#E8562A;display:flex;flex-direction:column;align-items:center;justify-content:center;transform-origin:50% 50%;mix-blend-mode:normal}
+#stamp b{font-family:'Inter Display';font-size:118px;font-weight:900;line-height:1;letter-spacing:-4px}
+#stamp span{font-family:'Noto Sans CJK SC';font-size:30px;font-weight:700;letter-spacing:4px}
+#tape{position:absolute;left:-200px;top:820px;width:1480px;height:150px;background:#FFB547;color:#1b1206;transform:rotate(-8deg);display:flex;align-items:center;overflow:hidden;box-shadow:0 20px 50px rgba(0,0,0,.45)}
+#tape div{white-space:nowrap;font-family:'Noto Sans CJK SC';font-size:64px;font-weight:900;letter-spacing:2px}
+</style></head>
+<body style="--ph1:#2d3a44;--ph2:#0d1114">
+<div id="ph"><div>（实拍素材层）</div></div>
+<div id="grade"></div>
+<div id="tag"><i id="dot"></i>ETSY 知识点 · 费用</div>
+<div id="brand"><span data-ep="brand"></span></div>
+<div id="world">
+  <div class="abs zh sh hk" id="h1" style="left:76px;top:600px" data-split>卖一件 $20 的货，</div>
+  <div class="abs zh sh hk2" id="h2" style="left:76px;top:720px" data-split>Etsy<span class="amb">拿走多少？</span></div>
+
+  <div id="rc"><div class="in">
+    <div class="hd">ETSY</div><div class="sm">ORDER · US SELLER</div>
+    <div class="dash" style="margin-top:22px"></div>
+    <div class="ln" id="l0"><span class="k">商品 Item</span><span>$20.00</span></div>
+    <div class="ln" id="l1"><span class="k">运费 Shipping</span><span>$5.00</span></div>
+    <div class="ln" id="l2" style="font-weight:700"><span class="k">买家支付</span><span>$25.00</span></div>
+    <div class="dash"></div>
+    <div class="ln m" id="l3"><span class="k">上架费</span><span>−$0.20</span></div>
+    <div class="ln m" id="l4"><span class="k">交易费 6.5%×$25</span><span>−$1.63</span></div>
+    <div class="ln m" id="l5"><span class="k">支付手续费 3%+$0.25</span><span>−$1.00</span></div>
+    <div class="dash"></div>
+    <div class="ln big" id="l6"><span class="k">到手</span><span>$22.17</span></div>
+  </div><div class="zz"></div></div>
+  <svg class="abs" id="ann" style="left:0;top:0;overflow:visible" width="1080" height="1920"><path id="annp" d="M150 1040 C 150 950, 190 880, 262 850 M262 850 L222 842 M262 850 L238 882" fill="none" stroke="#FFB547" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+  <div class="abs zh sh amb" id="annt" style="left:70px;top:1050px;font-size:46px;font-weight:900;line-height:1.25">运费也要<br>抽 6.5%</div>
+  <div id="stamp"><span>总共被扣</span><b>11%</b><span>≈ $2.83</span></div>
+
+  <div id="tape"><div id="tapet"></div></div>
+  <div class="abs zh sh" id="w2" style="left:80px;top:1060px;font-size:46px;font-weight:500;line-height:1.5">订单如果来自<span class="amb" style="font-weight:700">站外广告</span><br>还要再扣 <span class="amb" style="font-weight:900;font-size:64px">15%</span></div>
+
+  <div class="abs zh sh" id="t1" style="left:0;width:1080px;text-align:center;top:690px;font-size:92px;font-weight:900;letter-spacing:-2px" data-split>定价时先把 11%</div>
+  <div class="abs zh sh" id="t2" style="left:0;width:1080px;text-align:center;top:815px;font-size:92px;font-weight:900;letter-spacing:-2px" data-split>算<span class="amb">进成本里。</span></div>
+  <div class="abs zh" id="end" style="left:0;width:1080px;text-align:center;top:1000px;font-size:36px;font-weight:500;letter-spacing:3px;opacity:.9"><span data-ep="brand"></span> · 每天一个 Etsy 知识点</div>
+  <div class="abs zh" id="fol" style="left:420px;top:1080px;width:240px;height:90px;border-radius:50px;background:#FFB547;color:#1b1206;font-size:40px;font-weight:700;display:flex;align-items:center;justify-content:center">关注</div>
+</div>
+<div id="grain"></div>
+<div id="sub"><span id="subt"></span></div>
+<div id="flash"></div>
+<script src="../cinema/core.js"></script>
+<script src="kit.js"></script>
+<script>
+window.EP=window.EP||{brand:'Etsy-Tony'};
+window.TL=window.TL||{dur:21,cuts:[9,14],
+  subs:[[0.3,3.2,['卖一件20美元的货','Etsy到底拿走多少？']],[3.6,8.7,['假设商品20美元 运费5美元','先扣上架费0.2美元','再扣6.5%交易费和支付手续费']],
+        [9.2,14.2,['注意 交易费是按25美元算的','运费也要抽','加起来大约被扣11%']],[14.7,17.6,['订单要是来自站外广告','还要再扣15%']],[17.9,20.8,['所以定价时','先把这11%算进成本']]]};
+window.IDS=['h1','h2','rc','ann','annt','stamp','tape','w2','t1','t2','end','fol'];
+const LN=['l0','l1','l2','l3','l4','l5','l6'];
+window.SEG=function(t){
+  hook('h1','h2',t,0,3.4);
+  // 收据：一行一行「打印」出来，镜头推近费用行，最后盖章
+  if(vis(t,3.2,14.5)){show('rc','ann','annt','stamp');const lt=t-3.2;
+    const shown=LN.filter((_,i)=>lt>0.5+i*0.62).length;const prog=cl((lt-0.5)/(LN.length*0.62));
+    LN.forEach((l,i)=>{const k=P(lt,0.5+i*0.62,.25);$(l).style.opacity=k>0?1:0;$(l).style.transform=`translateY(${L(-10,0,E.oc(k))}px)`;});
+    const jit=prog<1?Math.sin(t*60)*1.2:0;const ke=E.oq(P(lt,0,.9));
+    const push=E.io(P(lt,6.1,1.4));const pull=E.io(P(lt,9.2,1.0));const z=L(1,1.32,push)*L(1,1/1.32*1.0,pull);
+    T('rc',{y:L(-500,0,ke)+jit+L(0,-150,push)*(1-pull),x:L(0,90,push)*(1-pull),rx:L(30,10,ke),r:L(-8,-3,ke)+1.2*Math.sin(t*.6),s:z,op:E.oc(P(lt,0,.4))});
+    $('rc').style.clipPath=`inset(0 0 ${L(100,0,E.io(cl(prog*1.04)))}% 0)`;
+    const ka=P(lt,6.9,.7);drawPath('annp',E.io(ka));$('ann').style.opacity=1-pull;T('annt',{x:L(-40,0,E.oq(P(lt,7.2,.5))),op:E.oc(P(lt,7.2,.5))*(1-pull)});
+    $('ann').style.transform=`translate(${L(0,90,push)*(1-pull)}px,${L(0,-60,push)*(1-pull)}px)`;
+    const ks=P(lt,9.8,.28);const land=E.oc(ks);T('stamp',{s:L(2.4,1,land)*(ks>=1?1+.04*Math.exp(-(lt-10.08)*8)*Math.sin((lt-10.08)*30):1),r:L(-30,-14,land),op:ks>0?L(0,.92,Math.min(1,ks*2)):0});
+    fadeAway(['rc','ann','annt','stamp'],lt,10.85,.45);}
+  // 警示胶带：横扫过画面
+  if(vis(t,14.5,17.7)){show('tape','w2');const lt=t-14.5;const k=E.oq(P(lt,0,.7));
+    $('tape').style.transform=`rotate(-8deg) translateX(${L(-1500,0,k)}px)`;$('tapet').style.transform=`translateX(${-((lt*120)%TW)}px)`;
+    fadeIn('w2',lt,.7,.6,16,10);fadeAway(['tape','w2'],lt,2.75,.4);}
+  if(vis(t,17.7,21)){show('t1','t2','end','fol');const lt=t-17.7;chars('t1',lt,.15,.05,.6,30,22);chars('t2',lt,.75,.07,.6,30,22);
+    fadeIn('end',lt,1.7,.6,10,6);const kf=P(lt,2.0,.5);T('fol',{s:L(.7,1,E.ob(kf)),op:E.oc(kf)});}
+};
+(function(){const u='站外广告 · OFFSITE ADS · 再扣 15% · ';$('tapet').innerHTML=('<span>'+u+'</span>').repeat(5);window.TW=$('tapet').firstChild.getBoundingClientRect().width;})();
+kitBoot();
+</script>
+</body></html>

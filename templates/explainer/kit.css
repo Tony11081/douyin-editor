@@ -1,0 +1,23 @@
+/* 知识讲解·纪录片式 公用样式（52 之后的变体共用） */
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:1080px;height:1920px;overflow:hidden;background:#000}
+body{font-family:'Inter Display','Inter','Noto Sans CJK SC',sans-serif;color:#fff;font-weight:600}
+.abs{position:absolute}
+.zh{font-family:'Noto Sans CJK SC'}
+.c{display:inline-block}
+.amb{color:#FFB547}
+.sh{text-shadow:0 4px 30px rgba(0,0,0,.6),0 2px 6px rgba(0,0,0,.5)}
+#ph{position:absolute;inset:0;background:radial-gradient(ellipse at 40% 45%,var(--ph1,#3a3f47),var(--ph2,#111317) 70%)}
+#ph div{position:absolute;left:0;top:930px;width:1080px;text-align:center;color:rgba(255,255,255,.22);font-size:40px;font-family:'Noto Sans CJK SC'}
+body.hole #ph{display:none}
+#grade{position:absolute;inset:0;z-index:1;background:linear-gradient(180deg,rgba(0,0,0,.55) 0%,rgba(0,0,0,0) 22%,rgba(0,0,0,0) 62%,rgba(0,0,0,.7) 100%),radial-gradient(ellipse 85% 70% at 50% 48%,rgba(0,0,0,0) 50%,rgba(0,0,0,.55) 100%),var(--tint,linear-gradient(0deg,rgba(255,150,60,.06),rgba(20,60,80,.08)))}
+#grain{position:absolute;inset:0;z-index:30;opacity:.10;background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='300' height='300'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/></filter><rect width='300' height='300' filter='url(%23n)' opacity='.55'/></svg>")}
+#world{position:absolute;inset:0;z-index:5;transform-origin:50% 45%}
+#tag{position:absolute;left:70px;top:190px;z-index:20;font-family:'Noto Sans CJK SC';font-size:28px;font-weight:500;letter-spacing:3px;display:flex;align-items:center;gap:14px;padding:12px 22px 14px;border-radius:40px;background:rgba(0,0,0,.35);border:1px solid rgba(255,255,255,.22)}
+#tag i{width:14px;height:14px;border-radius:50%;background:#FF4D3D;display:inline-block}
+#brand{position:absolute;right:70px;top:200px;z-index:20;font-size:30px;letter-spacing:1px;font-weight:600;opacity:.9}
+#sub{position:absolute;left:0;top:1430px;width:1080px;height:100px;display:flex;align-items:center;justify-content:center;z-index:25}
+#sub span{font-family:'Noto Sans CJK SC';font-size:48px;font-weight:500;color:#fff;letter-spacing:2px;text-shadow:0 2px 16px rgba(0,0,0,.95),0 0 4px rgba(0,0,0,.9),0 0 30px rgba(0,0,0,.7);white-space:nowrap;display:inline-block}
+#flash{position:absolute;inset:0;z-index:40;background:#fff7ea;opacity:0}
+.hk{font-size:92px;letter-spacing:-2px}
+.hk2{font-size:124px;letter-spacing:-3px;font-weight:900}
