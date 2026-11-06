@@ -1,6 +1,32 @@
-# 口播模板库（编号）
+# 视频模板总库（编号）
 
-Tony 选模板只说编号。样张页：templates_page.html（已发布为 Claude 页面「Etsy-Tony 视频模板库」）。
+**所有视频模板都在这一张表里**（Tony 2026-11-06：模板归到一块儿，以后直接按编号调用）。模板文件分在两个仓库：
+- `Tony11081/douyin-editor` 的 `templates/`（下表没写仓库的都在这里）
+- `Tony11081/video-drop` 的 `templates/`（表里写了「video-drop」的）
+
+Tony 选模板只说编号。样张页：templates_page.html（Claude 页面「Etsy-Tony 视频模板库」）。
+
+## 一、每天在用的固定方向（先看这里）
+
+每个方向的模板和配音固定，不混用。配音一律只加速配音（tts speed），画面、素材、音乐保持原速。
+
+| 方向 | 账号 / 用途 | 时间（自动任务） | 模板 | 配音 | 背景音乐 |
+|---|---|---|---|---|---|
+| Etsy 政策速递 | Shopwright，讲新规 + 观点 | 每天 08:37 | 56 号（video-drop `templates/policy-brief/`） | Bo 男声 1.3 倍 | mixkit_driving_ambition 0.1 |
+| 网站功能宣传 | openaigrowth.com 的工具和服务 | 每天 09:23 | 51b 号（`templates/promo-day/`） | Lan 女声 1.3 倍 | mixkit_dreaming_big 0.07 |
+| Etsy 知识点 | 抖音 Etsy-Tony，常青知识 | 每天 15:47 | 52–55 号轮换（`templates/explainer/`） | Bo 男声 1.3 倍 | mixkit_driving_ambition 0.1 |
+| AI浪潮 | 视频号 AI浪潮，每日 AI 新闻 | 早上（见 README） | 57 号（`templates/ai-wave/`） | 见 README | 见 README |
+| TonyBook 跨境实操 | 抖音 助理－TonyBook跨境 | — | 60 号（video-drop `templates/tonybook-mag/`） | ElevenLabs Will | 见 README |
+| 移轴微缩 | 抖音 Etsy-Tony 特别篇 | — | 58 号（video-drop `templates/etsytony-miniature/`） | 见 README | 合成音效 |
+| 科普治愈 | 科学现象 → 人生道理 | — | 59 号（video-drop `templates/science-healing/`） | 见 README | 见 README |
+
+所有方向共用的规矩：
+- **不重复**：政策速递、知识点、网站宣传三条线共用选题台账 video-drop `templates/policy-brief/topics.md`，同一个知识点只做一次；TonyBook 也先读它。
+- **免费实拍素材**：每条都要有，而且要和模板融为一体（素材在模板「下面」透出来，模板的暗角 / 颗粒 / 文字盖在上面）。Mixkit 只用详情页写「Mixkit Stock Video Free License」的，Pexels / Pixabay 也可以。已核对可商用和受限的清单见 `templates/explainer/README.md`。
+- **网址**：画面右上角和结尾卡带 openaigrowth.com（49–55、51b 已内置）。
+- **合成方式**：模板渲染成透明 webm（`?hole=1`），推到 video-drop 用提交 SHA 的 raw 链接；剪辑服务器 render 时素材在下、透明层在上；最后 mux 加配音和音乐。做法见 `templates/cinema/README.md`、`templates/explainer/README.md`、`templates/promo-day/README.md`。
+
+## 二、全部模板编号
 gallery.html 是所有模板的静态样式（?tpl=<代号>&s=hook|card，背景放 bg/hook.jpg、bg/card.jpg）。
 
 | 号 | 名称 | 代号 | 动画版实现 |
@@ -47,7 +73,7 @@ gallery.html 是所有模板的静态样式（?tpl=<代号>&s=hook|card，背景
 | 39 | 财经深蓝（高端） | fn | 仅静态样式 |
 | 40 | 极光玻璃（高端） | au | 仅静态样式 |
 | 41 | 对称美学（高端） | wa | 仅静态样式 |
-| 42 | 演讲舞台（高端） | sp | 仅静态样式 |
+| 42 | 演讲舞台（高端） | sp | templates/stage/stage_tpl.html（动画版，render05s.mjs） |
 | 43 | 香槟邀请函（高端） | iv | 仅静态样式 |
 | 44 | 口碑墙 · 倾斜滚墙 | tw-a | templates/testimonial-wall/wall.html（独立动效片段，8 秒） |
 | 45 | 口碑墙 · 星环隧道 | tw-b | templates/testimonial-wall/vortex.html（独立动效片段，8.5 秒） |
@@ -62,6 +88,15 @@ gallery.html 是所有模板的静态样式（?tpl=<代号>&s=hook|card，背景
 | 54 | 知识讲解 · 镂空大字横移 | ex-star | templates/explainer/star.html（大数字镂空透出实拍 + 指标横移长镜头 + 圆环计数 + 徽章） |
 | 55 | 知识讲解 · 手机实录 | ex-app | templates/explainer/ads.html（3D 手机界面示意 + 逐行圈重点 + 手指点开关 + 规则对比） |
 | 51b | 白昼极简 · 网站功能宣传版 | cd-promo | templates/promo-day/promo.html（每日 09:23 网站宣传用：实拍钩子 + 圆角框录屏 + 结尾网址和评论关键词；每期只写配置文件） |
+| 56 | Etsy 政策速递 · Shopwright 暖白青柠 | pb | video-drop templates/policy-brief/（engine.js + episodes/epNNN.js；check.py 自检、sfx.py 音效；选题台账 topics.md） |
+| 57 | AI浪潮 · 钴蓝荧光黄 | aw | templates/ai-wave/episode.html（每日 AI 新闻；Grok 交付表格 → 出片） |
+| 58 | 移轴微缩 · 玩具城市沙盘 | tm | video-drop templates/etsytony-miniature/（Three.js 沙盘 + 合成音效，每期一份节拍表） |
+| 59 | 科普治愈 · 纸光 | sh2 | video-drop templates/science-healing/（自然现象 → 人生道理） |
+| 60 | TonyBook 极简杂志（4 号动态版） | mag | video-drop templates/tonybook-mag/（细线刊头、衬线标题、实拍素材，ElevenLabs Will） |
+| 61 | 网站功能分屏 A（旧，2026-11-06 起由 51b 替换） | fs | templates/feature-split/board.html（上半屏面板 + 手机录屏） |
+| 62 | TonyBook 助理聊天（2026-10-31 起停用） | tc | video-drop templates/tonybook-chat/ |
+
+以后新模板接着编 63 号，加到这张表和样张页。
 
 高端系列另用字体：Cormorant Garamond、Playfair Display、Cinzel、Bodoni Moda、Jost（同样来自 google/fonts ofl/）。
 
