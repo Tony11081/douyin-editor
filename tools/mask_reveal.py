@@ -220,6 +220,10 @@ def load_clip(src: str, t_in: float, dur: float, w: int, h: int, fps: int) -> li
 def main(cfg_path: str) -> None:
     cfg = json.load(open(cfg_path, encoding="utf-8"))
     w, h, fps = cfg.get("w", 1280), cfg.get("h", 720), cfg.get("fps", 30)
+    if "beats_file" in cfg:                                             # beat_pick.py 生成的拍点
+        bf = json.load(open(cfg["beats_file"], encoding="utf-8"))
+        cfg["beats"] = bf["beats"]
+        cfg.setdefault("audio", bf.get("music"))
     beats = cfg["beats"]
     t0 = beats[0]
     yy, xx = np.mgrid[0:h, 0:w].astype(np.float32)
