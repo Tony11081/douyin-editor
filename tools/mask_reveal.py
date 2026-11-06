@@ -8,6 +8,8 @@
   stripes  横条一条条亮（半拍一条）
   radial   从画面中心向外圆形扩开
   scan     一道白光横扫，光扫过的地方变彩色
+大字（中英双语）：场景写 title_en / title_zh；end_card 写 "style": "big" 和 label。英文字体用 Playfair Display、
+编号用 Montserrat（Google Fonts，OFL 免费可商用），放在运行目录或用 config 的 fonts 指定路径。
 用法：python3 mask_reveal.py config.json
 config: {"out": "out.mp4", "w": 1280, "h": 720, "fps": 30, "beats": [拍点秒数...],
          "scenes": [{"src": "a.mp4", "in": 2.0, "beats": 4, "reveal": "wipe", "hues": [[0,25]],
@@ -63,6 +65,69 @@ def over(out: np.ndarray, layer: tuple[np.ndarray, np.ndarray], k: float) -> np.
     bgr, a = layer
     a = a[..., None] * k
     return out * (1 - a) + bgr * a
+
+
+# ---------------- 大字排版（中英双语，杂志风） ----------------
+def load_font(path: str, size: int, wght: int | None = None) -> ImageFont.FreeTypeFont:
+    f = ImageFont.truetype(path, size, index=2 if path.endswith(".ttc") else 0)
+    if wght:
+        try:
+            f.set_variation_by_axes([wght])                             # 可变字体（Playfair / Montserrat）选字重
+        except Exception:  # noqa: BLE001  非可变字体就用默认字重
+            pass
+    return f
+
+
+def line_layer(w: int, h: int, text: str, fnt, x: float, y: float, rgb=(255, 255, 255), spacing: float = 0,
+               anchor: str = "l") -> dict:
+    """一行字画成一层（逐字画以支持字距），记下这一行的上下边界，用来做"从基线升起"的动画。"""
+    img = Image.new("RGBA", (w, h), (0, 0, 0, 0))
+    d = ImageDraw.Draw(img)
+    widths = [d.textlength(c, font=fnt) for c in text]
+    total = sum(widths) + spacing * max(len(text) - 1, 0)
+    if anchor == "m":
+        x -= total / 2
+    cx = x
+    for c, cw in zip(text, widths):
+        d.text((cx, y), c, font=fnt, fill=tuple(int(v) for v in rgb) + (255,), anchor="ls")
+        cx += cw + spacing
+    a = np.asarray(img).astype(np.float32) / 255
+    asc, desc = fnt.getmetrics()
+    return {"bgr": a[..., [2, 1, 0]], "a": a[..., 3], "top": max(0, int(y - asc * 1.08)),
+            "bottom": min(h, int(y + desc * 1.15)), "x": x, "width": total, "y": y}
+
+
+def rise(out: np.ndarray, ln: dict, p: float, k_mult: float = 1.0) -> np.ndarray:
+    """文字从自己的基线下面升上来：只露出这一行框里的部分，像被一条线"吐"出来。"""
+    if p <= 0 or k_mult <= 0:
+        return out
+    k = ease(p)
+    top, bot = ln["top"], ln["bottom"]
+    dy = int(round((1 - k) * (bot - top)))
+    a = np.zeros_like(ln["a"][top:bot])
+    b = np.zeros_like(ln["bgr"][top:bot])
+    n = bot - top - dy
+    if n > 0:
+        a[dy:] = ln["a"][top:top + n]
+        b[dy:] = ln["bgr"][top:top + n]
+    a = (a * min(1.0, k * 1.3) * k_mult)[..., None]
+    out[top:bot] = out[top:bot] * (1 - a) + b * a
+    return out
+
+
+def scene_titles(w: int, h: int, idx: int, sc: dict, F: dict, accent) -> dict:
+    s = h / 720
+    x = round(88 * s)
+    lab_f = load_font(F["label"], round(19 * s), 600)
+    num = f"{idx:02d}"
+    return {
+        "lab": line_layer(w, h, num, lab_f, x, h - round(238 * s), spacing=round(6 * s)),
+        "lab_acc": line_layer(w, h, num, lab_f, x, h - round(238 * s), rgb=accent, spacing=round(6 * s)),
+        "en": line_layer(w, h, sc["title_en"], load_font(F["en"], round(sc.get("en_size", 100) * s), 600),
+                         x - round(4 * s), h - round(118 * s)),
+        "zh": line_layer(w, h, sc.get("title_zh", ""), load_font(F["zh"], round(29 * s)), x, h - round(64 * s),
+                         rgb=(236, 236, 236), spacing=round(10 * s)),
+    }
 
 
 def ease(x: float) -> float:
@@ -165,6 +230,10 @@ def main(cfg_path: str) -> None:
     accent = cfg.get("end_card", {}).get("accent", [232, 119, 46])
     acc_bgr = np.array(accent[::-1], np.float32) / 255
     shade = np.clip((yy / h - 0.62) / 0.38, 0, 1)[..., None]            # 字幕底部压暗，保证看得清
+    shade_big = (np.clip((yy / h - 0.38) / 0.62, 0, 1) ** 1.3 * np.clip(1.25 - xx / w, 0, 1))[..., None]
+    F = {"en": "PlayfairDisplay[wght].ttf", "en_italic": "PlayfairDisplay-Italic[wght].ttf",
+         "label": "Montserrat[wght].ttf", "zh": FONT_DIR + "NotoSerifCJK-Medium.ttc"}
+    F.update(cfg.get("fonts", {}))
     last_f = None
     for si, sc in enumerate(cfg["scenes"]):
         nb = sc.get("beats", 4)
@@ -182,6 +251,7 @@ def main(cfg_path: str) -> None:
                  "rgb": accent},
                 {"text": sc["caption"], "size": round(34 * s), "weight": "Medium", "xy": (round(64 * s), h - round(66 * s)),
                  "spacing": round(3 * s)}])
+        big = scene_titles(w, h, si + 1, sc, F, accent) if sc.get("title_en") else None
         for fi in range(f0, f1):
             t = fi / fps
             f = frames[min(fi - f0, len(frames) - 1)]
@@ -217,6 +287,23 @@ def main(cfg_path: str) -> None:
                 lx, ly, lw = round(64 * s), h - round(100 * s), round(36 * s * k)
                 out[ly:ly + max(2, round(2 * s)), lx + round(30 * s):lx + round(30 * s) + lw] = acc_bgr
                 out = over(out, cap, k)
+            if big is not None:                                         # 大字：切进来就一行行升起，全彩那拍编号变橙色
+                ts = t - start
+                out = out * (1 - 0.62 * ease(ts / 0.3) * shade_big)
+                s = h / 720
+                p_lab = (ts - 0.04) / 0.34
+                c = ease((t - bt[3]) / 0.15) if t >= bt[3] else 0.0
+                out = rise(out, big["lab"], p_lab, 1 - c)
+                out = rise(out, big["lab_acc"], p_lab, c)
+                lab = big["lab"]
+                lx = int(lab["x"] + lab["width"] + 16 * s)
+                ly = int(lab["y"] - 7 * s)
+                lw = int(64 * s * ease(p_lab))
+                if lw > 0:
+                    col = np.array([1.0, 1.0, 1.0], np.float32) * (1 - c) + acc_bgr * c
+                    out[ly:ly + max(2, round(2 * s)), lx:lx + lw] = col
+                out = rise(out, big["en"], (ts - 0.10) / 0.42)
+                out = rise(out, big["zh"], (ts - 0.24) / 0.38)
             enc.stdin.write((np.clip(out, 0, 1) * 255).astype(np.uint8).tobytes())
             last_f = f
         print(f"scene {si + 1} {sc.get('reveal')} {start:.2f}-{end:.2f}s", flush=True)
@@ -236,7 +323,38 @@ def main(cfg_path: str) -> None:
                                  "xy": (w // 2, round(h * 0.70)), "anchor": "m", "spacing": round(2 * s), "rgb": accent}])
         url_w = round(ImageDraw.Draw(Image.new("RGB", (1, 1))).textlength(ec.get("url", "openaigrowth.com"),
                       font=font("Medium", round(34 * s))) + 2 * s * len(ec.get("url", "openaigrowth.com")))
-        for fi in range(round(bt[0] * fps), round(bt[-1] * fps)):
+        if ec.get("style") == "big":                                    # 大字结尾卡：中英双语，衬线斜体品牌名
+            L = {
+                "label": line_layer(w, h, ec.get("label", "DESIGN · MAKE · SHIP"), load_font(F["label"], round(17 * s), 600),
+                                    w // 2, round(h * 0.315), spacing=round(9 * s), anchor="m"),
+                "brand": line_layer(w, h, ec.get("brand", "Shopwright"), load_font(F["en_italic"], round(128 * s), 600),
+                                    w // 2, round(h * 0.52), anchor="m"),
+                "zh": line_layer(w, h, ec.get("line", ""), load_font(F["zh"], round(27 * s)), w // 2, round(h * 0.625),
+                                 rgb=(236, 236, 236), spacing=round(8 * s), anchor="m"),
+                "url": line_layer(w, h, ec.get("url", "openaigrowth.com"), load_font(F["label"], round(24 * s), 500),
+                                  w // 2, round(h * 0.765), rgb=accent, spacing=round(5 * s), anchor="m"),
+            }
+            for fi in range(round(bt[0] * fps), round(bt[-1] * fps)):
+                t = fi / fps
+                c = ease((t - bt[2]) / 0.4) if t >= bt[2] else 0.0
+                out = bg_bw * (1 - c * 0.8) + bg_col * c * 0.8
+                out = rise(out, L["label"], (t - bt[0]) / 0.32)
+                out = rise(out, L["brand"], (t - bt[0] - 0.08) / 0.45)
+                out = rise(out, L["zh"], (t - bt[1]) / 0.36)
+                out = rise(out, L["url"], (t - bt[2]) / 0.36)
+                if t >= bt[2]:                                          # 网址下划线从中间向两边拉开
+                    lw = int(L["url"]["width"] * ease((t - bt[2] - 0.1) / 0.35))
+                    ly = int(L["url"]["y"] + 12 * s)
+                    if lw > 0:
+                        out[ly:ly + max(2, round(2 * s)), w // 2 - lw // 2:w // 2 - lw // 2 + lw] = acc_bgr
+                for b in bt[1:3]:
+                    if 0 <= t - b < 2 / fps:
+                        out = out * 1.08
+                if t > bt[-1] - 0.35:
+                    out = out * max(0.0, (bt[-1] - t) / 0.35)
+                enc.stdin.write((np.clip(out, 0, 1) * 255).astype(np.uint8).tobytes())
+            print(f"end card (big) {bt[0]:.2f}-{bt[-1]:.2f}s", flush=True)
+        for fi in range(round(bt[0] * fps), round(bt[-1] * fps)) if ec.get("style") != "big" else []:
             t = fi / fps
             c = ease((t - bt[2]) / 0.4) if t >= bt[2] else 0.0           # 第 2 拍背景开始上色
             out = bg_bw * (1 - c * 0.8) + bg_col * c * 0.8
@@ -255,7 +373,8 @@ def main(cfg_path: str) -> None:
             if t > bt[-1] - 0.35:                                       # 最后渐黑
                 out = out * max(0.0, (bt[-1] - t) / 0.35)
             enc.stdin.write((np.clip(out, 0, 1) * 255).astype(np.uint8).tobytes())
-        print(f"end card {bt[0]:.2f}-{bt[-1]:.2f}s", flush=True)
+        if ec.get("style") != "big":
+            print(f"end card {bt[0]:.2f}-{bt[-1]:.2f}s", flush=True)
     enc.stdin.close()
     enc.wait()
     dur = beats[bi] - t0
