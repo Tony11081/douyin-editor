@@ -47,6 +47,14 @@ p = vlm_relay.prepare({"messages": msg, "max_tokens": 10**6, "stream": True})
 assert p["model"] == "google/gemini-3.1-flash-lite" and p["max_tokens"] == vlm_relay.MAX_TOKENS
 assert p["stream"] is False and p["usage"] == {"include": True}
 
+# 2b. 视频片段从 image_url 改成 video_url，图片保持不变
+vm = [{"role": "user", "content": [{"type": "text", "text": "x"},
+                                   {"type": "image_url", "image_url": {"url": "data:video/mp4;base64,AAAA"}},
+                                   {"type": "image_url", "image_url": {"url": "data:image/jpeg;base64,BBBB"}}]}]
+pv = vlm_relay.prepare({"messages": vm})["messages"][0]["content"]
+assert pv[1] == {"type": "video_url", "video_url": {"url": "data:video/mp4;base64,AAAA"}}, pv[1]
+assert pv[2]["type"] == "image_url" and vm[0]["content"][1]["type"] == "image_url"  # 不改原请求
+
 # 3. 转发时用服务端密钥，记下花费
 status, data = vlm_relay.forward({"model": "google/gemini-3.1-flash-lite", "messages": msg, "max_tokens": 500},
                                  opener=fake_open)

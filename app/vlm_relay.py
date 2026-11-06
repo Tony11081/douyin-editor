@@ -38,6 +38,23 @@ class RelayError(Exception):
         self.status, self.message = status, message
 
 
+def _fix_video_parts(messages: list) -> list:
+    """rea-video 把视频片段写成 image_url 的 data:video/...；OpenRouter 要求视频用 video_url，否则 400。"""
+    fixed = []
+    for m in messages:
+        content = m.get("content") if isinstance(m, dict) else None
+        if isinstance(content, list):
+            parts = []
+            for p in content:
+                url = (p.get("image_url") or {}).get("url", "") if isinstance(p, dict) and p.get("type") == "image_url" else ""
+                if isinstance(url, str) and url.startswith("data:video/"):
+                    p = {"type": "video_url", "video_url": {"url": url}}
+                parts.append(p)
+            m = {**m, "content": parts}
+        fixed.append(m)
+    return fixed
+
+
 def prepare(body: dict) -> dict:
     """检查并整理转发给 OpenRouter 的请求体（纯函数，便于测试）。"""
     if not isinstance(body, dict) or not isinstance(body.get("messages"), list) or not body["messages"]:
@@ -47,6 +64,7 @@ def prepare(body: dict) -> dict:
         raise RelayError(403, f"模型 {model} 不在白名单里（允许：{', '.join(MODELS)}）")
     out = dict(body)
     out["model"] = model
+    out["messages"] = _fix_video_parts(body["messages"])
     mt = out.get("max_tokens")
     if not isinstance(mt, int) or mt <= 0 or mt > MAX_TOKENS:
         out["max_tokens"] = MAX_TOKENS
