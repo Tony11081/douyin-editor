@@ -10,9 +10,14 @@
   scan     一道白光横扫，光扫过的地方变彩色
 用法：python3 mask_reveal.py config.json
 config: {"out": "out.mp4", "w": 1280, "h": 720, "fps": 30, "beats": [拍点秒数...],
-         "scenes": [{"src": "a.mp4", "in": 2.0, "beats": 4, "reveal": "wipe", "hues": [[0,25]]}, ...],
-         "audio": "music.mp3", "audio_start": 12.3}
+         "scenes": [{"src": "a.mp4", "in": 2.0, "beats": 4, "reveal": "wipe", "hues": [[0,25]],
+                     "caption": "激光雕刻"}, ...],
+         "end_card": {"beats": 6, "brand": "Shopwright", "line": "一句话介绍", "url": "openaigrowth.com",
+                      "accent": [232, 119, 46]},
+         "audio": "music.mp3"}
 beats 是音乐里的拍点（相对音乐开头）；第一个场景从 beats[0] 开始，成片的 0 秒对应音乐的 beats[0]。
+caption：这个场景变全彩那一拍，左下角浮出编号 + 一行小字（宣传片里写服务名）。
+end_card：最后一个场景之后的结尾卡，接着最后一帧虚化成黑白，品牌名、介绍、网址按拍点依次出来，网址那拍上色。
 """
 from __future__ import annotations
 
@@ -22,8 +27,42 @@ import sys
 
 import cv2
 import numpy as np
+from PIL import Image, ImageDraw, ImageFont
 
 EASE = 0.12  # 每次亮开用多少秒渐变
+FONT_DIR = "/usr/share/fonts/opentype/noto/"
+
+
+def font(weight: str, size: int) -> ImageFont.FreeTypeFont:
+    return ImageFont.truetype(f"{FONT_DIR}NotoSansCJK-{weight}.ttc", size, index=2)   # index 2 = 简体中文
+
+
+def text_layer(w: int, h: int, items: list[dict]) -> tuple[np.ndarray, np.ndarray]:
+    """把几行字画成一层，返回 (BGR 0-1, alpha 0-1)。item: text, size, weight, xy, rgb, anchor, spacing"""
+    img = Image.new("RGBA", (w, h), (0, 0, 0, 0))
+    d = ImageDraw.Draw(img)
+    for it in items:
+        f = font(it.get("weight", "Medium"), it["size"])
+        x, y = it["xy"]
+        text, sp = it["text"], it.get("spacing", 0)
+        if sp:                                                          # 字距：逐字画
+            total = sum(d.textlength(c, font=f) for c in text) + sp * (len(text) - 1)
+            if it.get("anchor", "l") == "m":
+                x -= total / 2
+            for c in text:
+                d.text((x, y), c, font=f, fill=tuple(it.get("rgb", (255, 255, 255))) + (255,), anchor="ls")
+                x += d.textlength(c, font=f) + sp
+        else:
+            d.text((x, y), text, font=f, fill=tuple(it.get("rgb", (255, 255, 255))) + (255,),
+                   anchor="ms" if it.get("anchor") == "m" else "ls")
+    a = np.asarray(img).astype(np.float32) / 255
+    return a[..., [2, 1, 0]], a[..., 3]
+
+
+def over(out: np.ndarray, layer: tuple[np.ndarray, np.ndarray], k: float) -> np.ndarray:
+    bgr, a = layer
+    a = a[..., None] * k
+    return out * (1 - a) + bgr * a
 
 
 def ease(x: float) -> float:
@@ -123,6 +162,10 @@ def main(cfg_path: str) -> None:
                             "-r", str(fps), "-i", "-", "-c:v", "libx264", "-preset", "veryfast", "-crf", "18",
                             "-pix_fmt", "yuv420p", cfg["out"] + ".video.mp4"], stdin=subprocess.PIPE)
     bi = 0
+    accent = cfg.get("end_card", {}).get("accent", [232, 119, 46])
+    acc_bgr = np.array(accent[::-1], np.float32) / 255
+    shade = np.clip((yy / h - 0.62) / 0.38, 0, 1)[..., None]            # 字幕底部压暗，保证看得清
+    last_f = None
     for si, sc in enumerate(cfg["scenes"]):
         nb = sc.get("beats", 4)
         bt = [beats[bi + k] - t0 for k in range(nb + 1)]                # 这个场景的拍点（成片时间）
@@ -131,6 +174,14 @@ def main(cfg_path: str) -> None:
         beat = (end - start) / nb
         frames = load_clip(sc["src"], sc.get("in", 0.0), end - start, w, h, fps)
         f0, f1 = round(start * fps), round(end * fps)
+        cap = None
+        if sc.get("caption"):
+            s = h / 720
+            cap = text_layer(w, h, [
+                {"text": f"{si + 1:02d}", "size": round(22 * s), "weight": "Bold", "xy": (round(64 * s), h - round(112 * s)),
+                 "rgb": accent},
+                {"text": sc["caption"], "size": round(34 * s), "weight": "Medium", "xy": (round(64 * s), h - round(66 * s)),
+                 "spacing": round(3 * s)}])
         for fi in range(f0, f1):
             t = fi / fps
             f = frames[min(fi - f0, len(frames) - 1)]
@@ -159,8 +210,52 @@ def main(cfg_path: str) -> None:
             for b in bt[1:4]:                                           # 每个拍点亮一下
                 if 0 <= t - b < 2 / fps:
                     out = out * 1.07
+            if cap is not None and t >= bt[3]:                          # 全彩那拍浮出字幕
+                k = ease((t - bt[3]) / 0.18)
+                out = out * (1 - 0.45 * k * shade)
+                s = h / 720
+                lx, ly, lw = round(64 * s), h - round(100 * s), round(36 * s * k)
+                out[ly:ly + max(2, round(2 * s)), lx + round(30 * s):lx + round(30 * s) + lw] = acc_bgr
+                out = over(out, cap, k)
             enc.stdin.write((np.clip(out, 0, 1) * 255).astype(np.uint8).tobytes())
+            last_f = f
         print(f"scene {si + 1} {sc.get('reveal')} {start:.2f}-{end:.2f}s", flush=True)
+    ec = cfg.get("end_card")
+    if ec and last_f is not None:
+        nb = ec.get("beats", 6)
+        bt = [beats[bi + k] - t0 for k in range(nb + 1)]
+        bi += nb
+        s = h / 720
+        bg = cv2.GaussianBlur(last_f, (0, 0), 18)
+        bg_bw, bg_col = grade_bw(bg) * 0.42, grade_color(bg) * 0.5
+        brand = text_layer(w, h, [{"text": ec.get("brand", "Shopwright"), "size": round(76 * s), "weight": "Bold",
+                                   "xy": (w // 2, round(h * 0.44)), "anchor": "m", "spacing": round(6 * s)}])
+        line = text_layer(w, h, [{"text": ec.get("line", ""), "size": round(30 * s), "weight": "Regular",
+                                  "xy": (w // 2, round(h * 0.56)), "anchor": "m", "spacing": round(4 * s)}])
+        url = text_layer(w, h, [{"text": ec.get("url", "openaigrowth.com"), "size": round(34 * s), "weight": "Medium",
+                                 "xy": (w // 2, round(h * 0.70)), "anchor": "m", "spacing": round(2 * s), "rgb": accent}])
+        url_w = round(ImageDraw.Draw(Image.new("RGB", (1, 1))).textlength(ec.get("url", "openaigrowth.com"),
+                      font=font("Medium", round(34 * s))) + 2 * s * len(ec.get("url", "openaigrowth.com")))
+        for fi in range(round(bt[0] * fps), round(bt[-1] * fps)):
+            t = fi / fps
+            c = ease((t - bt[2]) / 0.4) if t >= bt[2] else 0.0           # 第 2 拍背景开始上色
+            out = bg_bw * (1 - c * 0.8) + bg_col * c * 0.8
+            out = over(out, brand, ease((t - bt[0]) / 0.25))
+            if t >= bt[1]:
+                out = over(out, line, ease((t - bt[1]) / 0.2))
+            if t >= bt[2]:
+                k = ease((t - bt[2]) / 0.3)
+                out = over(out, url, k)
+                lw = round(url_w * k)
+                ly = round(h * 0.70) + round(14 * s)
+                out[ly:ly + max(2, round(2 * s)), w // 2 - lw // 2:w // 2 - lw // 2 + lw] = acc_bgr
+            for b in bt[1:3]:
+                if 0 <= t - b < 2 / fps:
+                    out = out * 1.08
+            if t > bt[-1] - 0.35:                                       # 最后渐黑
+                out = out * max(0.0, (bt[-1] - t) / 0.35)
+            enc.stdin.write((np.clip(out, 0, 1) * 255).astype(np.uint8).tobytes())
+        print(f"end card {bt[0]:.2f}-{bt[-1]:.2f}s", flush=True)
     enc.stdin.close()
     enc.wait()
     dur = beats[bi] - t0
