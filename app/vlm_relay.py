@@ -114,8 +114,30 @@ def usage_summary(since: float = 0.0) -> dict:
     return {"calls": calls, "prompt_tokens": pt, "completion_tokens": ct, "cost_usd": round(cost, 5)}
 
 
+def _without_video(messages: list) -> list | None:
+    """去掉视频片段只留截图；没有视频片段时返回 None。"""
+    found, out = False, []
+    for m in messages:
+        content = m.get("content") if isinstance(m, dict) else None
+        if isinstance(content, list):
+            keep = [p for p in content if not (isinstance(p, dict) and p.get("type") == "video_url")]
+            found = found or len(keep) != len(content)
+            m = {**m, "content": keep}
+        out.append(m)
+    return out if found else None
+
+
 def forward(body: dict, opener=urllib.request.urlopen) -> tuple[int, bytes]:
-    out = prepare(body)
+    """转发一次；Gemini 不收太短的视频片段（不到 1 秒会 400 INVALID_ARGUMENT），这时去掉视频、只用截图重发一次。"""
+    status, data = _forward_once(prepare(body), opener)
+    if status == 400:
+        no_video = _without_video(prepare(body)["messages"])
+        if no_video is not None:
+            status, data = _forward_once({**prepare(body), "messages": no_video}, opener)
+    return status, data
+
+
+def _forward_once(out: dict, opener) -> tuple[int, bytes]:
     req = urllib.request.Request(API_BASE + "/chat/completions", data=json.dumps(out).encode(), method="POST",
                                  headers={"Content-Type": "application/json", "Authorization": f"Bearer {_key()}",
                                           "X-Title": "rea-video via douyin-editor"})

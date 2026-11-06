@@ -5,6 +5,7 @@ import json
 import os
 import sys
 import tempfile
+import urllib.error
 import urllib.request
 from pathlib import Path
 
@@ -62,6 +63,23 @@ assert status == 200 and sent[0]["auth"] == "Bearer sk-or-test"
 assert sent[0]["url"].endswith("/chat/completions") and sent[0]["body"]["max_tokens"] == 500
 s = vlm_relay.usage_summary()
 assert s["calls"] == 1 and s["cost_usd"] == 0.0006 and s["prompt_tokens"] == 1000, s
+
+# 3b. 视频片段太短被 400 时，去掉视频只用截图重发
+tries = []
+
+
+def picky(req, timeout=None):
+    body = json.loads(req.data)
+    kinds = [p["type"] for p in body["messages"][0]["content"]]
+    tries.append(kinds)
+    if "video_url" in kinds:
+        raise urllib.error.HTTPError(req.full_url, 400, "Bad", {}, io.BytesIO(
+            b'{"error":{"message":"Provider returned error","metadata":{"raw":"INVALID_ARGUMENT"}}}'))
+    return fake_open(req)
+
+
+st, _ = vlm_relay.forward({"messages": vm}, opener=picky)
+assert st == 200 and tries == [["text", "video_url", "image_url"], ["text", "image_url"]], tries
 
 # 4. 真起一个本机服务：只听 127.0.0.1，模型列表和错误路径正常
 vlm_relay.forward.__defaults__ = (fake_open,)
