@@ -1,0 +1,116 @@
+<!doctype html>
+<html><head><meta charset="utf-8">
+<!-- KP.004 商品图尺寸门槛（54 镂空大字 + 横移长镜头）。依据：help.etsy.com/hc/en-us/articles/115015663347 Requirements and Best Practices for Images in Your Etsy Shop -->
+<link rel="stylesheet" href="kit.css">
+<style>
+#ko{position:absolute;inset:0;z-index:8}
+#rail{position:absolute;left:0;top:0;width:4320px;height:1920px}
+.pn{position:absolute;top:0;width:1080px;height:1920px}
+.pn .lb{position:absolute;left:0;width:1080px;text-align:center;top:470px;font-family:'Noto Sans CJK SC';font-size:32px;letter-spacing:6px;color:#FFB547;font-weight:700}
+.pn .tt{position:absolute;left:0;width:1080px;text-align:center;top:530px;font-family:'Noto Sans CJK SC';font-size:66px;font-weight:900;letter-spacing:-1px;text-shadow:0 4px 30px rgba(0,0,0,.6)}
+.pn .nt{position:absolute;left:0;width:1080px;text-align:center;top:1210px;font-family:'Noto Sans CJK SC';font-size:38px;font-weight:500;opacity:.9;text-shadow:0 2px 14px rgba(0,0,0,.8)}
+.pn > svg{position:absolute;left:300px;top:690px}
+.big{position:absolute;left:0;width:1080px;text-align:center;top:845px;font-family:'Inter Display';font-size:132px;font-weight:800;letter-spacing:-4px;line-height:1}
+.big small{display:block;font-family:'Noto Sans CJK SC';font-size:30px;font-weight:500;letter-spacing:6px;opacity:.75;margin-top:14px}
+.chips{position:absolute;left:0;width:1080px;display:flex;justify-content:center;gap:24px}
+.chips .m{min-width:140px;padding:0 22px;height:110px;border-radius:24px;border:2px solid rgba(255,255,255,.4);display:flex;align-items:center;justify-content:center;font-family:'Inter';font-size:38px;font-weight:700;background:rgba(0,0,0,.35)}
+.chips .x{border-color:#FF6B5B;color:#FFB3A8;font-family:'Noto Sans CJK SC';font-size:36px}
+#badge{position:absolute;left:390px;top:440px;width:300px;height:300px;border-radius:50%;background:#7B4CE0;display:flex;align-items:center;justify-content:center;box-shadow:0 30px 80px rgba(0,0,0,.5),inset 0 0 0 10px rgba(255,255,255,.18)}
+</style></head>
+<body style="--ph1:#4a3a2c;--ph2:#141008">
+<div id="ph"><div>（实拍素材层）</div></div>
+<div id="grade"></div>
+<div id="tag"><i id="dot"></i>ETSY 知识点 · 商品图</div>
+<div id="brand"><span data-ep="brand"></span><span class="url" data-ep="url"></span></div>
+<svg id="ko" width="1080" height="1920" viewBox="0 0 1080 1920">
+  <defs><mask id="kom"><rect width="1080" height="1920" fill="#fff"/><text id="kot" x="540" y="1060" text-anchor="middle" font-family="Inter Display" font-weight="900" font-size="440" letter-spacing="-14" fill="#000">635</text></mask></defs>
+  <rect id="kor" width="1080" height="1920" fill="#0a0a0a" mask="url(#kom)"/>
+  <text id="kol" x="540" y="560" text-anchor="middle" font-family="Noto Sans CJK SC" font-weight="700" font-size="46" letter-spacing="8" fill="#fff">ETSY 首图的像素及格线</text>
+</svg>
+<div id="world">
+  <div id="rail">
+    <div class="pn" style="left:0"><div class="lb">01 · 首图下限</div><div class="tt">宽和高都至少</div>
+      <svg width="480" height="480" viewBox="-240 -240 480 480"><circle r="200" fill="none" stroke="rgba(255,255,255,.18)" stroke-width="26"/><circle class="arc" r="200" fill="none" stroke="#FFB547" stroke-width="26" stroke-linecap="round" transform="rotate(-90)" stroke-dasharray="1256.6" stroke-dashoffset="1256.6"/></svg>
+      <div class="big"><span class="num">0</span><small>像素</small></div><div class="nt">不到，搜索里可能排得更后</div></div>
+    <div class="pn" style="left:1080px"><div class="lb">02 · 官方建议</div><div class="tt">商品图宽和高</div>
+      <svg width="480" height="480" viewBox="-240 -240 480 480"><circle r="200" fill="none" stroke="rgba(255,255,255,.18)" stroke-width="26"/><circle class="arc" r="200" fill="none" stroke="#FFB547" stroke-width="26" stroke-linecap="round" transform="rotate(-90)" stroke-dasharray="1256.6" stroke-dashoffset="1256.6"/></svg>
+      <div class="big" style="font-size:108px;top:860px"><span class="num">0</span>+<small>像素</small></div><div class="nt">2000 像素以上</div></div>
+    <div class="pn" style="left:2160px"><div class="lb">03 · 首图方向</div><div class="tt">横图 或 方图</div>
+      <svg id="shp" width="760" height="480" viewBox="0 0 760 480" style="left:160px">
+        <g id="sh1"><rect x="10" y="90" width="420" height="280" rx="18" fill="rgba(0,0,0,.3)" stroke="#FFB547" stroke-width="8"/><text x="220" y="250" text-anchor="middle" font-family="Noto Sans CJK SC" font-size="54" font-weight="900" fill="#fff">横图 ✓</text></g>
+        <g id="sh2"><rect x="470" y="90" width="280" height="280" rx="18" fill="rgba(0,0,0,.3)" stroke="#FFB547" stroke-width="8"/><text x="610" y="250" text-anchor="middle" font-family="Noto Sans CJK SC" font-size="54" font-weight="900" fill="#fff">方图 ✓</text></g>
+      </svg>
+      <div class="nt">首图还决定后面几张图的形状</div></div>
+    <div class="pn" style="left:3240px"><div class="lb">04 · 缩略图</div><div class="tt">会被裁成三种</div>
+      <svg id="crop" width="480" height="480" viewBox="-240 -240 480 480">
+        <rect x="-230" y="-230" width="460" height="460" rx="10" fill="rgba(0,0,0,.28)" stroke="rgba(255,255,255,.35)" stroke-width="3"/>
+        <rect x="-70" y="-80" width="140" height="160" rx="20" fill="#C9A47A"/><circle r="10" fill="#fff"/>
+        <g id="c1"><rect x="-150" y="-150" width="300" height="300" fill="none" stroke="#FFB547" stroke-width="7"/><text x="-140" y="-118" font-family="Noto Sans CJK SC" font-size="30" font-weight="700" fill="#FFB547">方</text></g>
+        <g id="c2"><rect x="-115" y="-205" width="230" height="410" fill="none" stroke="#fff" stroke-width="5" stroke-dasharray="16 10"/><text x="-104" y="196" font-family="Noto Sans CJK SC" font-size="30" font-weight="700" fill="#fff">竖</text></g>
+        <g id="c3"><rect x="-215" y="-120" width="430" height="240" fill="none" stroke="#fff" stroke-width="5" stroke-dasharray="16 10"/><text x="176" y="110" font-family="Noto Sans CJK SC" font-size="30" font-weight="700" fill="#fff">横</text></g>
+      </svg>
+      <div class="nt">商品放中间，四周留够边</div></div>
+  </div>
+  <div class="abs zh sh" id="r1" style="left:0;width:1080px;text-align:center;top:640px;font-size:76px;font-weight:900">超过 <span class="amb">1MB</span> 的图</div>
+  <div class="abs zh sh" id="r2" style="left:0;width:1080px;text-align:center;top:750px;font-size:44px;font-weight:500;opacity:.9">网速慢时可能传不完</div>
+  <div class="chips" id="mo" style="top:900px"></div>
+  <div class="chips" id="mx" style="top:1050px"><div class="m x">✕ 动图</div><div class="m x">✕ 透明底 PNG</div></div>
+  <div id="badge"><svg width="190" height="190" viewBox="-50 -50 100 100"><g fill="none" stroke="#fff" stroke-width="7" stroke-linecap="round"><path d="M-40 -18 V-40 H-18"/><path d="M18 -40 H40 V-18"/><path d="M40 18 V40 H18"/><path d="M-18 40 H-40 V18"/></g><circle r="9" fill="#fff"/></svg></div>
+  <div class="abs zh" id="op" style="left:0;width:1080px;text-align:center;top:770px;font-size:34px;font-weight:700;letter-spacing:6px;color:#FFB547;text-shadow:0 2px 12px rgba(0,0,0,.8)">我们的看法</div>
+  <div class="abs zh sh" id="t1" style="left:0;width:1080px;text-align:center;top:840px;font-size:92px;font-weight:900;letter-spacing:-2px" data-split>商品放正中，</div>
+  <div class="abs zh sh" id="t2" style="left:0;width:1080px;text-align:center;top:965px;font-size:92px;font-weight:900;letter-spacing:-2px" data-split>按<span class="amb">2000像素</span>拍。</div>
+  <div class="abs zh sh" id="t3" style="left:0;width:1080px;text-align:center;top:760px;font-size:96px;font-weight:900;letter-spacing:-2px" data-split>先过像素线，</div>
+  <div class="abs zh sh" id="t4" style="left:0;width:1080px;text-align:center;top:885px;font-size:96px;font-weight:900;letter-spacing:-2px" data-split>再谈<span class="amb">好不好看。</span></div>
+  <div class="abs zh" id="end" style="text-shadow:0 2px 10px rgba(0,0,0,.85);left:0;width:1080px;text-align:center;top:1040px;font-size:30px;font-weight:500;letter-spacing:3px;opacity:.9">每天一个 Etsy 知识点<br><span style="font-family:Inter,'Noto Sans CJK SC';font-size:22px;letter-spacing:1px;opacity:.6">店铺诊断 · <span data-ep="url"></span></span></div>
+  <div class="abs zh" id="fol" style="left:420px;top:1160px;width:240px;height:90px;border-radius:50px;background:#FFB547;color:#1b1206;font-size:40px;font-weight:700;display:flex;align-items:center;justify-content:center">关注</div>
+</div>
+<div id="grain"></div>
+<div id="sub"><span id="subt"></span></div>
+<div id="flash"></div>
+<script src="../cinema/core.js"></script>
+<script src="kit.js"></script>
+<script>
+window.EP=window.EP||{brand:'Etsy-Tony',url:'openaigrowth.com'};
+window.TL=window.TL||{dur:30.2,cuts:[],
+  subs:[[0.3,3.4,['首图不到635像素','搜索里可能排更后']],[3.8,10.3,['Etsy原文：首图宽和高','至少635像素','商品图建议2000像素以上']],[10.5,13.9,['首图用横图或方图','它还决定','后面几张图的形状']],
+        [14.1,17.7,['缩略图会被裁成','方、竖、横三种','商品四周要留够边']],[17.9,21.5,['超过1MB的图','网速慢可能传不完','动图和透明底PNG不支持']],[21.7,25.5,['我们的看法：','拍的时候商品放正中','四周留白','按2000像素出图 别靠事后裁']],[25.7,30.1,['主图先过像素线再谈好看','关注我','每天一个Etsy知识点']]]};
+window.IDS=['rail','r1','r2','mo','mx','badge','op','t1','t2','t3','t4','end','fol'];
+// 横移轨道：每个指标停一会儿，再平移到下一个（[开始停, 开始移]）
+const STOP=[[3.8,6.6],[7.2,10.4],[10.9,14.0],[14.5,17.8]];
+const GOAL=[635,2000];
+function railX(t){let x=0;for(let i=1;i<STOP.length;i++){const k=E.io(P(t,STOP[i-1][1],STOP[i][0]-STOP[i-1][1]));x=L(x,-1080*i,k);}return x;}
+const FMT=['JPG','GIF','PNG','SVG','HEIC'];
+window.SEG=function(t){
+  // 开场：镂空大字 635，实拍从字里透出来，最后镜头冲进字里
+  const ko=$('ko');if(t<3.7){ko.style.display='block';const k=E.oq(P(t,.1,1.2));const fly=E.io(P(t,2.6,1.0));const s=L(.82,1,k)*L(1,14,fly);
+    $('kot').setAttribute('transform',`translate(540 880) scale(${s.toFixed(4)}) translate(-540 -880)`);$('kot').setAttribute('opacity',1);
+    $('kor').setAttribute('opacity',(1-E.io(P(t,3.0,.6))).toFixed(3));$('kol').setAttribute('opacity',(E.oc(P(t,.6,.6))*(1-fly)).toFixed(3));}else ko.style.display='none';
+  // 指标轨道
+  if(vis(t,3.5,17.9)){show('rail');const x=railX(t);const v=Math.abs(railX(t+1/30)-x)*30;
+    T('rail',{x,op:E.oc(P(t,3.5,.4))*(1-E.io(P(t,17.4,.45))),bl:Math.min(16,v/180)});
+    document.querySelectorAll('.pn').forEach((pn,i)=>{const lt=t-STOP[i][0];const k=E.io(P(lt,.2,1.3));
+      const a=pn.querySelector('.arc');if(a){const g=GOAL[i];a.setAttribute('stroke-dashoffset',(1256.6*(1-(g/2000)*k)).toFixed(1));pn.querySelector('.num').textContent=Math.round(g*k);}
+      ['.lb','.tt','.nt'].forEach((s,j)=>{const e=pn.querySelector(s);const kk=P(lt,-.25+j*.25,.5);e.style.opacity=E.oc(kk);e.style.transform=`translateY(${L(20,0,E.oq(kk))}px)`;});});
+    // 03 横图 / 方图依次拍上
+    const l3=t-STOP[2][0];[['sh1',.2],['sh2',.6]].forEach(([id,d])=>{const kk=P(l3,d,.45);const e=$(id);e.style.opacity=E.oc(kk);e.style.transform=`translateY(${L(40,0,E.ob(kk))}px)`;});
+    // 04 三种裁切框依次出现
+    const l4=t-STOP[3][0];[['c1',.4],['c2',1.0],['c3',1.6]].forEach(([id,d])=>{const kk=P(l4,d,.4);const e=$(id);e.style.opacity=E.oc(kk);e.style.transform=`scale(${L(1.25,1,E.oq(kk))})`;});}
+  // 1MB + 格式
+  if(vis(t,17.8,21.7)){show('r1','r2','mo','mx');const lt=t-17.8;fadeIn('r1',lt,.15,.5,20,12);fadeIn('r2',lt,.45,.5,16,10);
+    document.querySelectorAll('#mo .m').forEach((m,i)=>{const k=P(lt,1.0+i*.09,.4);m.style.opacity=E.oc(k);m.style.transform=`translateY(${L(30,0,E.oq(k))}px)`;});
+    document.querySelectorAll('#mx .m').forEach((m,i)=>{const k=P(lt,2.0+i*.15,.4);m.style.opacity=E.oc(k);m.style.transform=`scale(${L(1.4,1,E.ob(k))})`;});
+    fadeAway(['r1','r2','mo','mx'],lt,3.5,.4);}
+  // 我们的看法 + 取景框徽章
+  if(vis(t,21.6,25.6)){show('badge','op','t1','t2');const lt=t-21.6;const kb=P(lt,.1,.35);const land=E.oc(kb);
+    T('badge',{s:L(2.2,1,land)*(kb>=1?1+.04*Math.exp(-(lt-.45)*7)*Math.sin((lt-.45)*26):1),r:L(-40,0,land)+2*Math.sin(t),op:kb>0?1:0});
+    fadeIn('op',lt,.3,.4,10,6);chars('t1',lt,.5,.06,.6,30,22);chars('t2',lt,1.1,.07,.6,30,22);fadeAway(['badge','op','t1','t2'],lt,3.6,.4);}
+  // 结尾：观点回扣 + 一行小字
+  if(vis(t,25.6,30.3)){show('t3','t4','end','fol');const lt=t-25.6;chars('t3',lt,.15,.06,.6,30,22);chars('t4',lt,.6,.06,.6,30,22);
+    fadeIn('end',lt,1.6,.6,10,6);const kf=P(lt,2.0,.5);T('fol',{s:L(.7,1,E.ob(kf)),op:E.oc(kf)});}
+};
+FMT.forEach(f=>{const d=document.createElement('div');d.className='m';d.textContent=f;$('mo').appendChild(d);});
+['c1','c2','c3'].forEach(id=>{$(id).style.transformOrigin='0 0';$(id).style.transformBox='view-box';});
+['sh1','sh2'].forEach(id=>{$(id).style.transformBox='fill-box';});
+kitBoot();
+</script>
+</body></html>
