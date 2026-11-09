@@ -106,8 +106,9 @@ body.hole #ph{display:none}
     <div id="stamp"><b>3–4</b><small>小时</small></div>
   </div>
   <svg class="abs" id="arrow" style="left:560px;top:1210px;overflow:visible" width="400" height="200"><path id="arp" d="M330 150 C 260 160, 170 120, 120 40 M120 40 L112 82 M120 40 L156 58" fill="none" stroke="#FFB547" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/></svg>
-  <div class="abs zh sh amb" id="arl" style="left:470px;top:1300px;font-size:44px;font-weight:700">光生图就要三四个小时</div>
-  <div class="abs zh sh amb" id="arl2" style="left:430px;top:1300px;font-size:44px;font-weight:700">创意也是我们自己出</div>
+  <div class="abs zh sh amb" id="arl" style="left:470px;top:1370px;font-size:44px;font-weight:700">光生图就要三四个小时</div>
+  <div class="abs zh sh amb" id="arl2" style="left:430px;top:1370px;font-size:44px;font-weight:700">创意也是我们自己出</div>
+  <div class="abs zh sh amb" id="arl3" style="left:330px;top:1370px;font-size:44px;font-weight:700">和实物一模一样，像实拍</div>
 
   <!-- 5 我们的看法 + 落版（结尾不引流：网址只放一行小字） -->
   <div class="abs zh sh" id="t0" style="left:0;width:1080px;text-align:center;top:610px;font-size:36px;font-weight:500;letter-spacing:4px;opacity:.85">我们的看法</div>
@@ -146,7 +147,7 @@ function render(t){
   bgFrame(t);
   const w=$('world');w.style.transform=`translate(${6*Math.sin(t*.7)}px,${5*Math.cos(t*.53)}px) scale(${1+.012*Math.sin(t*.4)})`;
   $('dot').style.opacity=.35+.65*Math.abs(Math.sin(t*3));fadeIn('tag',t,.1,.6,0,6);fadeIn('brand',t,.2,.6,0,6);
-  const all=['h1','h2','v0','cA','cB','xmk','v1','w-ic','w1','edges','wl','w2','o0','cP','price','o1','strike','o2','doc','arrow','arl','arl2','t0','t1','t2','end','fol'];all.forEach(i=>$(i).style.visibility='hidden');
+  const all=['h1','h2','v0','cA','cB','xmk','v1','w-ic','w1','edges','wl','w2','o0','cP','price','o1','strike','o2','doc','arrow','arl','arl2','arl3','t0','t1','t2','end','fol'];all.forEach(i=>$(i).style.visibility='hidden');
   const show=(...ids)=>ids.forEach(i=>$(i).style.visibility='visible');
   // 1 钩子：逐字砸进来，镜头冲过去
   if(vis(t,...TL.hook)){show('h1','h2');const lt=t-TL.hook[0],D=TL.hook[1]-TL.hook[0];chars('h1',lt,.25,.05,.55,0,18);chars('h2',lt,.75,.06,.6,0,22);
@@ -175,16 +176,18 @@ function render(t){
     fadeIn('o2',lt,5.9,.6,16,10);
     fadeOut(['o0','cP','price','strike','o2'],lt,D-.45,.4);}
   // 4 质检单：纸片翻进来，逐行打勾，荧光笔，盖章，批注换句，镜头冲进那句话
-  if(vis(t,...TL.doc)){show('doc','arrow','arl','arl2');const lt=t-TL.doc[0],D=TL.doc[1]-TL.doc[0];
+  if(vis(t,...TL.doc)){show('doc','arrow','arl','arl2','arl3');const lt=t-TL.doc[0],D=TL.doc[1]-TL.doc[0];
     const k=E.oq(P(lt,0,1.2));const push=E.io(P(lt,D-1.5,1.5));
     T('doc',{x:L(500,0,k)-push*120,y:L(700,0,k)-push*40,rx:L(40,6,k),ry:L(-30,-8,k)+3*Math.sin(t*.6),r:L(14,-3,k),s:L(.8,1,k)*(1+.04*E.is(P(lt,1,D-1.5)))*L(1,3.2,push),op:1,bl:L(0,14,P(lt,D-.6,.6))});
-    document.querySelectorAll('#doc .ck').forEach((c,i)=>{const kk=P(lt,1.3+i*.55,.35);c.style.opacity=kk>0?1:0;c.style.transform=`scale(${L(1.8,1,E.ob(kk))})`;});
-    $('hl').style.backgroundSize=L(0,100,E.io(P(lt,3.2,1.1)))+'% 100%';
-    const ks=P(lt,4.6,.3);T('stamp',{s:L(2.4,1,E.oc(ks)),r:L(-40,-14,E.oc(ks)),op:ks>0?.92:0});
-    drawP(P(lt,5.4,.6));
-    const sw=E.io(P(lt,8.0,.4));
-    $('arrow').style.opacity=1-push;fadeIn('arl',lt,5.9,.5,10,8);$('arl').style.opacity=E.oc(P(lt,5.9,.5))*(1-sw);
-    fadeIn('arl2',lt,8.2,.5,10,8);$('arl2').style.opacity=E.oc(P(lt,8.2,.5))*(1-push);}
+    document.querySelectorAll('#doc .ck').forEach((c,i)=>{const kk=P(lt,2.2+i*.4,.35);c.style.opacity=kk>0?1:0;c.style.transform=`scale(${L(1.8,1,E.ob(kk))})`;});
+    $('hl').style.backgroundSize=L(0,100,E.io(P(lt,.9,1.0)))+'% 100%';
+    const ks=P(lt,4.1,.3);T('stamp',{s:L(2.4,1,E.oc(ks)),r:L(-40,-14,E.oc(ks)),op:ks>0?.92:0});
+    drawP(P(lt,4.0,.5));
+    const s1=E.io(P(lt,5.4,.35)),s2=E.io(P(lt,7.2,.35));
+    $('arrow').style.opacity=1-push;
+    fadeIn('arl',lt,4.2,.5,10,8);$('arl').style.opacity=E.oc(P(lt,4.2,.5))*(1-s1);
+    fadeIn('arl2',lt,5.6,.5,10,8);$('arl2').style.opacity=E.oc(P(lt,5.6,.5))*(1-s2);
+    fadeIn('arl3',lt,7.4,.5,10,8);$('arl3').style.opacity=E.oc(P(lt,7.4,.5))*(1-push);}
   let f=0;(TL.cuts||[]).forEach(c=>{f=Math.max(f,1-Math.abs(t-c)/.28);});$('flash').style.opacity=f*.95;
   // 5 我们的看法 + 落版
   if(vis(t,...TL.take)){show('t0','t1','t2','end','fol');const lt=t-TL.take[0],D=TL.take[1]-TL.take[0];fadeIn('t0',lt,.05,.5,10,8);chars('t1',lt,.15,.06,.6,30,22);chars('t2',lt,.7,.07,.6,30,22);
