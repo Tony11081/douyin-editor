@@ -1,0 +1,100 @@
+<!doctype html>
+<html><head><meta charset="utf-8">
+<!-- KP.006 做图为什么收费（找别人做要花什么 vs 我们一家做完）· 基于 53 收据拆账：收据逐行打印 + 批注 + 盖章 + 警示胶带 -->
+<link rel="stylesheet" href="kit.css">
+<style>
+#bgs{position:absolute;inset:0;z-index:0;overflow:hidden}#bgs img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;transform-origin:50% 45%}
+#rc{position:absolute;left:220px;top:330px;width:640px;background:#FBFAF6;color:#1a1a1a;border-radius:6px 6px 0 0;box-shadow:0 50px 100px rgba(0,0,0,.55),0 8px 24px rgba(0,0,0,.35);font-family:'DejaVu Sans Mono','Noto Sans CJK SC',monospace;transform-origin:50% 0;overflow:hidden}
+#rc .in{padding:44px 40px 30px}
+#rc .hd{text-align:center;font-family:'Noto Sans CJK SC';font-weight:900;font-size:40px;letter-spacing:6px}
+#rc .sm{text-align:center;font-size:20px;color:#8a857b;margin-top:8px;letter-spacing:2px}
+.ln{display:flex;justify-content:space-between;font-size:29px;line-height:1;padding:16px 0;font-weight:500}
+.ln .k{font-family:'Noto Sans CJK SC';font-weight:500}
+.ln .v{font-family:'Noto Sans CJK SC';font-weight:700}
+.ln.m .v{color:#C2410C}
+.ln.big{font-size:38px;font-weight:700;padding-top:22px}
+.dash{border-top:2px dashed #cfc9bd;margin:10px 0}
+#rc .zz{height:22px;background:linear-gradient(-45deg,transparent 11px,#FBFAF6 0) 0 0/22px 22px repeat-x,linear-gradient(45deg,transparent 11px,#FBFAF6 0) 0 0/22px 22px repeat-x;transform:translateY(21px)}
+#stamp{position:absolute;left:560px;top:1000px;width:340px;height:340px;border-radius:50%;border:10px solid #E8562A;color:#E8562A;display:flex;flex-direction:column;align-items:center;justify-content:center;transform-origin:50% 50%}
+#stamp b{font-family:'Noto Sans CJK SC';font-size:76px;font-weight:900;line-height:1.05;letter-spacing:-2px}
+#stamp span{font-family:'Noto Sans CJK SC';font-size:30px;font-weight:700;letter-spacing:4px}
+#tape{position:absolute;left:-200px;top:820px;width:1480px;height:150px;background:#FFB547;color:#1b1206;transform:rotate(-8deg);display:flex;align-items:center;overflow:hidden;box-shadow:0 20px 50px rgba(0,0,0,.45)}
+#tape div{white-space:nowrap;font-family:'Noto Sans CJK SC';font-size:64px;font-weight:900;letter-spacing:2px}
+</style></head>
+<body style="--ph1:#2d3a44;--ph2:#0d1114">
+<div id="ph"><div>（实拍素材层）</div></div>
+<div id="bgs"></div>
+<div id="grade"></div>
+<div id="tag"><i id="dot"></i>ETSY 知识点 · KP.006</div>
+<div id="brand"><span data-ep="brand"></span><span class="url" data-ep="url"></span></div>
+<div id="world">
+  <div class="abs zh sh hk" id="h1" style="left:76px;top:600px" data-split>做个图还收费？</div>
+  <div class="abs zh sh hk2" id="h2" style="left:76px;top:720px" data-split>先算算<span class="amb">找别人做</span></div>
+
+  <div id="rc"><div class="in">
+    <div class="hd">找别人做一套图</div><div class="sm">OUTSOURCE · 账单</div>
+    <div class="dash" style="margin-top:22px"></div>
+    <div class="ln m" id="l0"><span class="k">工厂打样</span><span class="v">收打样费</span></div>
+    <div class="ln m" id="l1"><span class="k">拍摄团队</span><span class="v">收拍摄费</span></div>
+    <div class="ln m" id="l2"><span class="k">设计 A ↔ 工厂 B</span><span class="v">来回磨合</span></div>
+    <div class="dash"></div>
+    <div class="ln" id="l3"><span class="k">选品眼光</span><span class="v" style="color:#8a857b">买不到</span></div>
+    <div class="dash"></div>
+    <div class="ln big" id="l4"><span class="k">合计</span><span class="v">钱 + 时间</span></div>
+  </div><div class="zz"></div></div>
+  <svg class="abs" id="ann" style="left:0;top:0;overflow:visible" width="1080" height="1920"><path id="annp" d="M150 1060 C 150 960, 175 850, 236 790 M236 790 L196 794 M236 790 L226 830" fill="none" stroke="#FFB547" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+  <div class="abs zh sh amb" id="annt" style="left:60px;top:1070px;font-size:46px;font-weight:900;line-height:1.25">A 设计、B 制作<br>磨合很长时间</div>
+  <div id="stamp"><span>我们</span><b>一家<br>做完</b></div>
+
+  <div id="tape"><div id="tapet"></div></div>
+  <div class="abs zh sh" id="w2" style="left:80px;top:1060px;font-size:46px;font-weight:500;line-height:1.5">做图这块<span class="amb" style="font-weight:700">压根不赚钱</span><br>利润在以后的<span class="amb" style="font-weight:900;font-size:60px">供应链合作</span></div>
+
+  <div class="abs zh sh" id="t0" style="left:0;width:1080px;text-align:center;top:610px;font-size:36px;font-weight:500;letter-spacing:4px;opacity:.85">我们的看法</div>
+  <div class="abs zh sh" id="t1" style="left:0;width:1080px;text-align:center;top:690px;font-size:92px;font-weight:900;letter-spacing:-2px" data-split>图可以学着做，</div>
+  <div class="abs zh sh" id="t2" style="left:0;width:1080px;text-align:center;top:815px;font-size:92px;font-weight:900;letter-spacing:-2px" data-split>选品<span class="amb">学不来。</span></div>
+  <div class="abs zh" id="end" style="text-shadow:0 2px 10px rgba(0,0,0,.85);left:0;width:1080px;text-align:center;top:1000px;font-size:30px;font-weight:500;letter-spacing:3px;opacity:.9">每天一个 Etsy 知识点<br><span style="font-family:Inter,'Noto Sans CJK SC';font-size:22px;letter-spacing:1px;opacity:.6">选品 + 产品图 · <span data-ep="url"></span></span></div>
+  <div class="abs zh" id="fol" style="left:420px;top:1110px;width:240px;height:90px;border-radius:50px;background:#FFB547;color:#1b1206;font-size:40px;font-weight:700;display:flex;align-items:center;justify-content:center">关注</div>
+</div>
+<div id="grain"></div>
+<div id="sub"><span id="subt"></span></div>
+<div id="flash"></div>
+<script src="../cinema/core.js"></script>
+<script src="kit.js"></script>
+<script>
+window.EP=window.EP||{brand:'Etsy-Tony',url:'openaigrowth.com'};
+// 预览时间轴（配音出来后用 vo/kp006.json 的 anchors 对齐）
+window.TL=window.TL||{dur:38,cuts:[],
+  subs:[[0.3,3.2,['好多人不理解','做个图还收费']],[3.6,13.9,['你找别人做 先得打样','工厂收打样费','拍图要找拍摄团队 人家也收费','A设计 B来做','两边磨合要很长时间']],
+        [14.2,21.6,['我们是自己设计 自己做','知道每个细节是什么工艺','选品加AI制作 再加人工审核']],[22,28.4,['做图这块 我们压根不赚钱','利润在以后的供应链合作']],[28.8,37.6,['图可以学着做','选品能力学不来']]]};
+window.BG=[['../../../imgs/IMG-20261109-008-1.png',0,3.2],['../../../imgs/IMG-20261109-009-1.png',3.2,6.2],['../../../imgs/IMG-20261109-010-1.png',6.2,9.6],['../../../imgs/IMG-20261109-007-1.png',9.6,21.6],['../../../imgs/IMG-20261109-011-1.png',21.6,28.6],['../../../imgs/IMG-20261109-012-1.png',28.6,99]];
+window.IDS=['h1','h2','rc','ann','annt','stamp','tape','w2','t0','t1','t2','end','fol'];
+const LN=['l0','l1','l2','l3','l4'];
+window.SEG=function(t){
+  bgFrame(t);
+  hook('h1','h2',t,0,3.4);
+  // 账单：逐行打印，推近「磨合」那行，批注，最后盖「我们一家做完」
+  if(vis(t,3.2,21.8)){show('rc','ann','annt','stamp');const lt=t-3.2;
+    const prog=cl((lt-0.5)/(LN.length*1.6));
+    LN.forEach((l,i)=>{const k=P(lt,0.6+i*1.6,.25);$(l).style.opacity=k>0?1:0;$(l).style.transform=`translateY(${L(-10,0,E.oc(k))}px)`;});
+    const jit=prog<1?Math.sin(t*60)*1.2:0;const ke=E.oq(P(lt,0,.9));
+    const push=E.io(P(lt,3.6,1.4));const pull=E.io(P(lt,10.4,1.0));const z=L(1,1.3,push)*L(1,1/1.3,pull);
+    T('rc',{y:L(-500,0,ke)+jit+L(0,-30,push)*(1-pull),x:L(0,90,push)*(1-pull),rx:L(30,10,ke),r:L(-8,-3,ke)+1.2*Math.sin(t*.6),s:z,op:E.oc(P(lt,0,.4))});
+    const rv=Math.max(E.oc(P(lt,0,.6))*24,cl((lt-0.6)/(LN.length*1.6)*0.66+0.36)*100);$('rc').style.clipPath=`inset(0 0 ${100-Math.min(100,rv)}% 0)`;
+    const ka=P(lt,4.6,.7);drawPath('annp',E.io(ka));$('ann').style.opacity=1-pull;T('annt',{x:L(-40,0,E.oq(P(lt,4.9,.5))),op:E.oc(P(lt,4.9,.5))*(1-pull)});
+    $('ann').style.transform=`translate(${L(0,90,push)*(1-pull)}px,${L(0,-60,push)*(1-pull)}px)`;
+    const ks=P(lt,11.4,.28);const land=E.oc(ks);T('stamp',{s:L(2.4,1,land)*(ks>=1?1+.04*Math.exp(-(lt-11.68)*8)*Math.sin((lt-11.68)*30):1),r:L(-30,-14,land),op:ks>0?L(0,.92,Math.min(1,ks*2)):0});
+    fadeAway(['rc','ann','annt','stamp'],lt,18.1,.45);}
+  // 警示胶带：我们的四样本事横扫过画面 + 不赚钱
+  if(vis(t,21.8,28.6)){show('tape','w2');const lt=t-21.8;const k=E.oq(P(lt,0,.7));
+    $('tape').style.transform=`rotate(-8deg) translateX(${L(-1500,0,k)}px)`;$('tapet').style.transform=`translateX(${-((lt*120)%TW)}px)`;
+    fadeIn('w2',lt,3.4,.6,16,10);fadeAway(['tape','w2'],lt,6.35,.4);}
+  if(vis(t,28.6,38)){show('t0','t1','t2','end','fol');const lt=t-28.6;fadeIn('t0',lt,.05,.5,10,8);chars('t1',lt,.15,.05,.6,30,22);chars('t2',lt,.75,.07,.6,30,22);
+    fadeIn('end',lt,6.8,.6,10,6);const kf=P(lt,7.1,.5);T('fol',{s:L(.7,1,E.ob(kf)),op:E.oc(kf)});}
+};
+function bgInit(){const b=$('bgs');(window.BG||[]).forEach(([f])=>{const im=document.createElement('img');im.src=f;b.appendChild(im);});}
+function bgFrame(t){const ims=$('bgs').children;(window.BG||[]).forEach(([f,a,z],i)=>{const im=ims[i];const fi=a<=0?1:E.io(P(t,a-.25,.5)),fo=1-E.io(P(t,z-.25,.5));const o=Math.max(0,Math.min(fi,fo));
+  im.style.opacity=(t>=a-.25&&t<z+.25)?o:0;const k=cl((t-a)/Math.max(.1,z-a));im.style.transform=`scale(${1.04+.07*k}) translate(${(i%2?-1:1)*12*k}px,${-8*k}px)`;});}
+(function(){const u='选品 · AI 制作 · 人工审核 · 自己设计自己做 · ';$('tapet').innerHTML=('<span>'+u+'</span>').repeat(5);window.TW=$('tapet').firstChild.getBoundingClientRect().width;})();
+bgInit();kitBoot();
+</script>
+</body></html>
