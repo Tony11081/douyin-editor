@@ -1,0 +1,138 @@
+<!doctype html>
+<html><head><meta charset="utf-8">
+<!-- KP.008 Etsy 运单 vs 自己贴单号 · 基于 52 explainer（结尾按 kp003：不引流，网址只放小字）。52 · 知识讲解·纪录片式：实拍铺满全屏当舞台，文字/原文/标签作为「实物」长在画面里，一个连续镜头推进，不翻页。
+     整条渲染成透明 webm（?hole=1），叠在剪辑服务器拼好的实拍素材上。 -->
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:1080px;height:1920px;overflow:hidden;background:#000}
+body{font-family:'Inter Display','Inter','Noto Sans CJK SC',sans-serif;color:#fff;font-weight:600}
+.abs{position:absolute}
+.zh{font-family:'Noto Sans CJK SC'}
+.c{display:inline-block}
+.amb{color:#FFB547}
+#ph{position:absolute;inset:0;background:radial-gradient(ellipse at 40% 45%,#5a3a22,#1d140d 70%);}
+#ph div{position:absolute;left:0;top:930px;width:1080px;text-align:center;color:rgba(255,255,255,.25);font-size:40px;font-family:'Noto Sans CJK SC'}
+body.hole #ph{display:none}
+#grade{position:absolute;inset:0;z-index:1;background:linear-gradient(180deg,rgba(0,0,0,.55) 0%,rgba(0,0,0,0) 22%,rgba(0,0,0,0) 62%,rgba(0,0,0,.7) 100%),radial-gradient(ellipse 85% 70% at 50% 48%,rgba(0,0,0,0) 50%,rgba(0,0,0,.55) 100%),linear-gradient(0deg,rgba(255,150,60,.06),rgba(20,60,80,.08))}
+#grain{position:absolute;inset:0;z-index:30;opacity:.10;background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='300' height='300'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/></filter><rect width='300' height='300' filter='url(%23n)' opacity='.55'/></svg>")}
+#world{position:absolute;inset:0;z-index:5;transform-origin:50% 45%}
+.sh{text-shadow:0 4px 30px rgba(0,0,0,.6),0 2px 6px rgba(0,0,0,.5)}
+#tag{position:absolute;left:70px;top:190px;z-index:20;font-family:'Noto Sans CJK SC';font-size:28px;font-weight:500;letter-spacing:3px;display:flex;align-items:center;gap:14px;padding:12px 22px 14px;border-radius:40px;background:rgba(0,0,0,.35);border:1px solid rgba(255,255,255,.22)}
+#tag i{width:14px;height:14px;border-radius:50%;background:#FF4D3D;display:inline-block}
+#brand{position:absolute;right:70px;top:192px;z-index:20;font-size:30px;letter-spacing:1px;font-weight:600;opacity:.92;text-align:right;line-height:1.1}
+#brand .url{display:block;font-family:'Inter';font-size:21px;font-weight:500;letter-spacing:1.5px;opacity:.75;margin-top:6px}
+#doc{position:absolute;left:100px;top:500px;width:880px;height:700px;background:#F4F1EA;border-radius:18px;color:#1b1b1b;box-shadow:0 60px 120px rgba(0,0,0,.6),0 10px 30px rgba(0,0,0,.35);transform-origin:50% 50%;padding:56px 60px;overflow:hidden}
+#doc .src{font-size:24px;color:#8a8478;letter-spacing:2px;font-weight:500}
+#doc h3{font-family:'Inter Display';font-size:58px;font-weight:700;letter-spacing:-1px;margin:18px 0 26px}
+#doc .q{font-family:'Inter';font-size:46px;line-height:1.32;font-weight:500;position:relative}
+#doc .q span{position:relative;z-index:1}
+#hl{background-image:linear-gradient(rgba(255,181,71,.65),rgba(255,181,71,.65));background-repeat:no-repeat;background-size:0% 100%;-webkit-box-decoration-break:clone;box-decoration-break:clone;padding:0 6px;border-radius:6px}
+#doc .tr{font-family:'Noto Sans CJK SC';font-size:34px;color:#6d675c;margin-top:30px;line-height:1.5;font-weight:500}
+#doc .url{position:absolute;left:60px;bottom:40px;font-family:'Inter';font-size:24px;color:#a39d90;letter-spacing:1px;font-weight:500}
+#chip{position:absolute;left:150px;top:700px;width:780px;height:150px;border-radius:80px;background:#fff;color:#222;display:flex;align-items:center;gap:26px;padding-left:44px;font-family:'Inter';font-size:52px;font-weight:600;box-shadow:0 30px 60px rgba(0,0,0,.45);transform-origin:50% 50%}
+#chip .ic{width:76px;height:76px;border-radius:50%;background:#222;display:flex;align-items:center;justify-content:center}
+#sub{position:absolute;left:0;top:1430px;width:1080px;height:100px;display:flex;align-items:center;justify-content:center;z-index:25}
+#sub span{font-family:'Noto Sans CJK SC';font-size:48px;font-weight:500;color:#fff;letter-spacing:2px;text-shadow:0 2px 16px rgba(0,0,0,.95),0 0 4px rgba(0,0,0,.9),0 0 30px rgba(0,0,0,.7);white-space:nowrap;display:inline-block}
+#flash{position:absolute;inset:0;z-index:40;background:#fff7ea;opacity:0}
+</style></head>
+<body>
+<div id="ph"><div>（实拍素材层）</div></div>
+<div id="grade"></div>
+<div id="tag"><i id="dot"></i>ETSY 知识点 · KP.008</div>
+<div id="brand"><span data-ep="brand"></span><span class="url" data-ep="url"></span></div>
+
+<div id="world">
+  <!-- 钩子 -->
+  <div class="abs zh sh" id="h1" style="left:76px;top:600px;font-size:92px;letter-spacing:-2px" data-split>中国卖家，</div>
+  <div class="abs zh sh" id="h2" style="left:76px;top:720px;font-size:116px;letter-spacing:-3px;font-weight:900" data-split>Etsy运单<span class="amb">买不了</span></div>
+
+  <!-- 一个标签：贴纸拍上来 + 字符计数 -->
+  <div class="abs zh sh" id="v0" style="left:150px;top:610px;font-size:36px;font-weight:500;opacity:.85">用 Etsy 运单（帮助中心原文）</div>
+  <div id="chip"><div class="ic" style="background:#2E9E5B"><svg width="44" height="44" viewBox="0 0 44 44"><path d="M9 23 L18 32 L36 12" fill="none" stroke="#fff" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/></svg></div><span class="zh">自动标成已发货</span><span style="margin-left:auto;margin-right:44px;font-size:34px;color:#2E9E5B;font-weight:700">Shipped</span></div>
+  <div class="abs zh sh" id="v1" style="left:150px;top:900px;font-size:96px;font-weight:900;letter-spacing:-3px" data-split>单号<span class="amb">自动</span>发给买家</div>
+  <div class="abs" id="v1l" style="left:150px;top:1030px;width:700px;height:10px;background:#FFB547;border-radius:6px;transform-origin:0 50%"></div>
+
+  <!-- 但书：下三分之一 -->
+  <svg class="abs" id="w-ic" style="left:80px;top:850px" width="90" height="80" viewBox="0 0 90 80"><path d="M45 6 L86 74 H4 Z" fill="none" stroke="#FFB547" stroke-width="7" stroke-linejoin="round"/><path d="M45 30 V50" stroke="#FFB547" stroke-width="7" stroke-linecap="round"/><circle cx="45" cy="62" r="4.5" fill="#FFB547"/></svg>
+  <div class="abs zh sh" id="w1" style="left:80px;top:960px;font-size:76px;font-weight:900;letter-spacing:-2px" data-split>其他国家：自己买单</div>
+  <div class="abs" id="wl" style="left:80px;top:1080px;width:6px;height:190px;background:#FFB547;transform-origin:50% 0"></div>
+  <div class="abs zh sh" id="w2" style="left:112px;top:1086px;font-size:46px;font-weight:500;line-height:1.45">完成订单时 <span class="amb" style="font-weight:700">手动填单号</span><br><span id="w2b">已完成的订单 → 也能<span class="amb" style="font-weight:700">补加单号</span></span></div>
+
+  <!-- 官方原文 -->
+  <div id="doc">
+    <div class="src">ETSY HELP · SHIPPING LABELS</div>
+    <h3>Shipping Labels on Etsy</h3>
+    <div class="q">“We offer shipping labels for <span id="hl">sellers in Canada, the UK, and the US.</span>”</div>
+    <div class="tr">Etsy 运单只对加拿大、英国、<br>美国等几国的卖家开放</div>
+    <div class="url">help.etsy.com</div>
+  </div>
+  <svg class="abs" id="arrow" style="left:560px;top:1150px;overflow:visible" width="400" height="200"><path id="arp" d="M330 150 C 260 160, 170 120, 120 40 M120 40 L112 82 M120 40 L156 58" fill="none" stroke="#FFB547" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+  <div class="abs zh sh amb" id="arl" style="left:520px;top:1290px;font-size:44px;font-weight:700">名单里没有中国</div>
+  <div class="abs zh sh amb" id="arl2" style="left:470px;top:1290px;font-size:44px;font-weight:700">中国卖家：自己找物流商</div>
+
+  <!-- 我们的看法 + 落版 -->
+  <div class="abs zh sh" id="t0" style="left:0;width:1080px;text-align:center;top:610px;font-size:36px;font-weight:500;letter-spacing:4px;opacity:.85">我们的看法</div>
+  <div class="abs zh sh" id="t1" style="left:0;width:1080px;text-align:center;top:700px;font-size:88px;font-weight:900;letter-spacing:-2px" data-split>当天发货，</div>
+  <div class="abs zh sh" id="t2" style="left:0;width:1080px;text-align:center;top:830px;font-size:88px;font-weight:900;letter-spacing:-2px" data-split>当天<span class="amb">填单号。</span></div>
+  <div class="abs zh sh" id="t3" style="left:0;width:1080px;text-align:center;top:980px;font-size:56px;font-weight:700;letter-spacing:1px">单号，就是你的<span class="amb">发货证据</span></div>
+  <div class="abs zh" id="end" style="text-shadow:0 2px 10px rgba(0,0,0,.85);left:0;width:1080px;text-align:center;top:1080px;font-size:30px;font-weight:500;letter-spacing:3px;opacity:.9">每天一个 Etsy 知识点<br><span style="font-family:Inter,'Noto Sans CJK SC';font-size:22px;letter-spacing:1px;opacity:.6">店铺诊断 · <span data-ep="url"></span></span></div>
+  <div class="abs zh" id="fol" style="left:420px;top:1190px;width:240px;height:90px;border-radius:50px;background:#FFB547;color:#1b1206;font-size:40px;font-weight:700;display:flex;align-items:center;justify-content:center">关注</div>
+</div>
+
+<div id="grain"></div>
+<div id="sub"><span id="subt"></span></div>
+<div id="flash"></div>
+
+<script src="../cinema/core.js"></script>
+<script>
+window.EP=window.EP||{brand:'Etsy-Tony',url:'openaigrowth.com'};
+// 段落时间直接按配音时间写（vo/kp001.json 的 anchors 是恒等映射）
+window.TL=window.TL||{dur:32.45,cuts:[],
+  hook:[0,2.3],doc:[2.3,9.0],chip:[9.0,14.35],warn:[14.35,22.7],take:[22.7,32.45],
+  subs:[[0.3,2.08,['中国卖家','Etsy运单你买不了']]]};
+document.querySelectorAll('[data-ep]').forEach(e=>{e.textContent=EP[e.dataset.ep];});
+document.querySelectorAll('[data-split]').forEach(splitChars);
+buildSubs();window.DUR=TL.dur;
+const vis=(lt,a,b)=>lt>=a&&lt<b;
+function arrive(id,lt,a,o){const k=P(lt,a,o.d||.6);const kk=E.oq(k);T(id,{x:L(o.x||0,0,kk),y:L(o.y||0,0,kk),z:L(o.z||0,0,kk),s:L(o.s||1,1,kk),r:L(o.r||0,0,kk),op:E.oc(P(lt,a,(o.d||.6)*.5)),bl:L(o.bl||0,0,E.oc(k))});}
+function fadeOut(ids,lt,at,d=.45){const ko=E.io(P(lt,at,d));ids.forEach(i=>{const e=$(i);e.style.opacity=(parseFloat(e.style.opacity)||1)*(1-ko);});return ko;}
+function render(t){
+  const w=$('world');w.style.transform=`translate(${6*Math.sin(t*.7)}px,${5*Math.cos(t*.53)}px) scale(${1+.012*Math.sin(t*.4)})`;
+  $('dot').style.opacity=.35+.65*Math.abs(Math.sin(t*3));fadeIn('tag',t,.1,.6,0,6);fadeIn('brand',t,.2,.6,0,6);
+  const all=['h1','h2','doc','arrow','arl','arl2','v0','chip','v1','v1l','w-ic','w1','wl','w2','t0','t1','t2','t3','end','fol'];all.forEach(i=>$(i).style.visibility='hidden');
+  const show=(...ids)=>ids.forEach(i=>$(i).style.visibility='visible');
+  // 1 钩子
+  if(vis(t,...TL.hook)){show('h1','h2');const lt=t-TL.hook[0],D=TL.hook[1]-TL.hook[0];chars('h1',lt,.25,.05,.55,0,18);chars('h2',lt,.75,.06,.6,0,22);
+    document.querySelectorAll('#h1 .c,#h2 .c').forEach((c,i)=>{const k=P(lt,.25+i*.055,.5);c.style.transform=`translateZ(0) scale(${L(1.9,1,E.oq(k))})`;});
+    const ko=E.io(P(lt,D-.6,.6));['h1','h2'].forEach((i,j)=>T(i,{s:L(1,2.4,ko),y:L(0,j?260:-200,ko),op:1-ko,bl:L(0,30,ko)}));}
+  // 2 标签贴纸拍上来
+  if(vis(t,...TL.chip)){show('v0','chip','v1','v1l');const lt=t-TL.chip[0],D=TL.chip[1]-TL.chip[0];fadeIn('v0',lt,.2,.5,12,8);
+    const kc=P(lt,.45,.32);const land=E.oc(kc);T('chip',{s:L(1.7,1,land)*(kc>=1?1+.03*Math.exp(-(lt-.77)*7)*Math.sin((lt-.77)*28):1),r:L(-8,-2,land),op:kc>0?1:0,y:3*Math.sin(t*1.2)});
+    $('chip').style.boxShadow=`0 ${L(90,30,land)}px ${L(120,60,land)}px rgba(0,0,0,${L(.15,.45,land)})`;
+    chars('v1',lt,1.3,.07,.6,40,20);$('v1l').style.transform=`scaleX(${E.oq(P(lt,2.0,.7))})`;
+    const ko=fadeOut(['v0','chip','v1','v1l'],lt,D-.45);$('world').style.transform+=` translateX(${-ko*140}px)`;}
+  // 3 但书：下三分之一
+  if(vis(t,...TL.warn)){show('w-ic','w1','wl','w2');const lt=t-TL.warn[0],D=TL.warn[1]-TL.warn[0];arrive('w-ic',lt,.1,{x:140,d:.6,bl:10});chars('w1',lt,.3,.05,.5,0,16);
+    document.querySelectorAll('#w1 .c').forEach((c,i)=>{const k=P(lt,.3+i*.05,.5);c.style.transform=`translateX(${L(140,0,E.oq(k))}px)`;});
+    $('wl').style.transform=`scaleY(${E.oq(P(lt,.9,.6))})`;T('w2',{x:L(-30,0,E.oq(P(lt,2.2,.7))),op:E.oc(P(lt,2.2,.5))});$('w2b').style.opacity=E.oc(P(lt,5.1,.5));
+    fadeOut(['w-ic','w1','wl','w2'],lt,D-.45,.4);}
+  // 4 原文：纸片翻进来，荧光笔，批注换句，最后镜头冲进那句话
+  if(vis(t,...TL.doc)){show('doc','arrow','arl','arl2');const lt=t-TL.doc[0],D=TL.doc[1]-TL.doc[0];
+    const k=E.oq(P(lt,0,1.2));const push=E.io(P(lt,D-1.1,1.1));
+    T('doc',{x:L(500,0,k)-push*120,y:L(700,0,k)-push*40,rx:L(40,6,k),ry:L(-30,-8,k)+3*Math.sin(t*.6),r:L(14,-3,k),s:L(.8,1,k)*(1+.05*E.is(P(lt,1,D-1.5)))*L(1,3.4,push),op:1,bl:L(0,14,P(lt,D-.6,.6))});
+    $('hl').style.backgroundSize=L(0,100,E.io(P(lt,1.4,1.1)))+'% 100%';
+    drawP(P(lt,2.4,.6));
+    const sw=E.io(P(lt,4.2,.4));
+    $('arrow').style.opacity=1-push;fadeIn('arl',lt,3.0,.5,10,8);$('arl').style.opacity=E.oc(P(lt,3.0,.5))*(1-sw);
+    fadeIn('arl2',lt,4.4,.5,10,8);$('arl2').style.opacity=E.oc(P(lt,4.4,.5))*(1-push);}
+  let f=0;(TL.cuts||[]).forEach(c=>{f=Math.max(f,1-Math.abs(t-c)/.28);});$('flash').style.opacity=f*.95;
+  // 5 我们的看法 + 落版
+  if(vis(t,...TL.take)){show('t0','t1','t2','t3','end','fol');const lt=t-TL.take[0];fadeIn('t0',lt,.05,.5,10,8);chars('t1',lt,.15,.06,.6,30,22);chars('t2',lt,.7,.07,.6,30,22);
+    fadeIn('t3',lt,5.85,.5,12,8);fadeIn('end',lt,6.6,.6,10,6);const kf=P(lt,6.9,.5);T('fol',{s:L(.7,1,E.ob(kf)),op:E.oc(kf)});}
+  const c=CH.find(c=>t>=c[0]&&t<c[1]);const sp=$('subt');sp.textContent=c?c[2]:'';
+  if(c){const k=P(t,c[0],.2);sp.style.opacity=E.oc(k);const ww=sp.scrollWidth;sp.style.transform=`scale(${Math.min(1,960/ww)})`;}
+}
+function drawP(k){const p=$('arp');const len=p.getTotalLength();p.style.strokeDasharray=len;p.style.strokeDashoffset=len*(1-E.io(k));}
+window.render=render;render(0);
+</script>
+</body></html>
