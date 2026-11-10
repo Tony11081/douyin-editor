@@ -95,7 +95,7 @@ gallery.html 是所有模板的静态样式（?tpl=<代号>&s=hook|card，背景
 | 60 | TonyBook 极简杂志（4 号动态版） | mag | video-drop templates/tonybook-mag/（细线刊头、衬线标题、实拍素材，ElevenLabs Will） |
 | 61 | 网站功能分屏 A（旧，2026-11-06 起由 51b 替换） | fs | templates/feature-split/board.html（上半屏面板 + 手机录屏） |
 | 62 | TonyBook 助理聊天（2026-10-31 起停用） | tc | video-drop templates/tonybook-chat/ |
-| 63 | 新闻快讯台 · 深色 + 红橙警示色（政策速递新外观，2026-11-10 样片，待 Tony 定是否替换 56 号） | pd | video-drop templates/policy-desk/（和 56 号读同一种 episodes/epNNN.js，多一种 quote 原文纸条场景；实拍素材通栏 1080×608 + 新闻字幕条；OUR TAKE 场景自动盖「我们的看法」红章） |
+| 63 | 新闻快讯台 · 国际新闻台 breaking news 风格（深蓝演播室 + 新闻红 + 白色标题条；政策速递新外观，2026-11-10 样片，待 Tony 定是否替换 56 号） | pd | video-drop templates/policy-desk/（和 56 号读同一种 episodes/epNNN.js，多一种 quote 原文纸条场景；开场 BREAKING NEWS 突发大字 + 实拍素材通栏 1080×608 + 两层字幕条 + 底部滚动条 + 红白斜条转场；OUR TAKE 场景自动出「ANALYSIS · 我们的看法」标签；英文字体 Barlow Condensed 在模板 fonts/ 里） |
 
 以后新模板接着编 64 号，加到这张表和样张页。
 
