@@ -1,0 +1,113 @@
+<!doctype html>
+<html><head><meta charset="utf-8">
+<!-- KP.009 · 取消订单会怎样：上架费、交易费自动退回，取消不另收费，但首页销量去掉、卖完的商品要自己续上架（53 收据拆账）。依据：help.etsy.com 115015587347 How to Cancel a Sale -->
+<link rel="stylesheet" href="kit.css">
+<style>
+#rc{position:absolute;left:210px;top:300px;width:660px;background:#FBFAF6;color:#1a1a1a;border-radius:6px 6px 0 0;box-shadow:0 50px 100px rgba(0,0,0,.55),0 8px 24px rgba(0,0,0,.35);font-family:'DejaVu Sans Mono','Noto Sans CJK SC',monospace;transform-origin:50% 0}
+#rc .in{padding:40px 40px 26px}
+#rc .hd{text-align:center;font-family:'Inter Display';font-weight:800;font-size:40px;letter-spacing:6px}
+#rc .sm{text-align:center;font-size:20px;color:#8a857b;margin-top:8px;letter-spacing:2px}
+.ln{display:flex;justify-content:space-between;align-items:baseline;font-size:27px;line-height:1;padding:14px 0;font-weight:500}
+.ln .k{font-family:'Noto Sans CJK SC';font-weight:500}
+.ln .k small{font-family:'DejaVu Sans Mono';font-size:19px;color:#8a857b;margin-left:8px}
+.ln.m{color:#C2410C}
+.ln.big{font-size:36px;font-weight:700;padding-top:20px}
+.ln.big .k{font-weight:700}
+.hl{background:linear-gradient(transparent 55%,rgba(255,181,71,.75) 55%);background-size:0% 100%;background-repeat:no-repeat}
+.dash{border-top:2px dashed #cfc9bd;margin:8px 0}
+#rc .zz{height:22px;background:linear-gradient(-45deg,transparent 11px,#FBFAF6 0) 0 0/22px 22px repeat-x,linear-gradient(45deg,transparent 11px,#FBFAF6 0) 0 0/22px 22px repeat-x;transform:translateY(21px)}
+#stamp{position:absolute;left:630px;top:1020px;width:330px;height:330px;border-radius:50%;border:10px solid #E8562A;color:#E8562A;display:flex;flex-direction:column;align-items:center;justify-content:center;transform-origin:50% 50%;background:rgba(251,250,246,.0)}
+#stamp b{font-family:'Inter Display';font-size:120px;font-weight:900;line-height:1;letter-spacing:-3px;margin:6px 0}
+#stamp span{font-family:'Noto Sans CJK SC';font-size:30px;font-weight:700;letter-spacing:3px}
+#tape{position:absolute;left:-200px;top:560px;width:1480px;height:150px;background:#FFB547;color:#1b1206;transform:rotate(-8deg);display:flex;align-items:center;overflow:hidden;box-shadow:0 20px 50px rgba(0,0,0,.45)}
+#tape div{white-space:nowrap;font-family:'Noto Sans CJK SC';font-size:64px;font-weight:900;letter-spacing:2px}
+#qt{position:absolute;left:70px;top:1190px;width:540px;padding:18px 22px;border-left:6px solid #FFB547;background:rgba(10,10,10,.55);color:#f3efe6;font-family:Inter,'Noto Sans CJK SC';font-size:27px;line-height:1.35}
+#qt small{display:block;font-size:19px;opacity:.7;margin-top:8px;letter-spacing:1px}
+.note{font-size:50px;font-weight:900;line-height:1.25}
+</style></head>
+<body style="--ph1:#2f3a3d;--ph2:#0e1213">
+<div id="ph"><div>（实拍素材层）</div></div>
+<div id="grade"></div>
+<div id="tag"><i id="dot"></i>ETSY 知识点 · 订单</div>
+<div id="brand"><span data-ep="brand"></span><span class="url" data-ep="url"></span></div>
+<div id="world">
+  <div class="abs zh sh hk" id="h1" style="left:76px;top:640px" data-split>取消订单不罚钱，</div>
+  <div class="abs zh sh hk2" id="h2" style="left:76px;top:760px" data-split>但<span class="amb">销量会被扣回去</span></div>
+
+  <div id="rc"><div class="in">
+    <div class="hd">ETSY</div><div class="sm">CANCEL · 取消一单</div>
+    <div class="dash" style="margin-top:20px"></div>
+    <div class="ln" id="l0"><span class="k">谁能取消</span><span class="zh">只有卖家</span></div>
+    <div class="ln" id="l1"><span class="k">买家拿到</span><span class="zh">全额退款</span></div>
+    <div class="dash"></div>
+    <div class="ln" id="l2"><span class="k hl" id="hl2">上架费<small>Listing</small></span><span class="zh">退回 ✓</span></div>
+    <div class="ln" id="l3"><span class="k hl" id="hl3">交易费<small>Transaction</small></span><span class="zh">退回 ✓</span></div>
+    <div class="ln big" id="l4"><span class="k">取消另收费</span><span>$0.00</span></div>
+    <div class="dash"></div>
+    <div class="ln m big" id="l5"><span class="k hl" id="hl5">首页销量<small>Sales</small></span><span>−1</span></div>
+    <div class="ln m" id="l6"><span class="k">卖完的商品</span><span class="zh">自己续上架</span></div>
+    <div class="ln" id="l7"><span class="k">没用掉的运单</span><span class="zh">自己申请退</span></div>
+  </div><div class="zz"></div></div>
+  <svg class="abs" id="ann" style="left:0;top:0;overflow:visible" width="1080" height="1920"><path id="annp" d="" fill="none" stroke="#FFB547" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+  <div class="abs zh sh amb note" id="annt" style="left:70px;top:720px">自动退回</div>
+  <div class="abs zh sh amb note" id="annt2" style="left:70px;top:1040px">销量被扣</div>
+  <div id="qt">“Etsy automatically credits you for the related listing and transaction fees.”<small>Etsy 帮助中心 · How to Cancel a Sale</small></div>
+  <div id="stamp"><span>首页销量</span><b>−1</b><span>取消一单</span></div>
+
+  <div id="tape"><div id="tapet"></div></div>
+  <div class="abs zh sh" id="w2" style="left:80px;top:860px;font-size:58px;font-weight:600;line-height:1.45">取消不花钱，<br>花的是<span class="amb" style="font-weight:900;font-size:76px">攒的销量</span></div>
+  <div class="abs zh sh" id="w3" style="left:80px;top:1090px;font-size:58px;font-weight:600;line-height:1.45">能发货<span class="amb" style="font-weight:800">就别取消</span></div>
+
+  <div class="abs zh sh" id="t1" style="left:0;width:1080px;text-align:center;top:690px;font-size:92px;font-weight:900;letter-spacing:-2px" data-split>销量是</div>
+  <div class="abs zh sh" id="t2" style="left:0;width:1080px;text-align:center;top:815px;font-size:92px;font-weight:900;letter-spacing:-2px" data-split><span class="amb">攒出来的。</span></div>
+  <div class="abs zh" id="end" style="text-shadow:0 2px 10px rgba(0,0,0,.85);left:0;width:1080px;text-align:center;top:1000px;font-size:30px;font-weight:500;letter-spacing:3px;opacity:.9">每天一个 Etsy 知识点<br><span style="font-family:Inter,'Noto Sans CJK SC';font-size:22px;letter-spacing:1px;opacity:.6">店铺诊断 · <span data-ep="url"></span></span></div>
+  <div class="abs zh" id="fol" style="left:420px;top:1110px;width:240px;height:90px;border-radius:50px;background:#FFB547;color:#1b1206;font-size:40px;font-weight:700;display:flex;align-items:center;justify-content:center">关注</div>
+</div>
+<div id="grain"></div>
+<div id="sub"><span id="subt"></span></div>
+<div id="flash"></div>
+<script src="../cinema/core.js"></script>
+<script src="kit.js"></script>
+<script>
+window.EP=window.EP||{brand:'Etsy-Tony',url:'openaigrowth.com'};
+// 时间轴直接按配音写（vo/kp009.json，anchors 恒等）
+window.TL=window.TL||{dur:33.4,cuts:[],subs:[]};
+window.IDS=['h1','h2','rc','ann','annt','annt2','qt','stamp','tape','w2','w3','t1','t2','end','fol'];
+const LN=[['l0',4.7],['l1',7.2],['l2',9.9],['l3',10.7],['l4',12.0],['l5',14.4],['l6',16.9],['l7',20.6]];
+let GEO=null;
+function geo(){const rc=$('rc');const hdB=$('l0').offsetTop-4;const b=LN.map(([l])=>$(l).offsetTop+$(l).offsetHeight+16);return {hdB,b,H:rc.offsetHeight+22};}
+window.SEG=function(t){
+  hook('h1','h2',t,0,3.85);
+  if(vis(t,3.7,23.75)){show('rc','ann','annt','annt2','qt','stamp');const lt=t-3.7;GEO=geo();
+    let px=GEO.hdB,prev=GEO.hdB;
+    LN.forEach(([l,at],i)=>{const k=P(t,at,.3);$(l).style.opacity=k>0?1:0;$(l).style.transform=`translateY(${L(-10,0,E.oc(k))}px)`;
+      const kr=E.io(P(t,at-.12,.4));px+=kr*(GEO.b[i]-prev);prev=GEO.b[i];});
+    px+=E.io(P(t,20.9,.4))*(GEO.H-prev);
+    $('rc').style.clipPath=`inset(0 0 ${Math.max(0,GEO.H-px)}px 0)`;
+    const printing=LN.some(([_,at])=>t>at-.1&&t<at+.35);const jit=printing?Math.sin(t*60)*1.2:0;
+    const ke=E.oq(P(lt,0,.8));
+    const push=E.io(P(t,14.0,1.0))*(1-E.io(P(t,19.6,.8)));const z=L(1,1.1,push);
+    T('rc',{y:L(-480,0,ke)+jit+L(0,20,push),x:L(0,-20,push),rx:L(30,8,ke),r:L(-7,-2.5,ke)+1.1*Math.sin(t*.6),s:z,op:E.oc(P(lt,0,.35))});
+    $('hl2').style.backgroundSize=`${100*E.io(P(t,10.2,.5))}% 100%`;$('hl3').style.backgroundSize=`${100*E.io(P(t,10.9,.5))}% 100%`;$('hl5').style.backgroundSize=`${100*E.io(P(t,14.8,.5))}% 100%`;
+    // 批注 1：自动退回 指向上架费/交易费；批注 2：销量被扣 指向首页销量
+    const p=$('annp');let d='',ka=0,off=1;
+    const r1=$('l3').getBoundingClientRect(),r5=$('l5').getBoundingClientRect();
+    if(t<13.8){const y=r1.top+r1.height/2;d=`M150 712 C 120 ${y-80}, 130 ${y-30}, ${r1.left-10} ${y} M${r1.left-10} ${y} L${r1.left-50} ${y+4} M${r1.left-10} ${y} L${r1.left-28} ${y-34}`;
+      ka=P(t,10.4,.6);off=1-E.io(P(t,13.2,.45));T('annt',{x:L(-40,0,E.oq(P(t,10.7,.5))),op:E.oc(P(t,10.7,.5))*off});$('annt2').style.opacity=0;}
+    else{const y=r5.top+r5.height/2;d=`M150 1030 C 120 ${y+120}, 130 ${y+40}, ${r5.left-10} ${y} M${r5.left-10} ${y} L${r5.left-50} ${y-4} M${r5.left-10} ${y} L${r5.left-28} ${y+34}`;
+      ka=P(t,15.0,.6);off=1-E.io(P(t,19.4,.45));T('annt2',{x:L(-40,0,E.oq(P(t,15.3,.5))),op:E.oc(P(t,15.3,.5))*off});$('annt').style.opacity=0;}
+    if(p.getAttribute('d')!==d)p.setAttribute('d',d);drawPath('annp',E.io(ka));$('ann').style.opacity=ka>0?off:0;
+    // 原文引句：第 3 句时出现，推镜前收起
+    const kq=P(t,9.3,.5);T('qt',{x:L(-30,0,E.oq(kq)),op:E.oc(kq)*(1-E.io(P(t,13.4,.4)))});
+    const ks=P(t,21.6,.28);const land=E.oc(ks);T('stamp',{s:L(2.4,1,land)*(ks>=1?1+.04*Math.exp(-(t-21.88)*8)*Math.sin((t-21.88)*30):1),r:L(-30,-12,land),op:ks>0?L(0,.94,Math.min(1,ks*2)):0});
+    fadeAway(['rc','stamp'],t,23.25,.45);}
+  if(vis(t,23.7,29.6)){show('tape','w2','w3');const lt=t-23.7;const k=E.oq(P(lt,0,.7));
+    $('tape').style.transform=`rotate(-8deg) translateX(${L(-1500,0,k)}px)`;$('tapet').style.transform=`translateX(${-((lt*120)%TW)}px)`;
+    fadeIn('w2',lt,1.0,.6,16,10);fadeIn('w3',lt,3.8,.6,16,10);fadeAway(['tape','w2','w3'],lt,5.45,.4);}
+  if(vis(t,29.5,33.45)){show('t1','t2','end','fol');const lt=t-29.5;chars('t1',lt,.15,.05,.6,30,22);chars('t2',lt,.55,.07,.6,30,22);
+    fadeIn('end',lt,1.6,.6,10,6);const kf=P(lt,1.9,.5);T('fol',{s:L(.7,1,E.ob(kf)),op:E.oc(kf)});}
+};
+(function(){const u='我们的看法 · OUR TAKE · ';$('tapet').innerHTML=('<span>'+u+'</span>').repeat(6);window.TW=$('tapet').firstChild.getBoundingClientRect().width;})();
+kitBoot();
+</script>
+</body></html>
