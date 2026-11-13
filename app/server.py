@@ -121,8 +121,10 @@ def _job_view(job: dict[str, Any]) -> dict[str, Any]:
 def _tts_view(meta: dict[str, Any]) -> dict[str, Any]:
     return {"tts_id": meta["tts_id"], "model": meta["model"], "voice": meta["voice"],
             "total": meta["total"], "gap": meta["gap"],
-            "segments": [{k: it[k] for k in ("index", "text", "duration", "start", "end")}
+            "segments": [{k: it[k] for k in ("index", "text", "duration", "start", "end",
+                                             "tail_cut", "tail_suspect", "pauses") if k in it}
                          for it in meta["segments"]],
+            "warnings": meta.get("warnings", []),
             "preview_url": f"{PUBLIC_URL}/files/{TOKEN}/tts/{meta['tts_id']}.mp3",
             "verify": meta.get("verify")}
 
@@ -244,6 +246,7 @@ def tts(segments: list[str], model: str | None = None, voice: str | None = None,
         gap: float = 0.3, verify: bool = True) -> dict:
     """AI 配音（OpenRouter 语音接口）。segments 是逐句旁白（建议一句一个镜头），
     每句单独生成并去掉首尾静音，wait_job 完成后返回 tts_id、每句时长和试听链接 preview_url。
+    句尾多出来的杂音会自动剪掉；结果里的 warnings 列出剪了哪句、哪句结尾拿不准、哪句中间停顿太长（要处理）。
     - model：默认用服务器 .env 的 OPENROUTER_TTS_MODEL；可用 tts_voices 查模型
     - voice：音色 ID（随模型不同，例如 OpenAI 的 alloy、nova）
     - instructions：语气说明，如「沉稳的知识类讲解，语速稍快」（OpenAI / Gemini / Fish Audio 支持）
