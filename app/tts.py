@@ -54,6 +54,63 @@ def _duration(path: Path) -> float:
     return float(out.strip() or 0)
 
 
+TAIL_GAP = 0.5     # 一句话念完后静了这么久……
+TAIL_MAX = 0.6     # ……又冒出不超过这么长的一小段声音：可能是模型多念的杂音
+LONG_PAUSE = 0.7   # 句子中间的停顿超过这么久就提醒（建议按句号拆开重新生成）
+
+
+def _silences(path: Path) -> list[tuple[float, float]]:
+    """这段音频里的静音区间 [(开始, 结束)]；一直静到结尾的那段没有结束时间，不算。"""
+    out = run(["ffmpeg", "-v", "error", "-i", str(path), "-af",
+               "silencedetect=noise=-40dB:d=0.25,ametadata=print:file=-", "-f", "null", "-"])
+    starts = [float(x) for x in re.findall(r"lavfi\.silence_start=(-?[\d.]+)", out)]
+    ends = [float(x) for x in re.findall(r"lavfi\.silence_end=(-?[\d.]+)", out)]
+    return list(zip(starts, ends))
+
+
+def _tail_is_stray(wav: Path, cut: Path, text: str, gap: float, tail: float) -> bool:
+    """句尾那一小段是不是多余的：剪掉以后听写结果和原文一样接近，才算多余（是正文的话，剪了会少字）。
+    服务器没装 Whisper 时只剪特别明显的（停得久、声音很短）。"""
+    import difflib
+    try:
+        import faster_whisper  # noqa: F401
+    except Exception:
+        return gap >= 0.7 and tail <= 0.3
+    want = _norm(text)
+    full = difflib.SequenceMatcher(None, want, _norm(editor.whisper_file(wav))).ratio()
+    short = difflib.SequenceMatcher(None, want, _norm(editor.whisper_file(cut))).ratio()
+    return short >= full - 0.005
+
+
+def _clean_tail(wav: Path, text: str = "") -> dict[str, Any]:
+    """有的模型（MAI-Voice 常见）一句话念完、停了半秒以上，又多冒出一小段含糊的杂音。
+    首尾静音裁剪去不掉它（它不是静音），逐句听写也常常听不出来，成片里就是句尾多「咯噔」一声。
+    这里找出来、确认不是正文后剪掉。返回 {cut: 剪掉几秒, suspect: 像杂音但没敢剪的秒数,
+    pauses: 句子中间的长停顿 [[开始, 结束], …]}。"""
+    dur = _duration(wav)
+    sil = _silences(wav)
+    res: dict[str, Any] = {"cut": 0.0, "suspect": 0.0, "pauses": []}
+    if sil:
+        s, e = sil[-1]
+        gap, tail = e - s, dur - e
+        if gap >= TAIL_GAP and 0 < tail <= TAIL_MAX and s > 0.3:
+            keep = s + 0.06
+            tmp = wav.with_name(wav.stem + ".cut.wav")
+            run(["ffmpeg", "-y", "-v", "error", "-i", str(wav), "-af",
+                 f"atrim=0:{keep:.3f},afade=t=out:st={keep - 0.03:.3f}:d=0.03",
+                 "-c:a", "pcm_s16le", str(tmp)])
+            if _tail_is_stray(wav, tmp, text, gap, tail):
+                tmp.replace(wav)
+                res["cut"] = round(dur - keep, 3)
+                sil = sil[:-1]
+            else:
+                tmp.unlink(missing_ok=True)
+                if tail <= 0.35:
+                    res["suspect"] = round(tail, 3)
+    res["pauses"] = [[round(s, 2), round(e, 2)] for s, e in sil if e - s >= LONG_PAUSE]
+    return res
+
+
 PCM_RATE = 24000  # Gemini TTS 只回原始 PCM：16-bit 单声道 24kHz
 
 
@@ -161,10 +218,18 @@ def synthesize(segments: list[str], model: str | None = None, voice: str | None 
             else ["-i", str(raw)]
         run(["ffmpeg", "-y", "-v", "error", *src, "-af", af, "-c:a", "pcm_s16le", str(wav)])
         raw.unlink(missing_ok=True)
+        tail = _clean_tail(wav, segs[k]) if trim else {}
         dur = _duration(wav)
         if dur < 0.15:
             raise EditorError(f"第 {k + 1} 句生成的音频是空的：{segs[k][:30]}")
-        return {"index": k, "text": segs[k], "file": wav.name, "duration": round(dur, 3)}
+        it = {"index": k, "text": segs[k], "file": wav.name, "duration": round(dur, 3)}
+        if tail.get("cut"):
+            it["tail_cut"] = tail["cut"]
+        if tail.get("suspect"):
+            it["tail_suspect"] = tail["suspect"]
+        if tail.get("pauses"):
+            it["pauses"] = tail["pauses"]
+        return it
 
     try:
         with ThreadPoolExecutor(max_workers=4) as ex:
@@ -191,9 +256,18 @@ def synthesize(segments: list[str], model: str | None = None, voice: str | None 
         import shutil
         shutil.rmtree(d, ignore_errors=True)
         raise
+    warns = []
+    for it in items:
+        if it.get("tail_cut"):
+            warns.append(f"第 {it['index'] + 1} 句结尾有一段多余的声音，已自动剪掉 {it['tail_cut']} 秒")
+        if it.get("tail_suspect"):
+            warns.append(f"第 {it['index'] + 1} 句结尾 {it['tail_suspect']} 秒可能是多余的声音，没敢剪，请试听")
+        for a, b in it.get("pauses", []):
+            warns.append(f"第 {it['index'] + 1} 句在 {a}–{b} 秒停了 {b - a:.1f} 秒，"
+                         "嫌长就把这句按句号拆成两句重新生成")
     meta = {"tts_id": tid, "model": model, "voice": voice, "instructions": instructions,
             "speed": speed, "gap": gap, "total": round(total, 3), "segments": items,
-            "track": track.name}
+            "track": track.name, "warnings": warns}
     if verify:
         try:
             meta["verify"] = check_segments(meta)
