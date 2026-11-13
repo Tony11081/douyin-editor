@@ -59,4 +59,18 @@ tts.editor.whisper_file = lambda p: "就在图片的文件属性里"
 w = make("stray2.wav", [("tone", 2.4), ("sil", 0.8), ("tone", 0.25)])
 r = tts._clean_tail(w, "就在图片的文件属性里。")
 assert 0.9 < r["cut"] < 1.1 and abs(tts._duration(w) - 2.46) < 0.05, r
+
+# 7) 句首 0.12 秒杂音 + 停 0.2 秒 + 正文：听写多一个「的」，剪掉更接近原文 → 剪
+tts.editor.whisper_file = lambda p: "的办法是上传之前" if tts._duration(p) > 2.25 else "办法是上传之前"
+w = make("head.wav", [("tone", 0.12), ("sil", 0.2), ("tone", 2.0)])
+r = tts._clean_head(w, "办法是，上传之前")
+assert 0.25 < r["cut"] < 0.33 and abs(tts._duration(w) - 2.04) < 0.05, (r, tts._duration(w))
+# 8) 同样的形状，但开头是正文（「对，……」），剪了少字 → 不剪，标出来
+tts.editor.whisper_file = lambda p: "对上传之前" if tts._duration(p) > 2.25 else "上传之前"
+w = make("head_real.wav", [("tone", 0.2), ("sil", 0.2), ("tone", 2.0)])
+r = tts._clean_head(w, "对，上传之前")
+assert r["cut"] == 0 and r["suspect"] > 0 and abs(tts._duration(w) - 2.4) < 0.05, r
+# 9) 开头第一段就是正常的词（0.6 秒）：不碰
+w = make("head_normal.wav", [("tone", 0.6), ("sil", 0.3), ("tone", 2.0)])
+assert tts._clean_head(w, "实拍图，只是") == {"cut": 0.0, "suspect": 0.0}
 print("OK")

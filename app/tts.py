@@ -57,29 +57,54 @@ def _duration(path: Path) -> float:
 TAIL_GAP = 0.5     # 一句话念完后静了这么久……
 TAIL_MAX = 0.6     # ……又冒出不超过这么长的一小段声音：可能是模型多念的杂音
 LONG_PAUSE = 0.7   # 句子中间的停顿超过这么久就提醒（建议按句号拆开重新生成）
+HEAD_MAX = 0.25    # 开头不超过这么长的一小段声音……
+HEAD_GAP = 0.15    # ……后面又静了这么久：可能是模型开口前多出来的杂音
 
 
-def _silences(path: Path) -> list[tuple[float, float]]:
-    """这段音频里的静音区间 [(开始, 结束)]；一直静到结尾的那段没有结束时间，不算。"""
+def _silences(path: Path, d: float = 0.25) -> list[tuple[float, float]]:
+    """这段音频里不短于 d 秒的静音区间 [(开始, 结束)]；一直静到结尾的那段没有结束时间，不算。"""
     out = run(["ffmpeg", "-v", "error", "-i", str(path), "-af",
-               "silencedetect=noise=-40dB:d=0.25,ametadata=print:file=-", "-f", "null", "-"])
+               f"silencedetect=noise=-40dB:d={d},ametadata=print:file=-", "-f", "null", "-"])
     starts = [float(x) for x in re.findall(r"lavfi\.silence_start=(-?[\d.]+)", out)]
     ends = [float(x) for x in re.findall(r"lavfi\.silence_end=(-?[\d.]+)", out)]
     return list(zip(starts, ends))
 
 
-def _tail_is_stray(wav: Path, cut: Path, text: str, gap: float, tail: float) -> bool:
-    """句尾那一小段是不是多余的：剪掉以后听写结果和原文一样接近，才算多余（是正文的话，剪了会少字）。
-    服务器没装 Whisper 时只剪特别明显的（停得久、声音很短）。"""
+def _is_stray(wav: Path, cut: Path, text: str, obvious: bool) -> bool:
+    """那一小段是不是多余的：剪掉以后听写结果和原文一样接近，才算多余（是正文的话，剪了会少字）。
+    服务器没装 Whisper 时只剪特别明显的（obvious）。"""
     import difflib
     try:
         import faster_whisper  # noqa: F401
     except Exception:
-        return gap >= 0.7 and tail <= 0.3
+        return obvious
     want = _norm(text)
     full = difflib.SequenceMatcher(None, want, _norm(editor.whisper_file(wav))).ratio()
     short = difflib.SequenceMatcher(None, want, _norm(editor.whisper_file(cut))).ratio()
     return short >= full - 0.005
+
+
+def _clean_head(wav: Path, text: str = "") -> dict[str, Any]:
+    """句首的杂音：模型开口前先冒出零点一二秒含糊的声音、停一下才念正文（听写里常多出一个「的」）。
+    确认不是正文后剪掉。返回 {cut: 剪掉几秒, suspect: 像杂音但没敢剪的秒数}。"""
+    dur = _duration(wav)
+    sil = _silences(wav, d=0.12)
+    res: dict[str, Any] = {"cut": 0.0, "suspect": 0.0}
+    if sil:
+        s, e = sil[0]
+        if 0 < s <= HEAD_MAX and e - s >= HEAD_GAP and e < dur - 0.3:
+            start = max(0.0, e - 0.04)
+            tmp = wav.with_name(wav.stem + ".cut.wav")
+            run(["ffmpeg", "-y", "-v", "error", "-i", str(wav), "-af",
+                 f"atrim=start={start:.3f},asetpts=PTS-STARTPTS,afade=t=in:st=0:d=0.02",
+                 "-c:a", "pcm_s16le", str(tmp)])
+            if _is_stray(wav, tmp, text, obvious=False):
+                tmp.replace(wav)
+                res["cut"] = round(start, 3)
+            else:
+                tmp.unlink(missing_ok=True)
+                res["suspect"] = round(s, 3)
+    return res
 
 
 def _clean_tail(wav: Path, text: str = "") -> dict[str, Any]:
@@ -99,7 +124,7 @@ def _clean_tail(wav: Path, text: str = "") -> dict[str, Any]:
             run(["ffmpeg", "-y", "-v", "error", "-i", str(wav), "-af",
                  f"atrim=0:{keep:.3f},afade=t=out:st={keep - 0.03:.3f}:d=0.03",
                  "-c:a", "pcm_s16le", str(tmp)])
-            if _tail_is_stray(wav, tmp, text, gap, tail):
+            if _is_stray(wav, tmp, text, obvious=gap >= 0.7 and tail <= 0.3):
                 tmp.replace(wav)
                 res["cut"] = round(dur - keep, 3)
                 sil = sil[:-1]
@@ -218,11 +243,16 @@ def synthesize(segments: list[str], model: str | None = None, voice: str | None 
             else ["-i", str(raw)]
         run(["ffmpeg", "-y", "-v", "error", *src, "-af", af, "-c:a", "pcm_s16le", str(wav)])
         raw.unlink(missing_ok=True)
+        head = _clean_head(wav, segs[k]) if trim else {}
         tail = _clean_tail(wav, segs[k]) if trim else {}
         dur = _duration(wav)
         if dur < 0.15:
             raise EditorError(f"第 {k + 1} 句生成的音频是空的：{segs[k][:30]}")
         it = {"index": k, "text": segs[k], "file": wav.name, "duration": round(dur, 3)}
+        if head.get("cut"):
+            it["head_cut"] = head["cut"]
+        if head.get("suspect"):
+            it["head_suspect"] = head["suspect"]
         if tail.get("cut"):
             it["tail_cut"] = tail["cut"]
         if tail.get("suspect"):
@@ -258,6 +288,10 @@ def synthesize(segments: list[str], model: str | None = None, voice: str | None 
         raise
     warns = []
     for it in items:
+        if it.get("head_cut"):
+            warns.append(f"第 {it['index'] + 1} 句开头有一段多余的声音，已自动剪掉 {it['head_cut']} 秒")
+        if it.get("head_suspect"):
+            warns.append(f"第 {it['index'] + 1} 句开头 {it['head_suspect']} 秒可能是多余的声音，没敢剪，请试听")
         if it.get("tail_cut"):
             warns.append(f"第 {it['index'] + 1} 句结尾有一段多余的声音，已自动剪掉 {it['tail_cut']} 秒")
         if it.get("tail_suspect"):
