@@ -1,0 +1,114 @@
+<!doctype html>
+<html><head><meta charset="utf-8">
+<!-- KP.013 数字商品上架规矩（54 镂空大字 + 横移长镜头）。依据：help.etsy.com/hc/en-us/articles/115015628347 How to Manage Your Digital Listings -->
+<link rel="stylesheet" href="kit.css">
+<style>
+#ko{position:absolute;inset:0;z-index:8}
+#rail{position:absolute;left:0;top:0;width:4320px;height:1920px}
+.pn{position:absolute;top:0;width:1080px;height:1920px}
+.pn .lb{position:absolute;left:0;width:1080px;text-align:center;top:470px;font-family:'Noto Sans CJK SC';font-size:32px;letter-spacing:6px;color:#FFB547;font-weight:700}
+.pn .tt{position:absolute;left:0;width:1080px;text-align:center;top:530px;font-family:'Noto Sans CJK SC';font-size:66px;font-weight:900;letter-spacing:-1px;text-shadow:0 4px 30px rgba(0,0,0,.6)}
+.pn .nt{position:absolute;left:0;width:1080px;text-align:center;top:1210px;font-family:'Noto Sans CJK SC';font-size:38px;font-weight:500;opacity:.9;text-shadow:0 2px 14px rgba(0,0,0,.8)}
+.pn > svg{position:absolute;left:300px;top:690px}
+.big{position:absolute;left:0;width:1080px;text-align:center;top:845px;font-family:'Inter Display';font-size:132px;font-weight:800;letter-spacing:-4px;line-height:1}
+.big small{display:block;font-family:'Noto Sans CJK SC';font-size:30px;font-weight:500;letter-spacing:6px;opacity:.75;margin-top:14px}
+.chips{position:absolute;left:0;width:1080px;display:flex;justify-content:center;gap:24px}
+.chips .m{min-width:140px;padding:0 22px;height:110px;border-radius:24px;border:2px solid rgba(255,255,255,.4);display:flex;align-items:center;justify-content:center;font-family:'Inter';font-size:38px;font-weight:700;background:rgba(0,0,0,.35)}
+.chips .x{border-color:#FF6B5B;color:#FFB3A8;font-family:'Noto Sans CJK SC';font-size:36px}
+#badge{position:absolute;left:390px;top:440px;width:300px;height:300px;border-radius:50%;background:#7B4CE0;display:flex;align-items:center;justify-content:center;box-shadow:0 30px 80px rgba(0,0,0,.5),inset 0 0 0 10px rgba(255,255,255,.18)}
+</style></head>
+<body style="--ph1:#4a3a2c;--ph2:#141008">
+<div id="ph"><div>（实拍素材层）</div></div>
+<div id="grade"></div>
+<div id="tag"><i id="dot"></i>ETSY 知识点 · 数字商品</div>
+<div id="brand"><span data-ep="brand"></span><span class="url" data-ep="url"></span></div>
+<svg id="ko" width="1080" height="1920" viewBox="0 0 1080 1920">
+  <defs><mask id="kom"><rect width="1080" height="1920" fill="#fff"/><text id="kot" x="540" y="1230" text-anchor="middle" font-family="Inter Display" font-weight="900" font-size="900" fill="#000">5</text></mask></defs>
+  <rect id="kor" width="1080" height="1920" fill="#0a0a0a" mask="url(#kom)"/>
+  <text id="kol" x="540" y="520" text-anchor="middle" font-family="Noto Sans CJK SC" font-weight="700" font-size="46" letter-spacing="8" fill="#fff">ETSY 数字商品 · 一个链接最多</text>
+  <text id="kol2" x="540" y="1340" text-anchor="middle" font-family="Noto Sans CJK SC" font-weight="900" font-size="64" letter-spacing="10" fill="#fff">个文件</text>
+</svg>
+<div id="world">
+  <div id="rail">
+    <div class="pn" style="left:0"><div class="lb">01 · 单个文件</div><div class="tt">每个文件最大</div>
+      <svg width="480" height="480" viewBox="-240 -240 480 480"><circle r="200" fill="none" stroke="rgba(255,255,255,.18)" stroke-width="26"/><circle class="arc" r="200" fill="none" stroke="#FFB547" stroke-width="26" stroke-linecap="round" transform="rotate(-90)" stroke-dasharray="1256.6" stroke-dashoffset="1256.6"/></svg>
+      <div class="big" style="font-size:112px;top:858px"><span class="num">0</span>MB<small>一个链接最多 5 个</small></div><div class="nt">即时下载、定制下载都一样</div></div>
+    <div class="pn" style="left:1080px"><div class="lb">02 · 文件名</div><div class="tt">最多</div>
+      <svg width="480" height="480" viewBox="-240 -240 480 480"><circle r="200" fill="none" stroke="rgba(255,255,255,.18)" stroke-width="26"/><circle class="arc" r="200" fill="none" stroke="#FFB547" stroke-width="26" stroke-linecap="round" transform="rotate(-90)" stroke-dasharray="1256.6" stroke-dashoffset="1256.6"/></svg>
+      <div class="big"><span class="num">0</span><small>个字符</small></div><div class="nt">上传以后，<span class="amb">文件名不能改</span></div></div>
+    <div class="pn" style="left:2160px"><div class="lb">03 · 即时下载</div><div class="tt">没附文件</div>
+      <svg id="shp" width="760" height="480" viewBox="0 0 760 480" style="left:160px">
+        <g id="sh1"><rect x="20" y="90" width="330" height="280" rx="18" fill="rgba(0,0,0,.3)" stroke="#FF6B5B" stroke-width="8"/><text x="185" y="250" text-anchor="middle" font-family="Noto Sans CJK SC" font-size="58" font-weight="900" fill="#fff">发布 ✕</text></g>
+        <g id="sh2"><rect x="410" y="90" width="330" height="280" rx="18" fill="rgba(0,0,0,.3)" stroke="#FF6B5B" stroke-width="8"/><text x="575" y="250" text-anchor="middle" font-family="Noto Sans CJK SC" font-size="58" font-weight="900" fill="#fff">保存 ✕</text></g>
+      </svg>
+      <div class="nt">发布不了，也保存不了</div></div>
+    <div class="pn" style="left:3240px"><div class="lb">04 · 买家付款以后</div><div class="tt">想收回下载权限</div>
+      <svg id="crop" width="480" height="480" viewBox="-240 -240 480 480">
+        <g id="c1"><circle r="190" fill="rgba(0,0,0,.3)" stroke="rgba(255,255,255,.45)" stroke-width="10"/><path d="M0 -95 V60 M-62 0 L0 62 L62 0 M-90 105 H90" fill="none" stroke="#fff" stroke-width="22" stroke-linecap="round" stroke-linejoin="round"/></g>
+        <g id="c2"><path d="M-150 -150 L150 150" stroke="#FF6B5B" stroke-width="26" stroke-linecap="round"/></g>
+        <g id="c3"><rect x="-175" y="150" width="350" height="76" rx="38" fill="#FFB547"/><text x="0" y="203" text-anchor="middle" font-family="Noto Sans CJK SC" font-size="40" font-weight="900" fill="#1b1206">取消订单</text></g>
+      </svg>
+      <div class="nt">这是<span class="amb">唯一</span>的办法</div></div>
+  </div>
+  <div class="abs zh sh" id="r1" style="left:0;width:1080px;text-align:center;top:640px;font-size:76px;font-weight:900">数字商品<span class="amb">不能设变体</span></div>
+  <div class="abs zh sh" id="r2" style="left:0;width:1080px;text-align:center;top:750px;font-size:44px;font-weight:500;opacity:.9">常见格式基本都能传</div>
+  <div class="chips" id="mo" style="top:900px"></div>
+  <div class="chips" id="mx" style="top:1050px"></div>
+  <div id="badge"><svg width="190" height="190" viewBox="-50 -50 100 100"><g fill="none" stroke="#fff" stroke-width="7" stroke-linejoin="round" stroke-linecap="round"><path d="M-28 -42 H12 L30 -24 V42 H-28 Z"/><path d="M12 -42 V-24 H30"/><path d="M-14 8 L-3 19 L18 -4"/></g></svg></div>
+  <div class="abs zh" id="op" style="left:0;width:1080px;text-align:center;top:770px;font-size:34px;font-weight:700;letter-spacing:6px;color:#FFB547;text-shadow:0 2px 12px rgba(0,0,0,.8)">我们的看法</div>
+  <div class="abs zh sh" id="t1" style="left:0;width:1080px;text-align:center;top:840px;font-size:92px;font-weight:900;letter-spacing:-2px" data-split>文件名和内容，</div>
+  <div class="abs zh sh" id="t2" style="left:0;width:1080px;text-align:center;top:965px;font-size:92px;font-weight:900;letter-spacing:-2px" data-split>上传前<span class="amb">就定稿。</span></div>
+  <div class="abs zh sh" id="t3" style="left:0;width:1080px;text-align:center;top:760px;font-size:96px;font-weight:900;letter-spacing:-2px" data-split>多查一遍，</div>
+  <div class="abs zh sh" id="t4" style="left:0;width:1080px;text-align:center;top:885px;font-size:96px;font-weight:900;letter-spacing:-2px" data-split>比<span class="amb">取消订单</span>省事。</div>
+  <div class="abs zh" id="end" style="text-shadow:0 2px 10px rgba(0,0,0,.85);left:0;width:1080px;text-align:center;top:1040px;font-size:30px;font-weight:500;letter-spacing:3px;opacity:.9">每天一个 Etsy 知识点<br><span style="font-family:Inter,'Noto Sans CJK SC';font-size:22px;letter-spacing:1px;opacity:.6">店铺诊断 · <span data-ep="url"></span></span></div>
+  <div class="abs zh" id="fol" style="left:420px;top:1160px;width:240px;height:90px;border-radius:50px;background:#FFB547;color:#1b1206;font-size:40px;font-weight:700;display:flex;align-items:center;justify-content:center">关注</div>
+</div>
+<div id="grain"></div>
+<div id="sub"><span id="subt"></span></div>
+<div id="flash"></div>
+<script src="../cinema/core.js"></script>
+<script src="kit.js"></script>
+<script>
+window.EP=window.EP||{brand:'Etsy-Tony',url:'openaigrowth.com'};
+window.TL=window.TL||{dur:30.2,cuts:[],
+  subs:[[0.3,3.4,['数字商品一个链接','最多只能传5个文件']],[3.8,10.3,['每个文件最大20MB','文件名最多70个字符','传上去就不能改']],[10.5,13.9,['即时下载的商品没附文件','发布不了','也保存不了']],[14.1,17.7,['买家付款后','想收回下载权限','唯一办法是取消订单']],[17.9,21.5,['数字商品不能设变体','PDF、PNG、ZIP都能传']],[21.7,25.5,['我们的看法：','文件名和内容','上传前就定稿']],[25.7,30.1,['多查一遍比取消订单省事','关注我','每天一个Etsy知识点']]]};
+window.IDS=['rail','r1','r2','mo','mx','badge','op','t1','t2','t3','t4','end','fol'];
+// 横移轨道：每个指标停一会儿，再平移到下一个（[开始停, 开始移]）
+const STOP=[[3.8,6.6],[7.2,10.4],[10.9,14.0],[14.5,17.8]];
+const GOAL=[20,70];
+function railX(t){let x=0;for(let i=1;i<STOP.length;i++){const k=E.io(P(t,STOP[i-1][1],STOP[i][0]-STOP[i-1][1]));x=L(x,-1080*i,k);}return x;}
+const FMT=['PDF','PNG','JPG','ZIP'],FMT2=['STL','MP3','MOV','EPUB'];
+window.SEG=function(t){
+  // 开场：镂空大字 635，实拍从字里透出来，最后镜头冲进字里
+  const ko=$('ko');if(t<3.7){ko.style.display='block';const k=E.oq(P(t,.1,1.2));const fly=E.io(P(t,2.6,1.0));const s=L(.82,1,k)*L(1,14,fly);
+    $('kot').setAttribute('transform',`translate(540 900) scale(${s.toFixed(4)}) translate(-540 -900)`);$('kot').setAttribute('opacity',1);
+    $('kor').setAttribute('opacity',(1-E.io(P(t,3.0,.6))).toFixed(3));$('kol').setAttribute('opacity',(E.oc(P(t,.6,.6))*(1-fly)).toFixed(3));$('kol2').setAttribute('opacity',(E.oc(P(t,1.0,.6))*(1-fly)).toFixed(3));}else ko.style.display='none';
+  // 指标轨道
+  if(vis(t,3.5,17.9)){show('rail');const x=railX(t);const v=Math.abs(railX(t+1/30)-x)*30;
+    T('rail',{x,op:E.oc(P(t,3.5,.4))*(1-E.io(P(t,17.4,.45))),bl:Math.min(16,v/180)});
+    document.querySelectorAll('.pn').forEach((pn,i)=>{const lt=t-STOP[i][0];const k=E.io(P(lt,.2,1.3));
+      const a=pn.querySelector('.arc');if(a){const g=GOAL[i];a.setAttribute('stroke-dashoffset',(1256.6*(1-k)).toFixed(1));pn.querySelector('.num').textContent=Math.round(g*k);}
+      ['.lb','.tt','.nt'].forEach((s,j)=>{const e=pn.querySelector(s);const kk=P(lt,-.25+j*.25,.5);e.style.opacity=E.oc(kk);e.style.transform=`translateY(${L(20,0,E.oq(kk))}px)`;});});
+    // 03 横图 / 方图依次拍上
+    const l3=t-STOP[2][0];[['sh1',.2],['sh2',.6]].forEach(([id,d])=>{const kk=P(l3,d,.45);const e=$(id);e.style.opacity=E.oc(kk);e.style.transform=`translateY(${L(40,0,E.ob(kk))}px)`;});
+    // 04 三种裁切框依次出现
+    const l4=t-STOP[3][0];[['c1',.2],['c2',.9],['c3',1.5]].forEach(([id,d])=>{const kk=P(l4,d,.4);const e=$(id);e.style.opacity=E.oc(kk);e.style.transform=`scale(${L(1.25,1,E.oq(kk))})`;});}
+  // 1MB + 格式
+  if(vis(t,17.8,21.7)){show('r1','r2','mo','mx');const lt=t-17.8;fadeIn('r1',lt,.15,.5,20,12);fadeIn('r2',lt,.45,.5,16,10);
+    document.querySelectorAll('#mo .m').forEach((m,i)=>{const k=P(lt,1.0+i*.09,.4);m.style.opacity=E.oc(k);m.style.transform=`translateY(${L(30,0,E.oq(k))}px)`;});
+    document.querySelectorAll('#mx .m').forEach((m,i)=>{const k=P(lt,1.5+i*.09,.4);m.style.opacity=E.oc(k);m.style.transform=`translateY(${L(30,0,E.oq(k))}px)`;});
+    fadeAway(['r1','r2','mo','mx'],lt,3.5,.4);}
+  // 我们的看法 + 取景框徽章
+  if(vis(t,21.6,25.6)){show('badge','op','t1','t2');const lt=t-21.6;const kb=P(lt,.1,.35);const land=E.oc(kb);
+    T('badge',{s:L(2.2,1,land)*(kb>=1?1+.04*Math.exp(-(lt-.45)*7)*Math.sin((lt-.45)*26):1),r:L(-40,0,land)+2*Math.sin(t),op:kb>0?1:0});
+    fadeIn('op',lt,.3,.4,10,6);chars('t1',lt,.5,.06,.6,30,22);chars('t2',lt,1.1,.07,.6,30,22);fadeAway(['badge','op','t1','t2'],lt,3.6,.4);}
+  // 结尾：观点回扣 + 一行小字
+  if(vis(t,25.6,30.3)){show('t3','t4','end','fol');const lt=t-25.6;chars('t3',lt,.15,.06,.6,30,22);chars('t4',lt,.6,.06,.6,30,22);
+    fadeIn('end',lt,1.6,.6,10,6);const kf=P(lt,2.0,.5);T('fol',{s:L(.7,1,E.ob(kf)),op:E.oc(kf)});}
+};
+FMT.forEach(f=>{const d=document.createElement('div');d.className='m';d.textContent=f;$('mo').appendChild(d);});FMT2.forEach(f=>{const d=document.createElement('div');d.className='m';d.textContent=f;$('mx').appendChild(d);});
+['c1','c2','c3'].forEach(id=>{$(id).style.transformOrigin='50% 50%';$(id).style.transformBox='fill-box';});
+['sh1','sh2'].forEach(id=>{$(id).style.transformBox='fill-box';});
+kitBoot();
+</script>
+</body></html>
