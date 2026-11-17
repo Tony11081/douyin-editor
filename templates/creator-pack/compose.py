@@ -16,6 +16,8 @@ plan.json：
   ]
 }
 
+注意：一个模板里有两个素材窗（75、77 号）时，素材宽高比要接近窗口（横窗用横屏素材），否则铺满后的溢出会盖住另一个窗，compose.py 会报警告。
+
 做法：每个素材窗按「铺满（cover）+ 推近 zoom + 取景 fx/fy」算出缩放后的尺寸和位置，
 作为 layer:"base" 叠加层铺在底下；模板透明层（挖空了素材窗）作为 layer:"front" 盖在上面，
 所以素材只从窗里透出来，模板的暗角、颗粒、字都压在素材上。
@@ -49,6 +51,11 @@ def build(plan, base_dir):
             for win in seg["wins"]:
                 src = slots[win["slot"]]
                 x, y, w, h = cover(win, src)
+                # 同时有两个素材窗时，铺满后溢出的部分不能伸进另一个窗（会盖住那个窗的素材）
+                for o in seg["wins"]:
+                    if o is not win and x < o["x"] + o["w"] and o["x"] < x + w and y < o["y"] + o["h"] and o["y"] < y + h:
+                        print(f"警告：{meta['tpl']} 的 {win['slot']} 素材铺满后伸进了 {o['slot']} 窗，"
+                              f"换一条宽高比更接近窗口的素材（例如横屏窗用横屏素材）", file=sys.stderr)
                 overlays.append({"video_id": src["video_id"], "start": round(at + t0, 3),
                                  "from": round(float(src.get("from", 0)) + t0, 3), "duration": round(t1 - t0, 3),
                                  "x": x, "y": y, "w": w, "h": h, "layer": "base"})
