@@ -13,14 +13,15 @@ Tony 选模板只说编号（2026-11-18 起共 1–79 号 + 51b）。样张页�
 | 方向 | 账号 / 用途 | 时间（自动任务） | 模板 | 配音 | 背景音乐 |
 |---|---|---|---|---|---|
 | Etsy 政策速递 | Shopwright，讲新规 + 观点 | 每天 08:37 | 56 号（video-drop `templates/policy-brief/`） | Bo 男声 1.3 倍 | mixkit_driving_ambition 0.1 |
-| 网站功能宣传 | openaigrowth.com 的工具和服务 | 每天 09:23 | 51b 号（`templates/promo-day/`） | Lan 女声 1.3 倍 | mixkit_dreaming_big 0.07 |
+| 网站功能宣传 | openaigrowth.com 的工具和服务 | 每天 09:23 | 51b 号（`templates/promo-day/`） | ~~Lan~~ 已禁用（2026-11-06）；2026-11-13 图片去属性那条用 ElevenLabs Will，1.3 倍 | mixkit_dreaming_big 0.07 |
 | Etsy 知识点 | 抖音 Etsy-Tony，常青知识 | 每天 15:47 | 52–55 号轮换（`templates/explainer/`） | Bo 男声 1.3 倍 | mixkit_driving_ambition 0.1 |
 | AI浪潮 | 视频号 AI浪潮，每日 AI 新闻 | 早上（见 README） | 57 号（`templates/ai-wave/`） | 见 README | 见 README |
 | TonyBook 跨境实操 | 抖音 助理－TonyBook跨境 | — | 60 号（video-drop `templates/tonybook-mag/`） | ElevenLabs Will | 见 README |
 | 移轴微缩 | 抖音 Etsy-Tony 特别篇 | — | 58 号（video-drop `templates/etsytony-miniature/`） | 见 README | 合成音效 |
 | 科普治愈 | 科学现象 → 人生道理 | — | 59 号（video-drop `templates/science-healing/`） | 见 README | 见 README |
 
-所有方向共用的规矩：
+所有方向共用的规矩（智能体总说明见仓库根目录 AGENTS.md）：
+- **抖音遮挡安全区**：竖版底部 1460 以下、右侧 930 以右 860–1600、顶部 0–200 会被抖音界面盖住，字幕/重点字/人脸不放进去（详见 templates/creator-pack/README.md）。
 - **不重复**：政策速递、知识点、网站宣传三条线共用选题台账 video-drop `templates/policy-brief/topics.md`，同一个知识点只做一次；TonyBook 也先读它。
 - **免费实拍素材**：每条都要有，而且要和模板融为一体（素材在模板「下面」透出来，模板的暗角 / 颗粒 / 文字盖在上面）。Mixkit 只用详情页写「Mixkit Stock Video Free License」的，Pexels / Pixabay 也可以。已核对可商用和受限的清单见 `templates/explainer/README.md`。
 - **网址**：画面右上角和结尾卡带 openaigrowth.com（49–55、51b 已内置）。
