@@ -2,3 +2,5 @@ __pycache__/
 *.pyc
 .env
 data/
+templates/creator-pack/still_*.png
+templates/creator-pack/guide_*.png

@@ -4,7 +4,7 @@
 - `Tony11081/douyin-editor` 的 `templates/`（下表没写仓库的都在这里）
 - `Tony11081/video-drop` 的 `templates/`（表里写了「video-drop」的）
 
-Tony 选模板只说编号。样张页：templates_page.html（Claude 页面「Etsy-Tony 视频模板库」）。
+Tony 选模板只说编号（2026-11-18 起共 1–79 号 + 51b）。样张页：templates_page.html（Claude 页面「Etsy-Tony 视频模板库」）。
 
 ## 一、每天在用的固定方向（先看这里）
 
@@ -97,7 +97,30 @@ gallery.html 是所有模板的静态样式（?tpl=<代号>&s=hook|card，背景
 | 62 | TonyBook 助理聊天（2026-10-31 起停用） | tc | video-drop templates/tonybook-chat/ |
 | 63 | 新闻快讯台 · 国际新闻台 breaking news 风格（深蓝演播室 + 新闻红 + 白色标题条；政策速递新外观，2026-11-10 样片，待 Tony 定是否替换 56 号） | pd | video-drop templates/policy-desk/（和 56 号读同一种 episodes/epNNN.js，多一种 quote 原文纸条场景；开场 BREAKING NEWS 突发大字 + 实拍素材通栏 1080×608 + 两层字幕条 + 底部滚动条 + 红白斜条转场；OUR TAKE 场景自动出「ANALYSIS · 我们的看法」标签；英文字体 Barlow Condensed 在模板 fonts/ 里） |
 
-以后新模板接着编 64 号，加到这张表和样张页。
+### 64–79 创作者风格包（2026-11-18，templates/creator-pack/，一个 pack.html 全包）
+
+| 号 | 名称 | 代号 | 动画版实现 |
+|---|---|---|---|
+| 64 | 大字砸屏 Bold Type | bt | templates/creator-pack/pack.html?tpl=bt（纯字，每拍换底色，大字砸屏 + 震屏） |
+| 65 | 贴纸拼贴 | sk | templates/creator-pack/pack.html?tpl=sk（牛皮纸 + 拍立得实拍框 + 剪报字 + 模切贴纸） |
+| 66 | 漫画演绎 | ct | templates/creator-pack/pack.html?tpl=ct（漫画格（Codex 漫画场景图）+ 右上画中画 + BLOCKED 大字） |
+| 67 | 杂志大片 Editorial | ed | templates/creator-pack/pack.html?tpl=ed（全屏实拍 + 衬线刊头/引语） |
+| 68 | 产品演示 | pd | templates/creator-pack/pack.html?tpl=pd（蓝底网站窗口打字/点击 + 左下圆形人像） |
+| 69 | 梗图反应 | mm | templates/creator-pack/pack.html?tpl=mm（上半屏梗图卡 + 下半屏实拍推镜头/定格） |
+| 70 | 动态图解 | mg | templates/creator-pack/pack.html?tpl=mg（上半屏信息图（进度条/迷雾/路线）+ 下半屏实拍） |
+| 71 | 白板手绘 | wb | templates/creator-pack/pack.html?tpl=wb（上半屏逐笔手绘 + 下半屏实拍） |
+| 72 | 生活 Vlog | vl | templates/creator-pack/pack.html?tpl=vl（全屏 B-roll + 手写标题） |
+| 73 | 回复评论 | rp | templates/creator-pack/pack.html?tpl=rp（评论卡 + 圆角实拍 + 编号要点） |
+| 74 | 照片堆叠 | ps | templates/creator-pack/pack.html?tpl=ps（照片甩到桌上，最后一张是实拍） |
+| 75 | 榜单倒数 | cd | templates/creator-pack/pack.html?tpl=cd（进度格 + 橙色大编号 + 上下两路实拍） |
+| 76 | 胶片手绘质感 | dt | templates/creator-pack/pack.html?tpl=dt（录像带 OSD + 颗粒 + 抖动手绘圈 + 黄色大字） |
+| 77 | 播客切片 | pc | templates/creator-pack/pack.html?tpl=pc（双人上下窗 + 说话人高亮 + 声波） |
+| 78 | 新闻评论 | nc | templates/creator-pack/pack.html?tpl=nc（原文卡荧光笔 + 「我的看法」角标） |
+| 79 | 4:3 横版口播 | wd | templates/creator-pack/pack.html?tpl=wd（1440×1080，抖音里居中显示、界面落在黑边不挡画面；章节标签 + 要点卡） |
+
+**抖音遮挡安全区（64 号起所有竖版模板都按这个排）**：顶部 0–200、底部 1460 以下（账号名/文案/评论框）、右侧 930 以右 860–1600（按钮列）会被抖音界面盖住，字幕、重点字、人脸不放进去；`render.py guide` 叠遮挡区检查。详见 templates/creator-pack/README.md。
+
+以后新模板接着编 80 号，加到这张表和样张页。
 
 高端系列另用字体：Cormorant Garamond、Playfair Display、Cinzel、Bodoni Moda、Jost（同样来自 google/fonts ofl/）。
 

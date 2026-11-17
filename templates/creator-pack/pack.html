@@ -1,0 +1,614 @@
+<!DOCTYPE html>
+<html lang="zh"><head><meta charset="utf-8">
+<title>64–78 · 创作者风格包</title>
+<style>
+@font-face{font-family:Anton;src:url(fonts/Anton-Regular.ttf)}
+@font-face{font-family:Playfair;src:url(fonts/Playfair.ttf)}
+@font-face{font-family:PlayfairI;src:url(fonts/Playfair-Italic.ttf)}
+@font-face{font-family:Caveat;src:url(fonts/Caveat.ttf)}
+@font-face{font-family:LongCang;src:url(fonts/LongCang-Regular.ttf)}
+@font-face{font-family:KuaiLe;src:url(fonts/ZCOOLKuaiLe-Regular.ttf)}
+@font-face{font-family:VT323;src:url(fonts/VT323-Regular.ttf)}
+@font-face{font-family:Oswald;src:url(fonts/Oswald.ttf)}
+html,body{margin:0;width:1080px;height:1920px;overflow:hidden;background:#000}
+body.hole,html.hole{background:transparent}
+#stage{position:absolute;inset:0;overflow:hidden;font-family:"Noto Sans CJK SC","Inter",sans-serif;color:#fff}
+#stage *{box-sizing:border-box}
+.a{position:absolute}
+.bgl{position:absolute;inset:0;z-index:0}
+.foot{position:absolute;z-index:1;overflow:hidden;background:#333}
+.foot img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.d{z-index:2}
+.cjk{font-family:"Noto Sans CJK SC",sans-serif;font-weight:900}
+.serif{font-family:"Noto Serif CJK SC",serif}
+</style></head>
+<body><div id="stage"></div>
+<script>
+// ============ 共用引擎 ============
+// ?tpl=代号 选模板；?hole=1 挖空素材窗（渲染透明 webm 叠在实拍上）；?cfg=JSON 覆盖文案（见 README）
+const Q = new URLSearchParams(location.search);
+const HOLE = Q.has('hole');
+const TPL = Q.get('tpl') || 'bt';
+const USER = Q.get('cfg') ? JSON.parse(Q.get('cfg')) : {};
+if (HOLE) { document.documentElement.classList.add('hole'); document.body.classList.add('hole'); }
+const S = document.getElementById('stage');
+let W = 1080, H = 1920;
+const cl = (v, a = 0, b = 1) => Math.max(a, Math.min(b, v));
+const lerp = (a, b, k) => a + (b - a) * k;
+const pr = (t, a, b) => cl((t - a) / (b - a));                 // 0→1 进度
+const eo = k => 1 - Math.pow(1 - k, 3);                           // ease out
+const eio = k => k < .5 ? 4 * k * k * k : 1 - Math.pow(-2 * k + 2, 3) / 2;
+const back = k => { const c = 1.7; return 1 + (c + 1) * Math.pow(k - 1, 3) + c * Math.pow(k - 1, 2); };
+const pop = (t, t0, d = .22) => back(pr(t, t0, t0 + d));          // 弹出 0→1（带回弹）
+const rnd = s => { const x = Math.sin(s * 127.1 + 311.7) * 43758.5453; return x - Math.floor(x); };
+function h(tag, css, html, parent) {
+  const e = document.createElement(tag); e.className = 'a d';
+  if (css) e.style.cssText += css; if (html != null) e.innerHTML = html; (parent || S).appendChild(e); return e;
+}
+function bg(css, parent) { const e = document.createElement('div'); e.className = 'bgl'; e.style.cssText += css; (parent || S).appendChild(e); return e; }
+const set = (e, o) => { for (const k in o) e.style[k] = o[k]; };
+// 高亮语法：[词] = 重点词
+const mark = (s, open, close = '</span>') => s.replace(/\[([^\]]+)\]/g, (m, w) => open + w + close);
+const C = (key, dflt) => (USER[key] !== undefined ? USER[key] : dflt);
+
+// ---- 素材窗（挖洞） ----
+// win: {slot, x,y,w,h, r?, circle?, rot?, t0, t1, zoom?, fx?, fy?}
+let WINS = [];
+function polyRR(w) {
+  const pts = []; const { x, y } = w; const ww = w.w, hh = w.h;
+  const r = w.circle ? Math.min(ww, hh) / 2 : Math.min(w.r || 0, ww / 2, hh / 2);
+  const cs = [[x + ww - r, y + r, -90], [x + ww - r, y + hh - r, 0], [x + r, y + hh - r, 90], [x + r, y + r, 180]];
+  for (const [cx, cy, a0] of cs) for (let i = 0; i <= 10; i++) {
+    const a = (a0 + 9 * i) * Math.PI / 180; pts.push([cx + r * Math.cos(a), cy + r * Math.sin(a)]);
+  }
+  const rot = (w.rot || 0) * Math.PI / 180, mx = x + ww / 2, my = y + hh / 2;
+  return pts.map(([px, py]) => [mx + (px - mx) * Math.cos(rot) - (py - my) * Math.sin(rot), my + (px - mx) * Math.sin(rot) + (py - my) * Math.cos(rot)]);
+}
+const FOOT = {};
+function footEl(w, i) {
+  if (FOOT[i]) return FOOT[i];
+  const e = document.createElement('div'); e.className = 'foot';
+  const im = document.createElement('img'); im.src = (Q.get('bg') || 'sample') + '/foot_' + w.slot + '.jpg';
+  im.onerror = () => { im.remove(); e.style.background = 'linear-gradient(135deg,#3a3f47,#1c1f24)'; };
+  e.appendChild(im); S.appendChild(e); return FOOT[i] = e;
+}
+function applyHoles(t) {
+  const act = WINS.filter(w => t >= w.t0 && t < w.t1);
+  if (HOLE) {
+    let d = `M0 0H${W}V${H}H0Z`;
+    for (const w of act) d += 'M' + polyRR(w).map(p => p[0].toFixed(1) + ' ' + p[1].toFixed(1)).join('L') + 'Z';
+    const cp = act.length ? `path(evenodd,'${d}')` : 'none';
+    document.querySelectorAll('.bgl').forEach(e => e.style.clipPath = cp);
+  } else {
+    WINS.forEach((w, i) => {
+      const e = footEl(w, i), on = t >= w.t0 && t < w.t1;
+      e.style.display = on ? 'block' : 'none'; if (!on) return;
+      set(e, { left: w.x + 'px', top: w.y + 'px', width: w.w + 'px', height: w.h + 'px',
+        borderRadius: w.circle ? '50%' : (w.r || 0) + 'px', transform: `rotate(${w.rot || 0}deg)` });
+      const im = e.firstChild; if (im && im.style) { im.style.transform = `scale(${w.zoom || 1})`; im.style.objectPosition = `${(w.fx ?? .5) * 100}% ${(w.fy ?? .5) * 100}%`; }
+    });
+  }
+}
+// 胶片颗粒（canvas，每帧换噪点）
+function grain(alpha = .08, z = 5) {
+  const c = document.createElement('canvas'); c.width = 270; c.height = 480; c.className = 'a d';
+  c.style.cssText = `inset:0;width:1080px;height:1920px;z-index:${z};opacity:${alpha};mix-blend-mode:overlay;image-rendering:pixelated`;
+  S.appendChild(c); const g = c.getContext('2d'); const img = g.createImageData(270, 480);
+  return t => { let s = Math.floor(t * 30) + 1; for (let i = 0; i < img.data.length; i += 4) { s = (s * 16807) % 2147483647; const v = s & 255; img.data[i] = img.data[i + 1] = img.data[i + 2] = v; img.data[i + 3] = 255; } g.putImageData(img, 0, 0); };
+}
+// 逐词字幕：segs=[{t0,t1,text}] text 用 [词] 标重点；style: 'pop' 逐词弹出 / 'fade'
+function caption(el, segs, t, hiOpen, mode = 'pop') {
+  const s = segs.find(s => t >= s.t0 && t < s.t1);
+  if (!s) { el.style.opacity = 0; return; }
+  el.style.opacity = 1;
+  if (el._k !== s) { // 拆成 token
+    el._k = s; const toks = []; s.text.replace(/\[([^\]]+)\]|([^\[\s]+|\s+)/g, (m, hi, plain) => { toks.push(hi ? { w: hi, hi: 1 } : { w: plain }); });
+    el.innerHTML = toks.map(k => k.hi ? `${hiOpen}${k.w}</span>` : `<span>${k.w}</span>`).join('');
+    el._n = toks.length;
+  }
+  const kids = el.children, n = kids.length, dur = Math.min(s.t1 - s.t0, 1.2);
+  for (let i = 0; i < n; i++) {
+    const k = mode === 'none' ? 1 : pop(t, s.t0 + dur * i / n * .8, .18);
+    kids[i].style.display = 'inline-block'; kids[i].style.opacity = cl(k * 3);
+    kids[i].style.transform = mode === 'pop' ? `translateY(${(1 - cl(k)) * 18}px) scale(${.7 + .3 * k})` : 'none';
+  }
+}
+
+// ============ 15 个模板 ============
+const T = {};
+
+// ---------- 64 · 大字砸屏 Bold type ----------
+T.bt = {
+  no: 64, name: '大字砸屏 Bold Type', dur: 6.6,
+  build() {
+    const B = C('beats', [
+      { t: 0, bg: '#F2651C', lines: [['不是你', '#111', 210, .15], ['不会选品', '#111', 210, .55], ['是没看数据。', '#FFF3E4', 190, 1.05]] },
+      { t: 2.2, bg: '#111', lines: [['爆款', '#F2651C', 330, 2.3], ['从来不靠', '#FFF3E4', 170, 2.75], ['猜。', '#FFF3E4', 240, 3.1]] },
+      { t: 4.3, bg: '#F3EADB', lines: [['IT\'S NOT', '#111', 200, 4.4, 'Anton'], ['LUCK.', '#F2651C', 330, 4.8, 'Anton'], ['是方法', '#111', 150, 5.3]] },
+    ]);
+    this.B = B; this.bgE = bg('');
+    this.wrap = h('div', 'left:0;top:0;width:1080px;height:1920px');
+    this.groups = B.map(b => {
+      const g = h('div', 'left:90px;top:0;width:900px;height:1920px;display:flex;flex-direction:column;justify-content:center;gap:6px', '', this.wrap);
+      g.style.position = 'absolute';
+      g.items = b.lines.map(([txt, col, sz, t0, ff]) => {
+        const e = document.createElement('div');
+        e.style.cssText = `font-family:${ff || '"Noto Sans CJK SC"'};font-weight:900;font-size:${sz}px;line-height:1.02;color:${col};letter-spacing:${ff ? 4 : -6}px;transform-origin:20% 60%;white-space:nowrap`;
+        e.textContent = txt; e.t0 = t0; g.appendChild(e); return e;
+      }); return g;
+    });
+    this.tag = h('div', 'left:90px;top:250px;font:600 30px Inter;letter-spacing:6px;opacity:.75', C('tag', 'ETSY-TONY · 选品课 01'));
+    this.flash = h('div', 'inset:0;background:#fff;z-index:9;opacity:0');
+  },
+  frame(t) {
+    let bi = 0; this.B.forEach((b, i) => { if (t >= b.t) bi = i; });
+    this.bgE.style.background = this.B[bi].bg;
+    this.tag.style.color = bi === 1 ? '#FFF3E4' : '#111';
+    let shake = 0;
+    this.groups.forEach((g, i) => {
+      g.style.display = i === bi ? 'flex' : 'none';
+      g.items.forEach(e => {
+        const k = pr(t, e.t0, e.t0 + .13); const on = t >= e.t0;
+        e.style.opacity = on ? 1 : 0;
+        e.style.transform = `scale(${lerp(1.6, 1, eo(k))}) rotate(${lerp(-4, 0, k)}deg)`;
+        e.style.filter = k < 1 ? `blur(${(1 - k) * 8}px)` : 'none';
+        const s = t - e.t0; if (i === bi && s >= 0.1 && s < .32) shake = Math.max(shake, (1 - (s - .1) / .22) * 14);
+      });
+    });
+    this.wrap.style.transform = shake ? `translate(${(rnd(t * 99) - .5) * shake}px,${(rnd(t * 77) - .5) * shake}px)` : 'none';
+    const sb = this.B.map(b => b.t).filter(x => x > 0).find(x => t >= x && t < x + .07);
+    this.flash.style.opacity = sb ? .85 : 0;
+  }
+};
+
+// ---------- 65 · 贴纸拼贴 Sticker collage ----------
+const STK = {
+  box: `<svg viewBox="0 0 200 200"><g stroke="#fff" stroke-width="22" stroke-linejoin="round" fill="#fff"><path d="M30 70 100 35 170 70 170 150 100 185 30 150Z"/></g><path d="M30 70 100 35 170 70 100 105Z" fill="#E2B477"/><path d="M30 70 100 105 100 185 30 150Z" fill="#C8955A"/><path d="M170 70 100 105 100 185 170 150Z" fill="#B07D45"/><path d="M62 54 132 88 132 112 120 106 120 92 50 60Z" fill="#F1D9A8" opacity=".9"/></svg>`,
+  stocking: `<svg viewBox="0 0 200 200"><path d="M70 30h70v80l20 30c14 22-6 50-32 42l-60-18c-24-7-26-40-4-50l6-3z" fill="#fff" stroke="#fff" stroke-width="24" stroke-linejoin="round"/><path d="M70 30h70v80l20 30c14 22-6 50-32 42l-60-18c-24-7-26-40-4-50l6-3z" fill="#D7263D"/><path d="M80 60h50M80 85h52M76 108h58" stroke="#fff" stroke-width="7" opacity=".8"/><rect x="62" y="22" width="86" height="34" rx="14" fill="#fff" stroke="#e8e8e8" stroke-width="3"/></svg>`,
+  coins: `<svg viewBox="0 0 200 200"><g stroke="#fff" stroke-width="22" fill="#fff"><ellipse cx="90" cy="150" rx="55" ry="20"/><rect x="35" y="80" width="110" height="70"/><ellipse cx="90" cy="80" rx="55" ry="20"/><rect x="110" y="40" width="70" height="100" rx="6"/></g><rect x="110" y="40" width="70" height="100" rx="6" fill="#3FA34D" transform="rotate(12 145 90)"/><circle cx="145" cy="90" r="16" fill="#9BD3A2" transform="rotate(12 145 90)"/>${[0, 1, 2, 3].map(i => `<ellipse cx="90" cy="${145 - i * 20}" rx="55" ry="20" fill="#E8A317" stroke="#B9790B" stroke-width="4"/>`).join('')}<ellipse cx="90" cy="80" rx="40" ry="12" fill="#F7C948"/></svg>`,
+  star: `<svg viewBox="0 0 200 200"><path d="M100 18l24 52 57 6-43 39 12 56-50-29-50 29 12-56-43-39 57-6z" fill="#FFD23F" stroke="#fff" stroke-width="20" stroke-linejoin="round" paint-order="stroke"/></svg>`,
+};
+T.sk = {
+  no: 65, name: '贴纸拼贴 Sticker Collage', dur: 6.6,
+  build() {
+    const L0 = bg(`background:#C9A27A;background-image:radial-gradient(rgba(255,255,255,.18) 1px,transparent 1.5px),radial-gradient(rgba(80,50,20,.12) 1px,transparent 1.5px);background-size:7px 7px,11px 11px`);
+    // 背景日历纸片（在素材下面的东西都放进挖洞层 L0）
+    h('div', `left:60px;top:250px;width:420px;height:460px;background:#F4EEE2;transform:rotate(-7deg);box-shadow:0 6px 18px rgba(0,0,0,.18);opacity:.9;font:700 46px/1.6 "Noto Sans CJK SC";color:#b9b1a3;padding:30px`, 'S M T W T F<br>2 3 4 5 6 7<br>9 10 11 12 13<br>16 17 18 19 20', L0);
+    this.frameE = h('div', 'left:150px;top:420px;width:780px;height:920px;background:#FBF9F4;transform:rotate(-2deg);box-shadow:0 18px 40px rgba(0,0,0,.35)', '', L0);
+    WINS.push({ slot: 'P', x: 178, y: 450, w: 724, h: 760, r: 2, rot: -2, t0: 0, t1: 99, fy: .38 });
+    // 胶带
+    [[120, 400, -38], [830, 395, 32], [860, 1270, -30]].forEach(([x, y, r]) => h('div', `left:${x}px;top:${y}px;width:190px;height:58px;background:rgba(236,224,196,.82);transform:rotate(${r}deg);box-shadow:0 2px 4px rgba(0,0,0,.12)`));
+    // 剪报字
+    const L = C('cut', [['爆', '#111', '#FFF'], ['单', '#fff', '#111'], ['了', '#111', '#FFD23F']]);
+    this.cut = L.map(([ch, fg, bgc], i) => h('div', `left:${250 + i * 200}px;top:255px;width:190px;height:200px;background:${bgc};color:${fg};font:900 160px/200px "Noto Sans CJK SC";text-align:center;box-shadow:0 6px 14px rgba(0,0,0,.3);z-index:4`, ch));
+    // 贴纸
+    const SS = C('stickers', [['coins', 60, 1060, -12, 1.3], ['box', 720, 400, 10, 2.3], ['stocking', 640, 820, -8, 3.3], ['star', 30, 700, 8, 4.2]]);
+    this.st = SS.map(([k, x, y, r, t0]) => { const e = h('div', `left:${x}px;top:${y}px;width:300px;height:300px;filter:drop-shadow(0 10px 10px rgba(0,0,0,.35));z-index:5`, STK[k]); e.r = r; e.t0 = t0; return e; });
+    this.lab = h('div', 'left:230px;top:1270px;width:620px;padding:22px 30px;background:#FFFDF6;transform:rotate(1.5deg);box-shadow:0 8px 20px rgba(0,0,0,.25);text-align:center;font:900 64px/1.15 "Noto Sans CJK SC";color:#111;z-index:4');
+    this.labIn = this.lab;
+    this.sub = h('div', 'left:230px;top:1385px;width:620px;text-align:center;font:700 48px Caveat,Inter;color:#3a2a18;z-index:4', C('sub', "it's just really big."));
+  },
+  frame(t) {
+    this.cut.forEach((e, i) => { const k = pop(t, .15 + i * .18, .25); e.style.opacity = t > .15 + i * .18 ? 1 : 0; e.style.transform = `rotate(${[-8, 5, -3][i]}deg) scale(${lerp(1.8, 1, cl(k))})`; });
+    this.st.forEach(e => { const k = pop(t, e.t0, .3); e.style.opacity = t >= e.t0 ? 1 : 0; e.style.transform = `rotate(${e.r + (1 - cl(k)) * 25}deg) scale(${lerp(1.7, 1, k)})`; });
+    caption(this.lab, C('caps', [{ t0: .6, t1: 99, text: '这单 真的 [很大]' }]), t, '<span style="background:#FFD23F;padding:0 8px">', 'pop');
+    this.sub.style.opacity = pr(t, 1.4, 1.8);
+  }
+};
+
+// ---------- 66 · 漫画演绎 Cartoon ----------
+T.ct = {
+  no: 66, name: '漫画演绎 Cartoon', dur: 6.8,
+  build() {
+    const L0 = bg(`background:#F6EAD6;background-image:radial-gradient(#e9c9a4 2.2px,transparent 2.6px);background-size:22px 22px`);
+    this.panel = h('div', 'left:60px;top:250px;width:960px;height:1140px;border:12px solid #111;border-radius:22px;overflow:hidden;background:#fff;box-shadow:14px 14px 0 #111', '', L0);
+    this.img = h('img', 'left:-140px;top:0;height:1140px;width:auto;transform-origin:60% 50%', null, this.panel); this.img.src = C('scene', 'sample/comic_team.jpg');
+    // 速度线
+    this.lines = h('div', 'inset:0;background:repeating-conic-gradient(from 0deg at 50% 45%,rgba(255,255,255,0) 0 6deg,rgba(255,255,255,.55) 6deg 7deg);opacity:0', '', this.panel);
+    // 画中画人物（右上）
+    WINS.push({ slot: 'P', x: 690, y: 275, w: 300, h: 360, r: 14, t0: 0, t1: 99, fy: .35 });
+    h('div', 'left:680px;top:265px;width:320px;height:380px;border:10px solid #111;border-radius:22px;z-index:3;box-shadow:6px 6px 0 #111');
+    // 禁止标志 + 问号
+    this.ban = h('div', 'left:110px;top:520px;width:300px;height:300px;z-index:4', '<svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="40" fill="none" stroke="#fff" stroke-width="20"/><circle cx="50" cy="50" r="40" fill="none" stroke="#E5202E" stroke-width="12"/><path d="M22 22 78 78" stroke="#fff" stroke-width="20"/><path d="M22 22 78 78" stroke="#E5202E" stroke-width="12"/></svg>');
+    this.q = h('div', 'left:520px;top:640px;font:900 150px KuaiLe;color:#E5202E;-webkit-text-stroke:6px #111;z-index:4', '?!');
+    this.word = h('div', 'left:120px;top:1020px;font:900 190px/1 Anton,"Noto Sans CJK SC";color:#E5202E;-webkit-text-stroke:8px #111;paint-order:stroke;text-shadow:10px 10px 0 #111;transform:rotate(-8deg);z-index:5;letter-spacing:4px', C('word', 'BLOCKED'));
+    this.cap = h('div', 'left:150px;top:1290px;width:780px;text-align:center;z-index:6');
+    this.capIn = h('div', 'position:relative;display:inline-block;background:#FFE14D;border:7px solid #111;padding:14px 30px;font:900 58px/1.2 "Noto Sans CJK SC";color:#111;box-shadow:8px 8px 0 #111;transform:rotate(-2deg)', '', this.cap);
+  },
+  frame(t) {
+    this.img.style.transform = `scale(${1.05 + .05 * t / this.dur}) translateX(${-t * 6}px)`;
+    const sh = t > 1.2 && t < 1.5 ? (rnd(t * 50) - .5) * 16 : 0;
+    this.panel.style.transform = `translate(${sh}px,${sh * .6}px)`;
+    this.lines.style.opacity = t > 1.15 && t < 2.2 ? .9 * (1 - pr(t, 1.6, 2.2)) : 0;
+    const kb = pop(t, 1.15, .3); this.ban.style.opacity = t > 1.15 ? 1 : 0; this.ban.style.transform = `scale(${kb}) rotate(${(1 - cl(kb)) * -90}deg)`;
+    const kq = pop(t, 1.6, .25); this.q.style.opacity = t > 1.6 ? 1 : 0; this.q.style.transform = `scale(${kq}) rotate(${Math.sin(t * 9) * 6}deg)`;
+    const kw = pop(t, 2.3, .28); this.word.style.opacity = t > 2.3 ? 1 : 0; this.word.style.transform = `rotate(-8deg) scale(${lerp(2.2, 1, cl(kw))})`;
+    caption(this.capIn, C('caps', [{ t0: .3, t1: 2.3, text: '我刚上架的 [爆款]…' }, { t0: 2.3, t1: 99, text: '好吧，被平台 [下架] 了。' }]), t, '<span style="color:#E5202E">');
+  }
+};
+
+// ---------- 67 · 杂志大片 Editorial ----------
+T.ed = {
+  no: 67, name: '杂志大片 Editorial', dur: 6.8,
+  build() {
+    WINS.push({ slot: 'W', x: 0, y: 0, w: 1080, h: 1920, t0: 0, t1: 99, fy: .3 });
+    h('div', 'inset:0;background:linear-gradient(180deg,rgba(30,12,4,.55) 0%,rgba(30,12,4,0) 22%,rgba(30,12,4,0) 35%,rgba(25,10,4,.86) 60%,rgba(20,8,3,.95) 100%);z-index:2');
+    h('div', 'inset:0;box-shadow:inset 0 0 260px rgba(0,0,0,.6);z-index:2');
+    this.g = grain(.1, 3);
+    this.mast = h('div', 'left:0;top:205px;width:1080px;text-align:center;font:400 150px/1 Playfair;letter-spacing:22px;color:#F5EDE3', C('mast', 'CRAFTED'));
+    this.rule = h('div', 'left:110px;top:375px;width:860px;height:2px;background:#F5EDE3;transform-origin:50% 50%');
+    this.issue = h('div', 'left:0;top:395px;width:1080px;text-align:center;font:600 26px Inter,"Noto Sans CJK SC";letter-spacing:8px;color:#F5EDE3', C('issue', 'NO. 07 — 关于手艺人的第二张脸'));
+    const QL = C('quote', ['你应该成为一个', '几乎<i>认不出来</i>的', '自己。']);
+    this.q = QL.map((s, i) => h('div', `left:100px;top:${980 + i * 120}px;width:900px;font:700 92px/1.25 "Noto Serif CJK SC",serif;color:#FBF4EA;letter-spacing:2px`, s.replace(/<i>(.*?)<\/i>/, '<span style="font-family:PlayfairI,\'Noto Serif CJK SC\';font-style:italic;font-weight:400;color:#E9C38A">$1</span>')));
+    this.en = h('div', 'left:104px;top:1355px;width:880px;font:400 italic 36px/1.35 PlayfairI;color:rgba(245,237,227,.8)', C('en', 'You should become an almost unrecognizable version of yourself.'));
+    this.folio = h('div', 'left:100px;top:1450px;width:880px;display:flex;justify-content:space-between;font:600 22px Inter;letter-spacing:5px;color:rgba(245,237,227,.6)', '<span>ETSY-TONY MAGAZINE</span><span>P. 42</span>');
+  },
+  frame(t) {
+    this.g(t);
+    this.mast.style.opacity = pr(t, .1, .9); this.mast.style.letterSpacing = lerp(40, 22, eo(pr(t, .1, 1.4))) + 'px';
+    this.rule.style.transform = `scaleX(${eo(pr(t, .5, 1.3))})`;
+    this.issue.style.opacity = pr(t, .9, 1.5);
+    this.q.forEach((e, i) => { const k = eo(pr(t, 1.4 + i * .55, 2.2 + i * .55)); e.style.opacity = k; e.style.transform = `translateY(${(1 - k) * 30}px)`; e.style.filter = `blur(${(1 - k) * 6}px)`; });
+    this.en.style.opacity = pr(t, 3.4, 4.2); this.folio.style.opacity = pr(t, 3.8, 4.4);
+  }
+};
+
+// ---------- 68 · 产品演示 Product demo ----------
+T.pd = {
+  no: 68, name: '产品演示 Product Demo', dur: 7.2,
+  build() {
+    const L0 = bg('background:radial-gradient(900px 700px at 20% 15%,#2F5BFF 0,transparent 60%),radial-gradient(800px 800px at 90% 90%,#0A36C9 0,transparent 60%),#0A1B5C');
+    this.chips = C('steps', ['上传产品图', '一键换场景', '下载上架']).map((s, i) => h('div', `left:${80 + i * 310}px;top:250px;height:62px;padding:0 26px 0 14px;border-radius:31px;font:700 30px/62px "Noto Sans CJK SC";display:flex;align-items:center;gap:12px;white-space:nowrap`, `<b style="display:inline-block;width:38px;height:38px;border-radius:50%;font:800 24px/38px Inter;text-align:center">${i + 1}</b>${s}`));
+    this.win = h('div', 'left:70px;top:350px;width:940px;height:780px;background:#fff;border-radius:22px;box-shadow:0 30px 80px rgba(0,0,30,.55);overflow:hidden;color:#111', '', L0);
+    h('div', 'left:0;top:0;width:940px;height:68px;background:#F2F3F7;border-bottom:1px solid #e3e5ec', `<div style="position:absolute;left:24px;top:24px;display:flex;gap:10px"><i style="width:18px;height:18px;border-radius:50%;background:#FF5F57"></i><i style="width:18px;height:18px;border-radius:50%;background:#FEBC2E"></i><i style="width:18px;height:18px;border-radius:50%;background:#28C840"></i></div><div style="position:absolute;left:0;width:940px;text-align:center;top:16px;font:600 26px Inter,'Noto Sans CJK SC';color:#555">${C('wtitle', '新任务 · openaigrowth.com')}</div>`, this.win);
+    const row = (y, k, v) => h('div', `left:40px;top:${y}px;width:860px;height:64px;border-bottom:1px solid #eceef3;font:500 28px/64px Inter,"Noto Sans CJK SC";color:#8a8f9c`, `${k}<span style="color:#111;margin-left:24px;font-weight:600">${v}</span>`, this.win);
+    row(90, '店铺 Shop', C('shop', 'NameAndBow')); row(154, '主题 Topic', C('topic', '圣诞袜 · 场景图'));
+    this.body = h('div', 'left:40px;top:250px;width:860px;height:300px;font:500 40px/1.6 "Noto Sans CJK SC";color:#111', '', this.win);
+    this.thumb = h('div', 'left:40px;top:560px;width:250px;height:150px;border-radius:12px;background:#f1f2f6 url(sample/photo_E.jpg) center/cover;border:1px solid #e3e5ec', '', this.win);
+    this.btn = h('div', 'left:620px;top:690px;width:260px;height:62px;border-radius:14px;background:#2A5BFF;color:#fff;font:700 30px/62px "Noto Sans CJK SC";text-align:center', C('btn', '生成 Generate'), this.win);
+    this.bar = h('div', 'left:40px;top:715px;width:0;height:12px;border-radius:6px;background:#2A5BFF', '', this.win);
+    this.cursor = h('div', 'left:0;top:0;width:52px;height:52px;z-index:6', '<svg viewBox="0 0 24 24"><path d="M4 2l15 11-7 1 4 8-3 1-4-8-5 5z" fill="#111" stroke="#fff" stroke-width="1.5"/></svg>');
+    WINS.push({ slot: 'P', x: 80, y: 1050, w: 300, h: 300, circle: true, t0: 0, t1: 99, fy: .33, zoom: 1 });
+    h('div', 'left:70px;top:1040px;width:320px;height:320px;border-radius:50%;border:10px solid #fff;box-shadow:0 14px 40px rgba(0,0,0,.45);z-index:3');
+    this.cap = h('div', 'left:420px;top:1130px;width:500px;text-align:left;font:800 56px/1.3 "Noto Sans CJK SC";color:#fff;text-shadow:0 4px 18px rgba(0,0,0,.5)');
+  },
+  frame(t) {
+    const step = t < 2.6 ? 0 : t < 5.2 ? 1 : 2;
+    this.chips.forEach((e, i) => { const on = i === step; e.style.background = on ? '#fff' : 'rgba(255,255,255,.14)'; e.style.color = on ? '#0A1B5C' : 'rgba(255,255,255,.8)'; const b = e.firstChild; b.style.background = on ? '#2A5BFF' : 'rgba(255,255,255,.25)'; b.style.color = '#fff'; e.style.opacity = pr(t, i * .15, i * .15 + .3); });
+    const k = pop(t, .1, .4); this.win.style.transform = `translateY(${(1 - cl(k)) * 60}px) scale(${.94 + .06 * k})`; this.win.style.opacity = cl(k * 2);
+    const txt = C('typed', '把这张产品图换成圣诞壁炉场景，袜子底色保持不变。');
+    const n = Math.floor(cl(pr(t, .7, 3.4)) * txt.length);
+    this.body.innerHTML = txt.slice(0, n) + (t < 3.6 && Math.floor(t * 3) % 2 ? '<span style="color:#2A5BFF">|</span>' : '');
+    // 光标移到按钮并点击
+    const m = eio(pr(t, 3.6, 4.6)); const cx = lerp(560, 820, m), cy = lerp(1300, 1065, m);
+    const click = t > 4.7 && t < 4.9;
+    set(this.cursor, { left: cx + 'px', top: cy + 'px', transform: `scale(${click ? .82 : 1})`, opacity: pr(t, 3.5, 3.7) });
+    this.btn.style.transform = `scale(${click ? .94 : 1})`; this.btn.style.boxShadow = t > 4.7 ? `0 0 0 ${12 * (1 - pr(t, 4.7, 5.3))}px rgba(42,91,255,.3)` : 'none';
+    this.bar.style.width = (eo(pr(t, 4.9, 6.6)) * 550) + 'px';
+    caption(this.cap, C('caps', [{ t0: .5, t1: 3.6, text: '一句话写清楚 [要什么]' }, { t0: 3.6, t1: 99, text: '点一下，[十秒] 出图' }]), t, '<span style="color:#7DF9C8">');
+  }
+};
+
+// ---------- 69 · 梗图反应 Memes & reactions ----------
+T.mm = {
+  no: 69, name: '梗图反应 Memes & Reactions', dur: 6.6,
+  build() {
+    bg('background:#3B1580;background-image:linear-gradient(rgba(255,255,255,.06) 2px,transparent 2px),linear-gradient(90deg,rgba(255,255,255,.06) 2px,transparent 2px);background-size:60px 60px');
+    this.rc = h('div', 'left:110px;top:230px;width:640px;padding:48px 50px 76px;background:#FFFDF6;color:#111;font:700 42px/1.8 "Courier New",monospace;box-shadow:0 20px 40px rgba(0,0,0,.4);transform:rotate(-3deg);-webkit-mask:linear-gradient(#000,#000) top/100% calc(100% - 26px) no-repeat,conic-gradient(from -45deg at bottom,#0000,#000 1deg 89deg,#0000 90deg) bottom/36px 26px repeat-x');
+    const rows = C('rows', [['售价 PRICE', '$70', 0], ['定金 DEPOSIT', '$35', 1.1], ['尾款 BALANCE', '$35', 1.7], ['已付 PAID', '$70', 2.4]]);
+    this.rows = rows.map(([k, v, t0], i) => { const e = h('div', `position:relative;display:flex;justify-content:space-between;${i === 3 ? 'border-top:3px dashed #111;margin-top:14px;padding-top:10px' : ''}`, `<span>${k}</span><span>${v} <b style="color:#18A558">${t0 ? '✓' : '&nbsp;'}</b></span>`, this.rc); e.style.position = 'relative'; e.t0 = t0; return e; });
+    this.flag = h('div', 'left:690px;top:170px;font:900 70px Anton;color:#fff;z-index:4', '<span style="display:inline-block;background:#E5202E;padding:6px 18px;transform:rotate(10deg);border:5px solid #fff;box-shadow:0 8px 0 rgba(0,0,0,.3)">×2</span>');
+    h('div', 'left:0;top:950px;width:1080px;height:12px;background:#FFD23F;z-index:3');
+    this.win = { slot: 'P', x: 0, y: 962, w: 1080, h: 958, t0: 0, t1: 99, fy: .3, zoom: 1 };
+    WINS.push(this.win);
+    this.fr = h('div', 'left:0;top:962px;width:1080px;height:958px;z-index:3;opacity:0;background:rgba(255,255,255,.0);box-shadow:inset 0 0 0 16px #fff');
+    this.frz = h('div', 'left:40px;top:1000px;font:900 44px Anton;letter-spacing:3px;color:#111;background:#fff;padding:4px 16px;z-index:4;opacity:0', '❚❚ FREEZE');
+    this.cap = h('div', 'left:40px;top:1290px;width:1000px;text-align:center;font:900 88px/1.15 "Noto Sans CJK SC";color:#fff;-webkit-text-stroke:10px #111;paint-order:stroke;z-index:4');
+  },
+  frame(t) {
+    const k = pop(t, 0, .35); this.rc.style.transform = `rotate(-3deg) translateY(${(1 - cl(k)) * -500}px)`;
+    this.rows.forEach(e => { const b = e.querySelector('b'); if (b) { const kk = pop(t, e.t0, .2); b.style.display = 'inline-block'; b.style.transform = `scale(${t >= e.t0 ? kk : 0})`; } e.style.opacity = t > e.t0 - .4 ? 1 : .25; });
+    const kf = pop(t, 2.8, .25); this.flag.style.opacity = t > 2.8 ? 1 : 0; this.flag.style.transform = `scale(${kf})`;
+    // 推镜头（punch-in）：3.2 秒起放大 1.35 倍；定格框 4.4–5.4
+    const punch = t >= 3.2; this.win.zoom = punch ? 1.35 : 1; this.win.fy = punch ? .25 : .3;
+    const fz = t >= 4.4 && t < 5.4; this.fr.style.opacity = fz ? 1 : 0; this.frz.style.opacity = fz ? 1 : 0;
+    caption(this.cap, C('caps', [{ t0: .3, t1: 3.2, text: '买家说要 [分两次付]' }, { t0: 3.2, t1: 99, text: '结果付了 [两遍]？' }]), t, '<span style="color:#FFD23F">');
+  }
+};
+
+// ---------- 70 · 动态图解 Motion graphics ----------
+T.mg = {
+  no: 70, name: '动态图解 Motion Graphics', dur: 7,
+  build() {
+    bg('background:linear-gradient(180deg,#8A2A12,#5E1A0A)');
+    this.card = h('div', 'left:50px;top:200px;width:980px;height:760px;border-radius:26px;overflow:hidden;background:#E9E6E1;box-shadow:0 24px 50px rgba(0,0,0,.4)');
+    h('div', 'inset:0;background-image:linear-gradient(rgba(0,0,0,.05) 1px,transparent 1px),linear-gradient(90deg,rgba(0,0,0,.05) 1px,transparent 1px);background-size:44px 44px', '', this.card);
+    h('div', 'left:0;top:0;width:980px;height:136px;background:#fff;border-bottom:3px solid #111', `<div style="position:absolute;left:30px;top:16px;font:800 30px Inter,'Noto Sans CJK SC';letter-spacing:3px;color:#111">${C('meter', '信息量 INFORMATION')}</div><div style="position:absolute;left:30px;top:66px;width:920px;height:26px;border:4px solid #111;border-radius:13px"></div><div style="position:absolute;left:30px;top:96px;font:700 20px Inter,'Noto Sans CJK SC';color:#111">几乎没有 ALMOST NONE</div><div style="position:absolute;right:30px;top:96px;font:700 20px Inter,'Noto Sans CJK SC';color:#E4551E">很多 MUCH MORE</div>`, this.card);
+    this.fill = h('div', 'left:34px;top:70px;height:18px;border-radius:9px;background:#E4551E;width:0', '', this.card);
+    this.knob = h('div', 'left:34px;top:60px;width:10px;height:38px;background:#111;border-radius:3px', '', this.card);
+    this.svg = h('div', 'left:0;top:120px;width:980px;height:640px', `<svg width="980" height="640" viewBox="0 0 980 640"><path id="mgp" d="M90 600 C 200 520, 160 420, 300 380 S 480 330, 520 250 S 610 170, 700 150" fill="none" stroke="#E4551E" stroke-width="8" stroke-linecap="round"/><g id="mgs" transform="translate(700 150)"><circle r="34" fill="#fff" stroke="#111" stroke-width="5"/><path d="M0 -20 6 -6 21 -6 9 3 13 18 0 9 -13 18 -9 3 -21 -6 -6 -6Z" fill="#E4551E"/></g></svg>`, this.card);
+    this.tag = h('div', 'left:560px;top:185px;padding:8px 16px;background:#111;color:#fff;font:800 24px Inter,"Noto Sans CJK SC";border-radius:8px;letter-spacing:2px', C('dest', '更好的选品 BETTER PICK'), this.card);
+    this.fog = [0, 1, 2, 3, 4, 5].map(i => h('div', `left:${-80 + i * 170}px;top:${200 + rnd(i + 9) * 380}px;width:460px;height:340px;border-radius:50%;background:radial-gradient(closest-side,rgba(236,233,228,1),rgba(236,233,228,0))`, '', this.card));
+    WINS.push({ slot: 'P', x: 0, y: 1000, w: 1080, h: 920, t0: 0, t1: 99, fy: .3 });
+    h('div', 'left:0;top:1000px;width:1080px;height:920px;background:linear-gradient(180deg,rgba(0,0,0,0) 25%,rgba(0,0,0,.5) 55%);z-index:2');
+    this.cap = h('div', 'left:60px;top:1330px;width:960px;text-align:center;font:800 60px/1.3 "Noto Sans CJK SC";color:#fff;text-shadow:0 3px 14px rgba(0,0,0,.6)');
+  },
+  frame(t) {
+    const k = eo(pr(t, 0, .6)); this.card.style.transform = `translateY(${(1 - k) * -80}px)`; this.card.style.opacity = k;
+    const m = eio(pr(t, 1.0, 4.4)); this.fill.style.width = m * 912 + 'px'; this.knob.style.left = (34 + m * 902) + 'px';
+    const p = this.svg.querySelector('#mgp'); const L = p.getTotalLength(); const d = eio(pr(t, 1.6, 4.6));
+    p.style.strokeDasharray = L; p.style.strokeDashoffset = L * (1 - d);
+    const s = this.svg.querySelector('#mgs'); const ks = pop(t, 4.5, .3); s.setAttribute('transform', `translate(700 150) scale(${t > 4.5 ? ks : 0})`);
+    this.tag.style.opacity = pr(t, 4.8, 5.1);
+    this.fog.forEach((f, i) => { f.style.opacity = 1 - eio(pr(t, 1.2 + i * .4, 3 + i * .4)) * .9; f.style.transform = `translateX(${Math.sin(t * .5 + i) * 30}px)`; });
+    caption(this.cap, C('caps', [{ t0: .4, t1: 3.4, text: '数据一多，迷雾就 [散了]' }, { t0: 3.4, t1: 99, text: '你会看到 [以前看不到] 的路' }]), t, '<span style="color:#FFB27A">');
+  }
+};
+
+// ---------- 71 · 白板手绘 Whiteboard ----------
+T.wb = {
+  no: 71, name: '白板手绘 Whiteboard', dur: 7.2,
+  build() {
+    bg('background:#FBFAF6');
+    this.svg = h('div', 'left:0;top:0;width:1080px;height:1040px', `<svg width="1080" height="1040" viewBox="0 0 1080 1040" fill="none" stroke-linecap="round" stroke-linejoin="round">
+      <path class="wl" d="M30 430 C 120 415, 200 445, 300 428 S 480 412, 560 432 S 760 448, 860 428 S 1000 420, 1050 432" stroke="#1E5BB8" stroke-width="7"/>
+      <path class="wl" d="M560 300 L 520 360 L 535 375 L 500 430 M560 300 L 600 350 L 585 365 L 640 430" stroke="#1E2A44" stroke-width="7"/>
+      <path class="wl" d="M500 430 C 420 520, 380 640, 420 760 C 450 860, 560 920, 640 880 C 760 820, 820 700, 780 580 C 750 500, 690 460, 640 430" stroke="#1E2A44" stroke-width="7"/>
+      <path class="wl" d="M590 470 C 600 560, 560 640, 600 730 C 620 790, 590 830, 600 860" stroke="#E4551E" stroke-width="9"/>
+      <path class="wl" d="M300 200 C 350 230, 420 250, 500 300" stroke="#1E5BB8" stroke-width="5"/>
+      <path class="wl" d="M300 640 C 360 650, 410 660, 460 680" stroke="#E4551E" stroke-width="5"/>
+      <path class="wl" d="M870 160 c 10 -30 50 -30 50 0 c 0 25 -40 30 -30 60 M 880 240 l 0 4 M 940 190 l 40 -50 M 940 190 l 20 25 l 50 -70" stroke="#1E2A44" stroke-width="6"/>
+    </svg>`);
+    this.l1 = h('div', 'left:60px;top:110px;font:700 64px/1 Caveat,LongCang;color:#1E5BB8;transform:rotate(-3deg)', C('top', '表面问题<br><span style="font-size:52px">surface-level pain points</span>'));
+    this.l2 = h('div', 'left:60px;top:560px;font:700 64px/1 Caveat,LongCang;color:#E4551E;transform:rotate(-2deg)', C('bottom', '深层的<br>结构问题<br><span style="font-size:48px">deeper problems</span>'));
+    this.pen = h('div', 'left:0;top:0;width:110px;height:110px;z-index:4', '<svg viewBox="0 0 60 60"><g transform="rotate(35 30 30)"><rect x="24" y="2" width="12" height="40" rx="3" fill="#1E2A44"/><rect x="24" y="6" width="12" height="8" fill="#E4551E"/><path d="M24 42h12l-6 12z" fill="#f2d3b1"/><path d="M28 50h4l-2 4z" fill="#1E2A44"/></g></svg>');
+    this.bars = [0, 1, 2].map(i => h('div', `left:${750 + i * 95}px;top:1000px;width:80px;height:10px;border-radius:5px;background:#ddd`));
+    WINS.push({ slot: 'P', x: 0, y: 1040, w: 1080, h: 880, t0: 0, t1: 99, fy: .3 });
+    this.cap = h('div', 'left:60px;top:1100px;width:960px;text-align:center;font:500 44px/1.3 Caveat,"Noto Sans CJK SC";color:#fff;text-shadow:0 2px 10px rgba(0,0,0,.7)');
+  },
+  frame(t) {
+    const ps = [...this.svg.querySelectorAll('.wl')]; const sch = [[.2, 1.0], [1.0, 1.8], [1.8, 3.4], [3.4, 4.4], [.9, 1.4], [4.4, 4.9], [5.2, 6.0]];
+    let tip = null;
+    ps.forEach((p, i) => { const L = p.getTotalLength(); const d = pr(t, ...sch[i]); p.style.strokeDasharray = L; p.style.strokeDashoffset = L * (1 - d); if (d > 0 && d < 1) tip = p.getPointAtLength(L * d); });
+    if (tip) set(this.pen, { left: (tip.x - 30) + 'px', top: (tip.y - 100) + 'px', opacity: 1 }); else this.pen.style.opacity = t > 6 ? 0 : this.pen.style.opacity;
+    this.l1.style.opacity = pr(t, .6, 1.0); this.l2.style.opacity = pr(t, 4.0, 4.4);
+    this.l1.style.clipPath = `inset(0 ${100 - pr(t, .6, 1.4) * 100}% 0 0)`; this.l2.style.clipPath = `inset(0 ${100 - pr(t, 4.0, 5.0) * 100}% 0 0)`;
+    this.bars.forEach((b, i) => b.style.background = t > [0, 2.4, 4.8][i] ? (i === (t < 2.4 ? 0 : t < 4.8 ? 1 : 2) ? '#E4551E' : '#1E2A44') : '#ddd');
+    caption(this.cap, C('caps', [{ t0: .3, t1: 3.6, text: '买家抱怨的，只是 [冰山一角]' }, { t0: 3.6, t1: 99, text: '水面下才是 [真问题]' }]), t, '<span style="color:#FFD23F">', 'fade');
+  }
+};
+
+// ---------- 72 · 生活 Vlog ----------
+T.vl = {
+  no: 72, name: '生活 Vlog', dur: 6.6,
+  build() {
+    WINS.push({ slot: 'W', x: 0, y: 0, w: 1080, h: 1920, t0: 0, t1: 99, fy: .3 });
+    h('div', 'inset:0;background:linear-gradient(180deg,rgba(0,0,0,.35),rgba(0,0,0,0) 30%,rgba(0,0,0,0) 60%,rgba(0,0,0,.45));z-index:2');
+    h('div', 'inset:0;background:rgba(255,150,60,.07);mix-blend-mode:soft-light;z-index:2');
+    this.g = grain(.06, 3);
+    this.t1 = h('div', 'left:80px;top:230px;font:700 140px/1 Caveat;color:#fff;text-shadow:0 4px 20px rgba(0,0,0,.4)', C('title', 'the desk'));
+    this.ul = h('div', 'left:80px;top:360px;width:420px;height:40px', '<svg width="420" height="40"><path d="M5 25 C 100 5, 220 35, 410 12" stroke="#FFD23F" stroke-width="7" fill="none" stroke-linecap="round"/></svg>');
+    this.t2 = h('div', 'left:86px;top:410px;font:700 30px Inter,"Noto Sans CJK SC";letter-spacing:8px;color:#fff', C('sub', 'ROCK SOLID · 我的工作台'));
+    this.day = h('div', 'left:780px;top:240px;text-align:right;width:220px;font:500 34px/1.3 Caveat;color:#fff', C('day', 'day 12<br>11.18'));
+    this.cap = h('div', 'left:60px;top:1240px;width:960px;text-align:center;font:700 62px/1.3 "Noto Sans CJK SC";color:#fff;text-shadow:0 3px 18px rgba(0,0,0,.65)');
+  },
+  frame(t) {
+    this.g(t);
+    this.t1.style.clipPath = `inset(0 ${100 - eio(pr(t, .2, 1.3)) * 100}% 0 0)`;
+    const p = this.ul.querySelector('path'); const L = p.getTotalLength(); p.style.strokeDasharray = L; p.style.strokeDashoffset = L * (1 - eo(pr(t, 1.1, 1.7)));
+    this.t2.style.opacity = pr(t, 1.4, 2.0); this.day.style.opacity = pr(t, 1.8, 2.4);
+    caption(this.cap, C('caps', [{ t0: 2.0, t1: 4.3, text: '稳得像块石头' }, { t0: 4.3, t1: 99, text: '而且 [超级大]' }]), t, '<span style="color:#FFD23F">', 'fade');
+  }
+};
+
+// ---------- 73 · 回复评论 Reply to a comment ----------
+T.rp = {
+  no: 73, name: '回复评论 Reply to a Comment', dur: 7.2,
+  build() {
+    bg('background:radial-gradient(700px 600px at 50% 40%,#4b3a2e,#16110d)');
+    this.card = h('div', 'left:60px;top:205px;width:960px;padding:28px 34px;background:#fff;border-radius:26px;color:#111;box-shadow:0 16px 40px rgba(0,0,0,.45);z-index:4');
+    h('div', 'position:relative;display:flex;align-items:center;gap:14px;font:700 30px Inter,"Noto Sans CJK SC"', `<span style="width:52px;height:52px;border-radius:50%;background:#17A85A;color:#fff;font:800 28px/52px Inter;text-align:center">${C('avatar', 'L')}</span>${C('user', '@Lily的手作小店')}<span style="margin-left:auto;font-weight:500;color:#999;font-size:24px">回复了你的视频</span>`, this.card).style.position = 'relative';
+    this.qt = h('div', 'position:relative;margin-top:18px;font:700 40px/1.5 "Noto Sans CJK SC"', '', this.card); this.qt.style.position = 'relative';
+    WINS.push({ slot: 'P', x: 90, y: 540, w: 900, h: 590, r: 30, t0: 0, t1: 99, fy: .28 });
+    h('div', 'left:90px;top:540px;width:900px;height:590px;border-radius:30px;box-shadow:inset 0 -200px 120px -80px rgba(0,0,0,.6),0 20px 50px rgba(0,0,0,.5);z-index:2');
+    this.cap = h('div', 'left:90px;top:1015px;width:900px;text-align:center;font:900 64px "Noto Sans CJK SC";color:#fff;text-shadow:0 3px 12px rgba(0,0,0,.6)');
+    this.items = C('list', ['直接私信联系买家', '用 ChatGPT 写开场白', '只发给真实的店铺']).map((s, i) => h('div', `left:110px;top:${1160 + i * 90}px;height:76px;padding:0 30px 0 12px;border-radius:16px;background:rgba(20,16,12,.85);font:700 40px/76px "Noto Sans CJK SC";color:#fff;display:flex;align-items:center;gap:16px;z-index:3`, `<b style="width:48px;height:48px;border-radius:10px;background:#FFE14D;color:#111;font:900 30px/48px Inter;text-align:center">${i + 1}</b>${s}`));
+  },
+  frame(t) {
+    const k = pop(t, .1, .35); this.card.style.transform = `scale(${.85 + .15 * k}) translateY(${(1 - cl(k)) * -40}px)`; this.card.style.opacity = cl(k * 2);
+    const q = C('question', '你是怎么找到第一批买家的？[具体流程是什么样的？]');
+    const sw = eo(pr(t, .8, 1.8));
+    this.qt.innerHTML = q.replace(/\[([^\]]+)\]/, `<span style="background:linear-gradient(90deg,#FFE14D ${sw * 100}%,transparent ${sw * 100}%);padding:0 4px">$1</span>`);
+    caption(this.cap, C('caps', [{ t0: 2.0, t1: 99, text: '我只做 [真实的] 店铺' }]), t, '<span style="color:#FFE14D">');
+    this.items.forEach((e, i) => { const kk = eo(pr(t, 3.0 + i * .7, 3.4 + i * .7)); e.style.opacity = kk; e.style.transform = `translateX(${(1 - kk) * -60}px)`; });
+  }
+};
+
+// ---------- 74 · 照片堆叠 Photo stack ----------
+T.ps = {
+  no: 74, name: '照片堆叠 Photo Stack', dur: 6.6,
+  build() {
+    const L0 = bg('background:#16130F;background-image:radial-gradient(rgba(255,255,255,.035) 1px,transparent 1.5px);background-size:6px 6px');
+    const P = C('photos', ['sample/photo_cut.jpg', 'sample/photo_sew.jpg', 'sample/photo_E.jpg', 'sample/photo_team.jpg']);
+    this.ph = P.map((src, i) => { const e = h('div', `left:110px;top:420px;width:860px;height:560px;background:#F7F4EC;padding:22px 22px 70px;box-shadow:0 18px 40px rgba(0,0,0,.55)`, `<div style="width:100%;height:100%;background:url(${src}) center/cover"></div>`, L0); e.t0 = .2 + i * .85; e.r = [-7, 6, -4, 3][i % 4]; e.dx = [-60, 70, -30, 40][i % 4]; return e; });
+    // 最上面一张是实拍（相框在挖洞层里，素材从相框中间透出来）
+    this.top = h('div', 'left:150px;top:430px;width:780px;height:600px;background:#F7F4EC;box-shadow:0 18px 40px rgba(0,0,0,.6)', '', L0);
+    WINS.push({ slot: 'L', x: 172, y: 452, w: 736, h: 490, r: 0, t0: 3.6, t1: 99, fy: .5 });
+    this.date = h('div', 'left:180px;top:965px;font:700 40px Caveat;color:#333;z-index:3', C('date', 'oct. 2026 · 工作室'));
+    this.cap = h('div', 'left:60px;top:1210px;width:960px;text-align:center;font:700 64px/1.3 "Noto Sans CJK SC";color:#fff');
+  },
+  frame(t) {
+    this.ph.forEach((e, i) => { const k = eo(pr(t, e.t0, e.t0 + .45)); e.style.opacity = t > e.t0 ? 1 : 0; e.style.transform = `translate(${(1 - k) * (i % 2 ? 900 : -900) + e.dx * k}px,${(1 - k) * 200}px) rotate(${e.r + (1 - k) * (i % 2 ? 40 : -40)}deg) scale(${1 + (1 - k) * .1})`; e.style.filter = `brightness(${t > e.t0 + 1.2 ? .55 : 1})`; });
+    const k = eo(pr(t, 3.6, 4.1)); const on = t >= 3.6;
+    this.top.style.display = on ? 'block' : 'none'; this.top.style.opacity = 1; this.top.style.transform = `translateY(${(1 - k) * 80}px)`;
+    this.date.style.opacity = pr(t, 4.2, 4.6);
+    caption(this.cap, C('caps', [{ t0: .4, t1: 3.6, text: '从第一单开始，' }, { t0: 3.6, t1: 99, text: '几个月之后，[全变了]' }]), t, '<span style="color:#FFC86B">', 'fade');
+  }
+};
+
+// ---------- 75 · 榜单倒数 Countdown list ----------
+T.cd = {
+  no: 75, name: '榜单倒数 Countdown List', dur: 7,
+  build() {
+    bg('background:#0F0D0C');
+    this.hd = h('div', 'left:60px;top:190px;width:960px;font:400 44px Anton,"Noto Sans CJK SC";letter-spacing:2px;color:#fff', `<span style="color:#F2651C">${C('count', '6')}</span> ${C('head', '个 ETSY 爆款小物 · RAPID FIRE')}`);
+    this.box = [1, 2, 3, 4, 5, 6].map(i => h('div', `left:${60 + (i - 1) * 108}px;top:252px;width:96px;height:40px;border:3px solid #555;border-radius:6px;font:400 26px/34px Anton;text-align:center;color:#888`, i));
+    WINS.push({ slot: 'L', x: 0, y: 320, w: 1080, h: 420, t0: 0, t1: 99, fy: .5 });
+    this.blk = h('div', 'left:0;top:740px;width:1080px;height:400px;background:#F2651C;overflow:hidden;z-index:2');
+    this.num = h('div', 'left:50px;top:-40px;font:400 330px/1 Anton;color:#111', '03', this.blk);
+    this.of = h('div', 'left:780px;top:50px;font:400 64px Anton;color:#111', 'OF 6', this.blk);
+    this.it = h('div', 'left:56px;top:280px;font:400 86px/1 Anton,"Noto Sans CJK SC";color:#111;white-space:nowrap', '', this.blk);
+    WINS.push({ slot: 'P', x: 0, y: 1140, w: 1080, h: 780, t0: 0, t1: 99, fy: .2 });
+    this.cap = h('div', 'left:60px;top:1350px;width:960px;text-align:center;font:900 60px "Noto Sans CJK SC";color:#fff;text-shadow:0 3px 12px rgba(0,0,0,.7)');
+  },
+  frame(t) {
+    const L = C('items', [[3, 'SMART LIGHTS 小夜灯', 0], [4, 'STOCKINGS 圣诞袜', 3.4]]);
+    let cur = L[0]; L.forEach(x => { if (t >= x[2]) cur = x; });
+    const ks = eo(pr(t, cur[2], cur[2] + .25));
+    this.num.textContent = String(cur[0]).padStart(2, '0'); this.num.style.transform = `translateY(${(1 - ks) * 300}px)`;
+    this.it.textContent = cur[1]; this.it.style.transform = `translateX(${(1 - ks) * -1100}px)`;
+    this.blk.style.transform = `scaleY(${t < .3 ? eo(pr(t, 0, .3)) : 1})`;
+    this.box.forEach((b, i) => { const n = i + 1; const done = n < cur[0], now = n === cur[0]; b.style.background = now ? '#F2651C' : done ? '#fff' : 'transparent'; b.style.color = now || done ? '#111' : '#777'; b.style.borderColor = now ? '#F2651C' : done ? '#fff' : '#444'; b.textContent = done ? n + '✓' : n; });
+    caption(this.cap, C('caps', [{ t0: .3, t1: 3.4, text: '一堆 [智能小灯]' }, { t0: 3.4, t1: 99, text: '定制款 [卖到断货]' }]), t, '<span style="color:#F2651C">');
+  }
+};
+
+// ---------- 76 · 胶片手绘质感 Drawn texture ----------
+T.dt = {
+  no: 76, name: '胶片手绘质感 Drawn Texture', dur: 6.4,
+  build() {
+    WINS.push({ slot: 'P', x: 0, y: 0, w: 1080, h: 1920, t0: 0, t1: 99, fy: .3 });
+    h('div', 'inset:0;background:repeating-linear-gradient(0deg,rgba(0,0,0,.16) 0 2px,transparent 2px 5px);z-index:2');
+    h('div', 'inset:0;box-shadow:inset 0 0 220px rgba(0,0,0,.75);background:linear-gradient(180deg,rgba(0,0,0,.25),transparent 25%,transparent 45%,rgba(0,0,0,.6));z-index:2');
+    this.g = grain(.16, 3);
+    this.osd1 = h('div', 'left:80px;top:220px;font:400 64px VT323;color:#fff;text-shadow:3px 0 rgba(255,0,60,.6),-3px 0 rgba(0,200,255,.6)', 'PLAY ▶');
+    h('div', 'left:880px;top:220px;font:400 64px VT323;color:#fff;text-shadow:3px 0 rgba(255,0,60,.6),-3px 0 rgba(0,200,255,.6)', 'SP');
+    this.tc = h('div', 'left:80px;top:300px;font:400 56px VT323;color:#fff;text-shadow:3px 0 rgba(255,0,60,.6)', '');
+    this.w1 = h('div', 'left:0;top:1000px;width:1080px;text-align:center;font:900 72px "Noto Sans CJK SC";color:#fff;-webkit-text-stroke:8px #111;paint-order:stroke', C('l1', '你就是'));
+    this.w2 = h('div', 'left:0;top:1080px;width:1080px;text-align:center;font:400 210px/1 Anton;letter-spacing:4px;color:#FFD23F;-webkit-text-stroke:10px #111;paint-order:stroke;text-shadow:8px 10px 0 #E4551E', C('big', 'EXACTLY'));
+    this.w3 = h('div', 'left:0;top:1300px;width:1080px;text-align:center;font:900 72px "Noto Sans CJK SC";color:#fff;-webkit-text-stroke:8px #111;paint-order:stroke', C('l3', '这么干的。'));
+    this.scr = h('div', 'left:90px;top:975px;width:900px;height:460px', '<svg width="900" height="460" viewBox="0 0 900 460"><path fill="none" stroke="#fff" stroke-width="8" stroke-linecap="round"/></svg>');
+  },
+  frame(t) {
+    this.g(t);
+    const f = Math.floor(t * 30);
+    this.osd1.style.opacity = Math.floor(t * 2) % 2 ? .4 : 1;
+    const sec = 47 + Math.floor(t); this.tc.textContent = C('date', 'NOV.18 2026') + `  00:${String(sec).padStart(2, '0')}:${String(f % 30).padStart(2, '0')}`;
+    const k1 = pop(t, 1.0, .2), k2 = pop(t, 1.45, .25), k3 = pop(t, 2.0, .2);
+    [[this.w1, k1, 1.0], [this.w2, k2, 1.45], [this.w3, k3, 2.0]].forEach(([e, k, t0]) => { e.style.opacity = t >= t0 ? 1 : 0; e.style.transform = `skewX(-8deg) scale(${lerp(1.8, 1, cl(k))}) translate(${(rnd(Math.floor(t * 8) + t0) - .5) * 4}px,${(rnd(Math.floor(t * 8) * 3 + t0) - .5) * 4}px)`; });
+    // 手绘描边：每 3 帧抖一次（boil）
+    const b = Math.floor(f / 3); let d = ''; for (let i = 0; i <= 40; i++) { const a = i / 40 * Math.PI * 2.1 - 1.4; const rx = 395 + (rnd(b * 50 + i) - .5) * 16, ry = 210 + (rnd(b * 70 + i) - .5) * 16; d += (i ? 'L' : 'M') + (450 + rx * Math.cos(a)).toFixed(1) + ' ' + (230 + ry * Math.sin(a)).toFixed(1); }
+    const p = this.scr.querySelector('path'); p.setAttribute('d', d); const L = 2800; p.style.strokeDasharray = L; p.style.strokeDashoffset = L * (1 - eo(pr(t, 2.3, 3.1)));
+  }
+};
+
+// ---------- 77 · 播客切片 Podcast clip ----------
+T.pc = {
+  no: 77, name: '播客切片 Podcast Clip', dur: 7.2,
+  build() {
+    bg('background:#0E0E10;background-image:radial-gradient(800px 500px at 50% 0,rgba(198,255,61,.08),transparent)');
+    this.hd = h('div', 'left:60px;top:200px;width:960px;display:flex;align-items:center;gap:16px;font:800 30px Inter,"Noto Sans CJK SC";letter-spacing:3px;color:#fff', `<i style="width:20px;height:20px;border-radius:50%;background:#FF3B30;display:inline-block"></i>ON AIR <span style="color:#777;font-weight:600">· ${C('show', 'TONYBOOK 跨境 PODCAST · EP.12')}</span>`);
+    WINS.push({ slot: 'T', x: 60, y: 270, w: 960, h: 480, r: 24, t0: 0, t1: 99, fy: .4 });
+    WINS.push({ slot: 'P', x: 60, y: 780, w: 960, h: 480, r: 24, t0: 0, t1: 99, fy: .3 });
+    this.fA = h('div', 'left:52px;top:262px;width:976px;height:496px;border-radius:30px;border:6px solid #C6FF3D;z-index:3');
+    this.fB = h('div', 'left:52px;top:772px;width:976px;height:496px;border-radius:30px;border:6px solid #C6FF3D;z-index:3');
+    this.nA = h('div', 'left:84px;top:680px;padding:8px 18px;border-radius:10px;background:rgba(0,0,0,.7);font:700 28px Inter,"Noto Sans CJK SC";color:#fff;z-index:3', C('hostA', '主播 · Tony'));
+    this.nB = h('div', 'left:84px;top:1190px;padding:8px 18px;border-radius:10px;background:rgba(0,0,0,.7);font:700 28px Inter,"Noto Sans CJK SC";color:#fff;z-index:3', C('hostB', '嘉宾 · 卖家 Lily'));
+    this.wv = [...Array(36)].map((_, i) => h('div', `left:${96 + i * 25}px;top:1300px;width:14px;height:20px;border-radius:7px;background:#C6FF3D`));
+    this.cap = h('div', 'left:60px;top:1370px;width:960px;text-align:center;font:900 58px "Noto Sans CJK SC";color:#fff');
+  },
+  frame(t) {
+    const a = t < 3.6; this.fA.style.opacity = a ? 1 : 0; this.fB.style.opacity = a ? 0 : 1;
+    this.nA.style.background = a ? '#C6FF3D' : 'rgba(0,0,0,.7)'; this.nA.style.color = a ? '#111' : '#fff';
+    this.nB.style.background = !a ? '#C6FF3D' : 'rgba(0,0,0,.7)'; this.nB.style.color = !a ? '#111' : '#fff';
+    this.wv.forEach((b, i) => { const v = .2 + .8 * Math.abs(Math.sin(t * 9 + i * .7) * Math.sin(t * 3.3 + i * .23)); b.style.height = (14 + v * 50) + 'px'; b.style.top = (1320 - (14 + v * 50) / 2) + 'px'; });
+    this.hd.firstChild.style.opacity = Math.floor(t * 2) % 2 ? .35 : 1;
+    caption(this.cap, C('caps', [{ t0: .2, t1: 3.6, text: '定价别怕 [往上走]' }, { t0: 3.6, t1: 99, text: '我涨了两次价，[单反而多了]' }]), t, '<span style="color:#C6FF3D">');
+  }
+};
+
+// ---------- 78 · 新闻评论 News commentary ----------
+T.nc = {
+  no: 78, name: '新闻评论 News Commentary', dur: 7.2,
+  build() {
+    bg('background:#ECE7DD;background-image:linear-gradient(rgba(0,0,0,.035) 1px,transparent 1px);background-size:100% 6px');
+    this.art = h('div', 'left:60px;top:200px;width:960px;height:600px;background:#fff;border-radius:18px;box-shadow:0 14px 34px rgba(0,0,0,.18);color:#111;overflow:hidden');
+    h('div', 'left:36px;top:30px;width:890px;display:flex;align-items:center;gap:14px;font:600 26px Inter,"Noto Sans CJK SC";color:#666', `<span style="width:44px;height:44px;border-radius:10px;background:#333;color:#fff;font:800 26px/44px Inter;text-align:center">N</span>${C('src', '跨境资讯 · 2026-11-17')}<span style="margin-left:auto;background:#E5202E;color:#fff;padding:4px 14px;border-radius:6px;font-weight:800;letter-spacing:2px">SOURCE 原文</span>`, this.art);
+    h('div', 'left:36px;top:110px;width:890px;font:900 58px/1.3 "Noto Serif CJK SC",serif', C('headline', '年末物流高峰来了：<br>卖家该怎么调整备货时间？'), this.art);
+    this.para = h('div', 'left:36px;top:310px;width:890px;font:500 40px/1.8 "Noto Sans CJK SC";color:#444', '', this.art);
+    WINS.push({ slot: 'P', x: 60, y: 830, w: 960, h: 520, r: 22, t0: 0, t1: 99, fy: .28 });
+    h('div', 'left:60px;top:830px;width:960px;height:520px;border-radius:22px;box-shadow:inset 0 -160px 90px -60px rgba(0,0,0,.65);z-index:2');
+    this.lt = h('div', 'left:90px;top:1255px;display:flex;align-items:stretch;z-index:3', `<span style="background:#E5202E;color:#fff;font:900 34px/62px Inter,'Noto Sans CJK SC';padding:0 20px;letter-spacing:2px">${C('take', '我的看法 MY TAKE')}</span><span style="background:#fff;color:#111;font:800 34px/62px 'Noto Sans CJK SC';padding:0 22px">${C('name', 'Tony · Etsy 卖家')}</span>`);
+    this.cap = h('div', 'left:60px;top:1375px;width:960px;text-align:center;font:900 54px "Noto Sans CJK SC";color:#111');
+  },
+  frame(t) {
+    const k = eo(pr(t, 0, .5)); this.art.style.transform = `translateY(${(1 - k) * -60}px) rotate(${(1 - k) * -2}deg)`; this.art.style.opacity = k;
+    const P = C('para', ['大促之后订单集中，承运商普遍延误。', '[备货时间建议多留 2–3 天，]', '并在店铺公告里提前写明。']);
+    const hl = eo(pr(t, 1.2, 2.4));
+    this.para.innerHTML = P.map(s => s.replace(/\[([^\]]+)\]/, `<span style="background:linear-gradient(90deg,rgba(255,214,0,.75) ${hl * 100}%,transparent ${hl * 100}%);color:#111">$1</span>`)).join('<br>');
+    const kl = eo(pr(t, 2.6, 3.0)); this.lt.style.transform = `translateX(${(1 - kl) * -700}px)`;
+    caption(this.cap, C('caps', [{ t0: 3.0, t1: 99, text: '别等买家来问，[先说清楚]' }]), t, '<span style="color:#E5202E">');
+  }
+};
+
+
+// ---------- 79 · 4:3 横版口播（抖音里画面居中，上下黑边放界面，文字按钮都不挡画面） ----------
+T.wd = {
+  no: 79, name: '4:3 横版口播 Wide 4:3', dur: 7.2, size: [1440, 1080],
+  build() {
+    WINS.push({ slot: 'T', x: 0, y: 0, w: 1440, h: 1080, t0: 0, t1: 99, fy: .4 });
+    h('div', 'inset:0;width:1440px;height:1080px;background:linear-gradient(180deg,rgba(0,0,0,.35),rgba(0,0,0,0) 22%,rgba(0,0,0,0) 62%,rgba(0,0,0,.6));z-index:2');
+    h('div', 'inset:0;width:1440px;height:1080px;box-shadow:inset 0 0 240px rgba(20,8,0,.55);background:rgba(255,140,40,.06);z-index:2');
+    this.g = grain(.05, 3);
+    // 章节（对应抖音「章节要点」：发布时按这里的章节打点）
+    const CH = C('chapters', ['开场', '看数据', '定价格', '做图片', '写标题', '上新', '复盘', '避坑', '总结']);
+    this.chip = h('div', 'left:56px;top:48px;display:flex;align-items:center;gap:16px;padding:12px 22px 12px 14px;border-radius:14px;background:rgba(0,0,0,.55);font:800 32px "Noto Sans CJK SC";color:#fff');
+    this.bars = h('div', 'left:56px;top:122px;display:flex;gap:6px');
+    this.CH = CH; this.barE = CH.map(() => { const b = document.createElement('i'); b.style.cssText = 'display:block;width:44px;height:8px;border-radius:4px;background:rgba(255,255,255,.35)'; this.bars.appendChild(b); return b; });
+    h('div', 'left:1160px;top:56px;width:230px;text-align:right;font:700 28px Inter;color:rgba(255,255,255,.85)', C('handle', '@Etsy-Tony'));
+    this.nameE = h('div', 'left:56px;top:760px;display:flex;align-items:stretch;z-index:3', `<span style="width:10px;background:#FFC23D"></span><span style="background:rgba(0,0,0,.72);padding:12px 26px;font:900 42px/1.25 'Noto Sans CJK SC';color:#fff">${C('who', 'Tony')}<br><span style="font:600 26px Inter,'Noto Sans CJK SC';color:#FFC23D;letter-spacing:2px">${C('role', 'ETSY-TONY · 跨境卖家')}</span></span>`);
+    this.kc = h('div', 'left:1010px;top:300px;width:380px;padding:26px 30px;border-radius:20px;background:#FFFDF7;color:#111;box-shadow:0 20px 40px rgba(0,0,0,.35);z-index:3', `<div style="font:700 24px Inter,'Noto Sans CJK SC';color:#C77700;letter-spacing:3px">${C('kicker', '要点 KEY POINT')}</div><div style="margin-top:8px;font:900 48px/1.3 'Noto Sans CJK SC'">${C('point', '先看 24 小时<br>真实销量')}</div>`);
+    this.cap = h('div', 'left:80px;top:930px;width:1280px;text-align:center;font:900 60px "Noto Sans CJK SC";color:#fff;-webkit-text-stroke:7px rgba(0,0,0,.85);paint-order:stroke;z-index:4');
+  },
+  frame(t) {
+    this.g(t);
+    const ci = C('chapter', 2);
+    this.chip.innerHTML = `<b style="background:#FFC23D;color:#111;border-radius:9px;padding:2px 12px;font:900 30px Inter">${String(ci + 1).padStart(2, '0')}/${String(this.CH.length).padStart(2, '0')}</b>${this.CH[ci]}`;
+    this.chip.style.opacity = pr(t, .1, .5); this.bars.style.opacity = pr(t, .3, .7);
+    this.barE.forEach((b, i) => { b.style.background = i < ci ? '#fff' : i === ci ? `linear-gradient(90deg,#FFC23D ${pr(t, 0, this.dur) * 100}%,rgba(255,255,255,.35) 0)` : 'rgba(255,255,255,.35)'; });
+    const kn = eo(pr(t, .4, .9)) * (1 - eo(pr(t, 3.2, 3.6))); this.nameE.style.transform = `translateX(${(1 - kn) * -620}px)`;
+    const kk = pop(t, 3.8, .35) * (t > 6.8 ? 1 - pr(t, 6.8, 7.1) : 1); this.kc.style.opacity = cl(kk * 2); this.kc.style.transform = `translateX(${(1 - cl(kk)) * 120}px) rotate(${(1 - cl(kk)) * 4}deg)`;
+    caption(this.cap, C('caps', [{ t0: .3, t1: 3.6, text: '所以我就想结合我自己的一些经历' }, { t0: 3.6, t1: 99, text: '选品第一步，先看 [真实销量]' }]), t, '<span style="color:#FFC23D">', 'none');
+  }
+};
+
+// ============ 启动 ============
+const CUR = T[TPL]; if (!CUR) throw new Error('没有这个模板：' + TPL);
+if (CUR.size) { [W, H] = CUR.size; for (const e of [document.documentElement, document.body]) { e.style.width = W + 'px'; e.style.height = H + 'px'; } }
+window.SIZE = [W, H];
+CUR.build();
+// ?label=1：样片合集用，顶部小标签写模板编号和名字
+if (Q.has('label')) h('div', `left:0;top:${H > W ? 120 : 14}px;width:${W}px;text-align:center;z-index:98`, `<span style="display:inline-block;background:rgba(0,0,0,.72);color:#fff;font:800 30px Inter,'Noto Sans CJK SC';padding:8px 22px;border-radius:30px;border:2px solid rgba(255,255,255,.5)">${CUR.no} 号 · ${CUR.name}</span>`);
+// ?guide=1：叠一层抖音界面遮挡区（只用于检查，不要出片）
+// 竖版 1080×1920：顶部 0–200 搜索/标签栏；底部 1460 以下是账号名、文案、评论框；右侧 930 以右、860–1600 是头像/点赞/评论/收藏/分享
+if (Q.has('guide') && H > W) {
+  const z = (css, txt) => h('div', css + ';z-index:99;background:rgba(255,0,60,.28);outline:3px dashed #ff2d55;font:700 30px "Noto Sans CJK SC";color:#fff;display:flex;align-items:center;justify-content:center;text-align:center', txt);
+  z('left:0;top:0;width:1080px;height:200px', '顶部搜索栏');
+  z('left:0;top:1460px;width:1080px;height:460px', '账号名 · 文案 · 评论框（会盖住）');
+  z('left:930px;top:860px;width:150px;height:740px', '按钮列');
+}
+window.DUR = C('dur', CUR.dur);
+window.render = t => { CUR.frame(t); applyHoles(t); };
+// 给合成脚本用：素材窗（时间段 + 位置 + 推近倍数）
+window.META = () => {
+  const out = []; const step = 1 / 30; let prev = null;
+  for (let t = 0; t < DUR; t += step) {
+    CUR.frame(t);
+    const act = WINS.filter(w => t >= w.t0 && t < w.t1).map(w => JSON.stringify({ slot: w.slot, x: w.x, y: w.y, w: w.w, h: w.h, zoom: w.zoom || 1, fx: w.fx ?? .5, fy: w.fy ?? .5 }));
+    const key = act.join('|');
+    if (key !== prev) { out.push({ t: +t.toFixed(3), wins: act.map(a => JSON.parse(a)) }); prev = key; }
+  }
+  return { tpl: TPL, no: CUR.no, name: CUR.name, dur: DUR, segments: out };
+};
+render(0);
+</script></body></html>

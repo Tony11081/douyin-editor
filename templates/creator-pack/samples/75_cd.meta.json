@@ -1,0 +1,1 @@
+{"tpl": "cd", "no": 75, "name": "榜单倒数 Countdown List", "dur": 7, "segments": [{"t": 0, "wins": [{"slot": "L", "x": 0, "y": 320, "w": 1080, "h": 420, "zoom": 1, "fx": 0.5, "fy": 0.5}, {"slot": "P", "x": 0, "y": 1140, "w": 1080, "h": 780, "zoom": 1, "fx": 0.5, "fy": 0.2}]}]}
