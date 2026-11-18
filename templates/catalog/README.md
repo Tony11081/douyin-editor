@@ -90,7 +90,7 @@ gallery.html 是所有模板的静态样式（?tpl=<代号>&s=hook|card，背景
 | 55 | 知识讲解 · 手机实录 | ex-app | templates/explainer/ads.html（3D 手机界面示意 + 逐行圈重点 + 手指点开关 + 规则对比） |
 | 51b | 白昼极简 · 网站功能宣传版 | cd-promo | templates/promo-day/promo.html（每日 09:23 网站宣传用：实拍钩子 + 圆角框录屏 + 结尾网址和评论关键词；每期只写配置文件） |
 | 56 | Etsy 政策速递 · Shopwright 暖白青柠 | pb | video-drop templates/policy-brief/（engine.js + episodes/epNNN.js；check.py 自检、sfx.py 音效；选题台账 topics.md） |
-| 57 | AI浪潮 · 钴蓝荧光黄 | aw | templates/ai-wave/episode.html（每日 AI 新闻；Grok 交付表格 → 出片） |
+| 57 | AI浪潮 · 钴蓝荧光黄 | aw | templates/ai-wave/episode.html（每日 AI 新闻；Gemini 交付表格 → 出片） |
 | 58 | 移轴微缩 · 玩具城市沙盘 | tm | video-drop templates/etsytony-miniature/（Three.js 沙盘 + 合成音效，每期一份节拍表） |
 | 59 | 科普治愈 · 纸光 | sh2 | video-drop templates/science-healing/（自然现象 → 人生道理） |
 | 60 | TonyBook 极简杂志（4 号动态版） | mag | video-drop templates/tonybook-mag/（细线刊头、衬线标题、实拍素材，ElevenLabs Will） |
