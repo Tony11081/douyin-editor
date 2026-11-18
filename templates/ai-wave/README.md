@@ -6,13 +6,13 @@
 
 | 时间（北京） | 谁 | 做什么 |
 |---|---|---|
-| 05:30 前 | Gemini | 把当天情报写进交付表格，最后一行 B 列写「完成」 |
-| 05:47 | Claude（定时任务） | 读表 → 出视频 → 1.4 倍速 → 交付 → 删掉读过的行 |
+| 04:30 | 服务器上的 Gemini（`agy` 命令行，`/etc/cron.d/ai-wave-intel`） | 搜过去 24 小时 AI 新闻，结果写到服务器 `/opt/ai-wave-intel/runs/YYYYMMDD.{status,json,txt}`，一般 3~20 分钟跑完 |
+| 05:47 | Claude（定时任务） | 用服务器连接器读情报 → 出视频 → 1.4 倍速 → 交付 |
 
 观众大多在早上通勤路上看，成片要在 07:00 前交到 Tony 手上。
 
-交付表格：[AI浪潮 · 新闻情报交付](https://docs.google.com/spreadsheets/d/1HofIP71ahTkJpePOLxbIenHYunL5Jv0L9ZnExwXguJE/edit)（「情报」页是数据，「说明」页是填写规则）。
-Gemini 的提示词在 `gemini_prompt.md`。
+服务器上：`run.sh`（跑 Gemini，失败自动重试一次）、`prompt.txt`（Gemini 的提示词）、`extract.py`（校验 JSON）、`totxt.py`（转成每字段一行的 txt，方便读）。`status` 文件第一词是 `running` / `ok` / `failed`。
+交付表格 [AI浪潮 · 新闻情报交付](https://docs.google.com/spreadsheets/d/1HofIP71ahTkJpePOLxbIenHYunL5Jv0L9ZnExwXguJE/edit) 留作人工补交的备用入口（「情报」页是数据，「说明」页是填写规则）。`gemini_prompt.md` 是写表格版的提示词，备用。
 
 ## 文件
 
@@ -33,7 +33,7 @@ Gemini 的提示词在 `gemini_prompt.md`。
 
 ## 每期流程
 
-1. **读表**：读「情报」页全部行。没有「完成」行说明 Gemini 还没写完，20 分钟后再看，最多等两次，再没有就告诉用户。
+1. **取情报**：读服务器 `runs/<北京日期>.status`。`ok` 就读 `.txt`；`running` 就 15 分钟后再看，最多等两次；`failed` 或没有文件，再看表格「情报」页有没有「完成」行（人工补交），都没有就告诉用户。用了表格的，交付后删掉读过的行。
 2. **选题**：挑 3~5 条能公开发的，按序号排，「钩子」行建议的那条放第一条。不收：内部业务（Nora Lane、闲鱼秘书等）、核实状态是「有争议」或「仅单一来源」且没有官方链接的条目。
 3. **口播稿**：
    - 开头：「AI浪潮，X月X日。」+ 一句钩子。
